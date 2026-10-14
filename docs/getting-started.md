@@ -12,7 +12,7 @@ runs Tailwind v4. The reference page is `playground/` in this repo: it does ever
 
 ```sh
 npm i github:danieloceno/lumux#v0.5.0
-npm i react react-dom lucide-react @radix-ui/react-slot @radix-ui/react-dialog @radix-ui/react-tooltip @radix-ui/react-dropdown-menu @radix-ui/react-popover   # React peers
+npm i react react-dom lucide-react @radix-ui/react-slot @radix-ui/react-dialog @radix-ui/react-tooltip @radix-ui/react-dropdown-menu @radix-ui/react-popover @radix-ui/react-select   # React peers
 npm i -D eslint-plugin-jsx-a11y                              # lint peer
 npm i @fontsource-variable/inter                             # the font; `geist` too if you use the `data` type role
 ```
