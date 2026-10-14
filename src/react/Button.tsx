@@ -27,7 +27,7 @@ const VARIANT: Record<ButtonVariant, string> = {
   secondary: 'border border-border-strong bg-surface text-accent hover:bg-surface-raised',
   ghost: 'text-foreground hover:bg-surface-raised',
   danger: 'bg-danger text-danger-foreground hover:bg-danger-strong',
-  'danger-outline': 'border border-danger bg-surface text-danger hover:bg-danger-soft',
+  'danger-outline': 'border border-danger bg-surface text-danger hover:bg-danger-soft hover:text-danger-on-soft',
   link: 'text-accent underline underline-offset-4 hover:no-underline',
 };
 

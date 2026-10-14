@@ -1,8 +1,9 @@
-// Checks every legal pairing in vocabulary.ts against every theme. Exits 1 on
-// any failure. There is no exception list: a failing pair is fixed in the
-// theme, never here.
+// Checks every legal pairing in vocabulary.ts against every theme, and every
+// pair a component renders against that list. Exits 1 on any failure. There is
+// no exception list: a failing pair is fixed in the theme, never here.
 
 import { PAIRS } from '../src/tokens/vocabulary.ts';
+import { componentPairs } from './component-pairs.ts';
 import { THEMES } from '../src/tokens/sets/index.ts';
 
 function rgb(hex: string): [number, number, number] {
@@ -40,7 +41,13 @@ for (const [theme, { scheme, colors }] of Object.entries(THEMES)) {
 }
 
 console.log(`\n${total - failures}/${total} pairs pass.`);
-if (failures) {
-  console.error(`${failures} pair(s) below threshold.`);
-  process.exit(1);
+if (failures) console.error(`${failures} pair(s) below threshold.`);
+
+const rendered = componentPairs();
+const unlisted = rendered.filter((r) => !PAIRS.some((p) => p.fg === r.fg && p.bg === r.bg && p.min >= r.min));
+for (const r of unlisted) {
+  console.error(`  UNLISTED  ${r.fg} on ${r.bg}  (${r.file} ${r.state || 'rest'})`);
 }
+console.log(`${rendered.length - unlisted.length}/${rendered.length} rendered pairs are listed.`);
+
+if (failures || unlisted.length) process.exit(1);
