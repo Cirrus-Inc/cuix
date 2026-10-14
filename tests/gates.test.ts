@@ -283,6 +283,14 @@ test('install-gates.sh: --src or --ui without a value is a usage error, not an u
   }
 });
 
+test('install-gates.sh: a flag followed by another flag is a missing value, not the value', () => {
+  for (const args of [['--src', '--ui', 'x'], ['--ui', '--src', 'x']]) {
+    const r = run('bash', [gate('install-gates.sh'), ...args], fresh());
+    assert.equal(r.code, 1);
+    assert.match(r.out, new RegExp(`install-gates: ${args[0]} needs a value`));
+  }
+});
+
 test('install-gates.sh: a baseline that cannot be written surfaces the gate\'s own error', () => {
   const dir = fresh();
   writeFileSync(join(dir, 'lumux-gates.json'), JSON.stringify({ src: ['src'], baseline: 'nodir/base.json' }));
