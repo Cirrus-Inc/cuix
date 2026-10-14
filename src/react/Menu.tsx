@@ -7,7 +7,7 @@ import { cx } from './cx.ts';
 export type MenuItem =
   | {
       type?: 'item';
-      /** Stable key for lists whose items come and go; the index is used without it. */
+      /** Stable React key for lists whose items come and go; the index is used without it. */
       id?: string;
       label: ReactNode;
       icon?: ReactNode;
@@ -60,7 +60,7 @@ export function Menu({ trigger, items, align = 'end', label }: MenuProps) {
                   {item.label}
                 </M.Label>
               );
-            const reasonId = `${base}-${item.id ?? i}`;
+            const reasonId = `${base}-${i}`;
             const showReason = item.disabled && item.disabledReason;
             return (
               <M.Item
