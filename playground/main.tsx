@@ -57,6 +57,9 @@ function Forms() {
         <Field label="Company" error="Enter the company name.">
           <Input autoComplete="organization" data-testid="invalid-input" />
         </Field>
+        <Field label="Phone">
+          <Input id="phone-own-id" type="tel" autoComplete="tel" />
+        </Field>
         <Field label="Search">
           <Input type="search" icon={<Search />} placeholder="Name or email" autoComplete="off" />
         </Field>

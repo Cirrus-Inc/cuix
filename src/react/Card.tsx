@@ -24,6 +24,8 @@ export type CardProps = {
   rail?: CardRail;
   /** Optional header: a `heading`-role title and an action slot on the right. */
   title?: ReactNode;
+  /** Heading level of `title`, to fit the page outline. Defaults to 3. */
+  headingLevel?: 2 | 3 | 4 | 5 | 6;
   action?: ReactNode;
   footer?: ReactNode;
   /** `none` when the children carry their own padding (a divided list). */
@@ -38,6 +40,7 @@ export function Card({
   elevation = 'flat',
   rail = 'none',
   title,
+  headingLevel = 3,
   action,
   footer,
   pad = 'default',
@@ -45,6 +48,7 @@ export function Card({
   children,
   ...rest
 }: CardProps) {
+  const Heading = `h${headingLevel}` as const;
   const padding = pad === 'default' ? 'p-card' : '';
   return (
     <Tag
@@ -58,7 +62,7 @@ export function Card({
     >
       {(title || action) && (
         <div className={cx('flex items-start gap-2 border-b border-border', padding || 'p-card')}>
-          {title && <h3 className="min-w-0 flex-1 text-subheading">{title}</h3>}
+          {title && <Heading className="min-w-0 flex-1 text-subheading">{title}</Heading>}
           {action && <div className="-m-2 ml-auto shrink-0">{action}</div>}
         </div>
       )}

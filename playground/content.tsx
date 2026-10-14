@@ -32,6 +32,9 @@ export function Content() {
         <Card title="Invoice #1042" action={<IconButton icon={<Pencil aria-hidden="true" />} aria-label="Edit invoice" />} footer={<Badge tone="success">Paid</Badge>} className="w-full sm:w-dialog-sm">
           <p className="text-body">Due 30 days after issue.</p>
         </Card>
+        <Card title="Plan summary" headingLevel={2} className="w-full sm:w-dialog-sm">
+          <p className="text-body">Team plan, billed monthly.</p>
+        </Card>
         <Card rail="warning" className="w-full sm:w-dialog-sm">
           <p className="text-body">Unanswered for 5 days.</p>
         </Card>

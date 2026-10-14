@@ -163,6 +163,28 @@ test('Field wires id, description, invalid state and required', async ({ page })
   await expect(page.getByRole('alert').filter({ hasText: 'Enter the company name.' })).toBeVisible();
 });
 
+test('Field label stays associated when the control has its own id', async ({ page }) => {
+  await open(page, 'day', 'default');
+  const phone = page.getByLabel('Phone');
+  await expect(phone).toHaveAttribute('id', 'phone-own-id');
+  await expect(page.locator('label', { hasText: 'Phone' })).toHaveAttribute('for', 'phone-own-id');
+  await page.locator('label', { hasText: 'Phone' }).click();
+  await expect(phone).toBeFocused();
+  const own = await new AxeBuilder({ page }).include('#phone-own-id').withRules(['label']).analyze();
+  expect(own.violations).toEqual([]);
+});
+
+test('native select takes its colour-scheme from the page theme, not the OS', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  const scheme = () => page.locator('select').first().evaluate((el) => getComputedStyle(el).colorScheme);
+  await open(page, 'day', 'default');
+  expect(await scheme()).toBe('light');
+  await page.evaluate(() => document.documentElement.removeAttribute('data-theme'));
+  expect(await scheme()).toBe('dark');
+  await page.emulateMedia({ colorScheme: 'light' });
+  expect(await scheme()).toBe('light');
+});
+
 test('switch toggles by click and keyboard; disabled switch does not', async ({ page }) => {
   await open(page, 'day', 'default');
   const sw = page.getByRole('switch', { name: 'Email notifications' });

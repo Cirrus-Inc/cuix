@@ -4,6 +4,9 @@ Every tag, newest first. Entries before the lumux import reference PRs of the pr
 
 ## [Unreleased]
 
+- docs(react): document that the native `Select` popup follows the page `color-scheme` in Chrome and the OS in Safari and mobile pickers, and test the scheme without `data-theme` (Cirrus-Inc/cuix#36)
+- feat(react): add `headingLevel` (2-6, default 3) to `Card` so its title fits the page heading outline (Cirrus-Inc/cuix#32)
+- fix(react): `Field` labels the control by its own `id` when it has one, so `<Field label="Email"><Input id="email" /></Field>` keeps its accessible name (Cirrus-Inc/cuix#26)
 - fix(react): a third nested `Dialog` logs a dev-only `console.error` instead of throwing, so production bundles never unmount the tree (Cirrus-Inc/cuix#20)
 - fix(react): `ToastProvider` renders persistent polite and assertive live regions and writes each toast into them, so success and info toasts are announced reliably; the visible toast no longer carries a live role (Cirrus-Inc/cuix#19)
 - fix(tokens): `theme.css` ships `@source "./react"`, so consumers no longer add a `node_modules` path to their CSS and overlays cannot render unstyled from a wrong path (Cirrus-Inc/cuix#21)
