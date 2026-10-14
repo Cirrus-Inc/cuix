@@ -28,6 +28,7 @@
     "./tokens.host.css": "./dist/tokens.host.css",
     "./theme.css": "./dist/theme.css",
     "./theme-init.js": "./dist/theme-init.js",
+    "./theme-init.sha256": "./dist/theme-init.sha256",
     "./theme": {
       "types": "./dist/theme/index.d.ts",
       "default": "./dist/theme/index.js"

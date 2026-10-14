@@ -38,40 +38,93 @@ Only an app that vendors `dist/react` somewhere else adds its own `@source` for 
 ```html
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#ffffff" />
-<!-- the contents of node_modules/lumux/dist/theme-init.js, inline, before any CSS -->
-<script>try{var t=localStorage.getItem("lumux-theme");if(["day","night","dawn","midnight","forest","ocean"].indexOf(t)>-1)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 ```
 
-Never `maximum-scale` or `user-scalable=no`. The inline script is what stops a stored
-dark theme from flashing light on load; `ThemeProvider` keeps `theme-color` in step after that.
+The pre-paint script `lumux/theme-init.js` must run inline, first in `<head>`, before any CSS. It
+is what stops a stored dark theme from flashing light on load; `ThemeProvider` keeps `theme-color`
+in step after that. Never `maximum-scale` or `user-scalable=no`.
+
+**Vite.** Inject the shipped file at build time, so it can never go stale:
+
+```ts
+// vite.config.ts
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { defineConfig } from "vite";
+
+const themeInit = () => ({
+  name: "lumux-theme-init",
+  transformIndexHtml: () => [{
+    tag: "script",
+    children: readFileSync(createRequire(import.meta.url).resolve("lumux/theme-init.js"), "utf8"),
+    injectTo: "head-prepend" as const,
+  }],
+});
+
+export default defineConfig({ plugins: [themeInit()] });
+```
+
+`head-prepend` makes it the first child of `<head>` in `vite build` output.
+
+**Other stacks.** Paste the contents of `node_modules/lumux/dist/theme-init.js` into an inline
+`<script>` at the top of `<head>`. The script hard-codes the theme list, so a theme added in a later
+tag is invisible to your copy until you re-paste it: re-paste on every upgrade.
+
+**CSP.** An inline script is blocked by a `script-src` without a hash or nonce. `lumux/theme-init.sha256`
+(`node_modules/lumux/dist/theme-init.sha256`) holds the ready-made token:
+
+```
+script-src 'self' 'sha256-<contents of theme-init.sha256 after the "sha256-" prefix>';
+```
+
+The hash covers the exact bytes of `theme-init.js`, including its single trailing newline (it equals
+`openssl dgst -sha256 -binary dist/theme-init.js | base64`). The Vite recipe emits those bytes
+unchanged. A hand-pasted copy must also match byte for byte, newline included, or the browser
+rejects it; with a nonce-based CSP, put the nonce on the tag instead.
 
 ## 4. React root
 
 ```tsx
-import { AppShell, IconProvider, ThemeProvider, ThemeSwitcher, THEME_NAMES } from "lumux/react";
+import {
+  AppShell, IconProvider, ThemeProvider, ThemeSwitcher, THEME_NAMES, ToastProvider, TooltipProvider,
+} from "lumux/react";
 
 createRoot(document.getElementById("root")!).render(
   <ThemeProvider legacy={{ key: "app-theme" }} /* optional: migrates an old key once */>
     <IconProvider>
-      <AppShell
-        header={<><Logo /><ThemeSwitcher themes={THEME_NAMES} className="ml-auto" /></>}
-        sidebar={<Nav />}
-      >
-        <Routes />
-      </AppShell>
+      <TooltipProvider>
+        <ToastProvider>
+          <AppShell
+            header={<><Logo /><ThemeSwitcher themes={THEME_NAMES} className="ml-auto" /></>}
+            sidebar={<Nav />}
+          >
+            <Routes />
+          </AppShell>
+        </ToastProvider>
+      </TooltipProvider>
     </IconProvider>
   </ThemeProvider>,
 );
 ```
 
-- `AppShell` gives you the skip link, the `<header>` / `<main id="main">` landmarks and safe
-  areas. Keep your own navigation inside it; lumux ships primitives, not shells.
-- `ThemeSwitcher` without `themes` offers the default pair plus System. Pass `THEME_NAMES` for all six.
-  An app that pins one theme sets `data-theme` on `<html>` and mounts no switcher.
-- Each route calls `useDocumentTitle("Contacts", "Acme")`.
+Mount all four providers, in this order (the playground does). `TooltipProvider` and
+`ToastProvider` are easy to forget, and the harness never shows it because the playground mounts them. Missing:
 
-Without React: `import { applyTheme, readTheme } from "lumux/theme"` does the same
-selection and persistence, framework-free.
+| Missing | Result |
+|---|---|
+| `TooltipProvider` | `Tooltip` throws on render: Radix "`Tooltip` must be used within `TooltipProvider`" |
+| `ToastProvider` | `useToast()` and `useToastLog()` throw: "must be used inside `<ToastProvider>`" |
+| `ThemeProvider` | `useTheme()` and `ThemeSwitcher` throw: "must be used inside `<ThemeProvider>`" |
+| `IconProvider` | icons lose the shared 16px / 1.75 stroke defaults |
+
+### New product checklist
+
+Decide before the first screen:
+
+- Which themes the product offers (all six via `THEME_NAMES`, or a subset in `ThemeSwitcher themes`).
+- A switcher, or one pinned theme: set `data-theme` on `<html>` and mount no switcher.
+- Gates installed (section 7) and run in CI.
+- An axe pass in every theme you offer in CI (section 8).
 
 ## 5. Build screens
 

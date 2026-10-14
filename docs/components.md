@@ -26,12 +26,18 @@ map. Keyboard behaviour that is the browser's own (Tab, Space on a native input)
 ```tsx
 <ThemeProvider legacy={/* optional */}>
   <IconProvider>
-    <AppShell header={…} sidebar={…}>{routes}</AppShell>
+    <TooltipProvider>
+      <ToastProvider>
+        <AppShell header={…} sidebar={…}>{routes}</AppShell>
+      </ToastProvider>
+    </TooltipProvider>
   </IconProvider>
 </ThemeProvider>
 ```
 
-Plus the inline `theme-init.js` in `<head>` (see docs/tokens.md).
+Without `TooltipProvider`, `Tooltip` throws on render (Radix needs it). Without `ToastProvider`,
+`useToast()` and `useToastLog()` throw. Plus the inline `theme-init.js` in `<head>`: see
+[getting-started.md](./getting-started.md) for the Vite recipe and the CSP hash.
 
 ## ThemeProvider · useTheme · ThemeSwitcher
 

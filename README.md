@@ -77,6 +77,12 @@ Every app that adopts lumux uses the same semantic tokens, mounts the same compo
 | Adoption | No product has migrated to lumux yet; HIVE, an internal Cirrus product, is the first consumer | ⏳ In progress |
 | `1.0.0` | API freeze | ⏳ Planned |
 
+## Consumers
+
+| Consumer | What it is | Constraint |
+|---|---|---|
+| HIVE | Internal Cirrus business platform (React 19, Vite, Tailwind 4) | Greenfield, so lumux from day one |
+
 Pre-release: expect breaking changes before `1.0.0`. Pin an exact tag.
 
 ## Quick start
@@ -92,7 +98,7 @@ npm i github:danieloceno/lumux#v0.3.0
 @import "lumux/theme.css";   /* also @source's the component classes; no node_modules path needed */
 ```
 
-Inline the pre-paint script in `<head>`, before any CSS, so a stored dark theme never flashes light:
+Inline the pre-paint script in `<head>`, before any CSS, so a stored dark theme never flashes light (a Vite plugin that injects the shipped file, and the CSP hash in `lumux/theme-init.sha256`, are in [`docs/getting-started.md`](./docs/getting-started.md)):
 
 ```html
 <script>try{var t=localStorage.getItem("lumux-theme");if(["day","night","dawn","midnight","forest","ocean"].indexOf(t)>-1)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>

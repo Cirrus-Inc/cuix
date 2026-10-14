@@ -29,7 +29,7 @@ What each token means, when to use it, and what never to do with it. The source 
 | Attribute | `data-theme` on `<html>`, one of six names (table below). Absent = follow the OS, live, through `prefers-color-scheme`, with the default pair (`day` / `night`). Any element can carry it to flip its subtree. |
 | Persistence | `localStorage["lumux-theme"]`, one of the six names. No key = system. |
 | Runtime | `import { applyTheme, readTheme, resolvedTheme, resolvedScheme, THEME_NAMES } from "lumux/theme"`. `applyTheme({ theme: "ocean" })` sets the attribute, persists the choice and updates `<meta name="theme-color">`. `{ theme: "system" }` clears both. `persist: false` applies without storing it. `resolvedScheme()` answers `light` / `dark` for anything that is not a token. |
-| Pre-paint | `theme-init.js` reads the key and sets the attribute before first paint. Without it, a stored dark theme flashes light on load. |
+| Pre-paint | `theme-init.js` reads the key and sets the attribute before first paint. Without it, a stored dark theme flashes light on load. `theme-init.sha256` is its CSP `script-src` hash ([getting-started.md](./getting-started.md)). |
 | Pinning | An app that offers only some themes lists them in `<ThemeSwitcher themes={…}>`; an app that must stay in one (an embed) sets `data-theme` and doesn't mount a switcher. The token files always carry all six. |
 | Embeds | `tokens.embed.css`: a `:host` block with 16 tokens that follows the host's `prefers-color-scheme` and never persists. |
 | Shadow roots | `tokens.host.css`: every token on `:host`, no base rules, so nothing leaks onto the host page. Put `data-theme` on the shadow host; without it the OS decides. Bring your own focus rule inside the shadow root (copy the one under Focus). |
