@@ -217,6 +217,15 @@ test('selected segment stays visible in forced colors', async ({ page }) => {
   const other = page.locator('label:has(> input[value="board"])');
   const bg = (l: typeof selected) => l.evaluate((el) => getComputedStyle(el).backgroundColor);
   expect(await bg(selected)).not.toBe(await bg(other));
+  const highlight = await page.evaluate(() => {
+    const probe = document.createElement('i');
+    probe.style.color = 'Highlight';
+    document.body.append(probe);
+    const c = getComputedStyle(probe).color;
+    probe.remove();
+    return c;
+  });
+  expect(await bg(selected)).toBe(highlight);
 });
 
 test('checkbox and radio draw their edges and marks with tokens, in forced colors too', async ({ page }) => {
@@ -251,6 +260,14 @@ test('checkbox and radio draw their edges and marks with tokens, in forced color
   await expect(mark(solo)).toBeHidden();
   await invalid.check();
   await expect(mark(invalid)).toBeVisible();
+
+  // Not in the playground: an invalid group and an indeterminate box.
+  await solo.evaluate((el) => el.closest('fieldset')!.setAttribute('aria-invalid', 'true'));
+  expect((await edge(solo)).color).toBe(await token('danger'));
+  const dash = (l: Locator) => l.locator('xpath=following-sibling::span[2]');
+  await expect(dash(disabled)).toBeHidden();
+  await disabled.evaluate((el) => ((el as HTMLInputElement).indeterminate = true));
+  await expect(dash(disabled)).toBeVisible();
 
   await page.emulateMedia({ forcedColors: 'active' });
   await open(page, 'day', 'default');

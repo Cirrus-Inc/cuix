@@ -6,6 +6,8 @@ Every tag, newest first. Entries before the lumux import reference PRs of the pr
 
 - fix(react): `Checkbox` and `RadioGroup` draw their box, circle and checked mark with tokens (`border-strong` edge, `danger` when invalid, `accent` / `accent-foreground` when checked, a dash for `indeterminate`) instead of the browser's `accent-color` rendering, and `check:contrast` derives control edges (`border-*`) at 3:1, so 1.4.11 is verified in all six themes (Cirrus-Inc/cuix#33)
 - fix(react): the `danger-outline` `Button` hover uses `danger-on-soft` on `danger-soft` (7.06:1 in `midnight`, was 6.69:1); `check:contrast` now derives the fg/bg pairs components render, per state, from their class strings and fails on any pair `PAIRS` does not list (Cirrus-Inc/cuix#22)
+- fix(tokens): `forced-selected` wins over `bg-*` / `text-*` in forced colors, so the selected `SegmentedControl` segment and `ThemeSwitcher` button are painted `Highlight` / `HighlightText` as documented (Chromium kept `bg-accent`)
+- chore(test): `E2E_PORT` moves the Playwright server off 5179, so a second worktree tests its own code
 - fix(tooling): `install-gates.sh` rejects a `--src` / `--ui` value that starts with `--`, so `--src --ui x` is a usage error
 - fix(react): a `Menu` item `id` with whitespace no longer breaks the disabled reason's `aria-describedby`; the reason's element id is built from the item index
 - chore(ci): workflow action SHA pin comments name the exact version (checkout and setup-node v4.4.0, upload-pages-artifact v3.0.1, deploy-pages v4.0.5)

@@ -183,8 +183,8 @@ const themeCss =
   (['top', 'right', 'bottom', 'left'] as const)
     .map((side) => utility(`safe-${side}`, { [`padding-${side}`]: `var(--lumux-safe-${side})` }))
     .join('') +
-  '\n/* A selected state drawn only with background disappears in forced colors,\n   where every background becomes Canvas. This paints it with the system pair. */\n' +
-  '@utility forced-selected {\n  @media (forced-colors: active) {\n    forced-color-adjust: none;\n    background-color: Highlight;\n    color: HighlightText;\n  }\n}\n';
+  '\n/* A selected state drawn only with background disappears in forced colors,\n   where every background becomes Canvas. This paints it with the system pair.\n   !important: Tailwind emits this before bg-* / text-*, which would win. */\n' +
+  '@utility forced-selected {\n  @media (forced-colors: active) {\n    forced-color-adjust: none;\n    background-color: Highlight !important;\n    color: HighlightText !important;\n  }\n}\n';
 
 // ── tokens.embed.css (embeds) ────────────────────────────────────────────────
 const EMBED_COLORS = [

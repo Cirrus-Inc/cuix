@@ -3,7 +3,9 @@
 // resting text or background it does not set; text with no background sits on
 // each surface. A control edge (`border-*`) sits on each surface at the non-text
 // minimum; `border` itself is decorative and has no requirement. check-contrast
-// fails on any pair PAIRS does not list.
+// fails on any pair PAIRS does not list. Literals joined with `+` are one string;
+// strings combined with cx(), text on a parent's background and fills nested in
+// fills (a knob on its track) are not derived: list those pairs by hand.
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { COLOR_TOKENS, NON_TEXT_MIN, SURFACES, TEXT_MIN, type ColorToken } from '../src/tokens/vocabulary.ts';
@@ -39,7 +41,8 @@ export function componentPairs(): (RenderedPair & { file: string })[] {
   return readdirSync(REACT)
     .filter((f) => f.endsWith('.tsx'))
     .flatMap((file) => {
-      const src = readFileSync(new URL(file, REACT), 'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
+      const src = readFileSync(new URL(file, REACT), 'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '')
+        .replace(/(['"])\s*\+\s*\1/g, ' ');
       return [...src.matchAll(/'([^'\n]*)'|"([^"\n]*)"|`([^`]*)`/g)].flatMap((m) =>
         pairsIn(m[1] ?? m[2] ?? m[3]).map((p) => ({ ...p, file })),
       );

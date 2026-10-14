@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { componentPairs, pairsIn } from '../scripts/component-pairs.ts';
 import { PAIRS, SURFACES } from '../src/tokens/vocabulary.ts';
 
-const listed = (fg: string, bg: string) => PAIRS.some((p) => p.fg === fg && p.bg === bg);
+const listed = (fg: string, bg: string, min = 0) => PAIRS.some((p) => p.fg === fg && p.bg === bg && p.min >= min);
 const show = (classes: string) => pairsIn(classes).map((p) => `${p.state}${p.fg}/${p.bg}`);
 
 test('a state keeps the resting text or background it does not set', () => {
@@ -40,8 +40,13 @@ test('checkbox and radio draw every edge and mark with listed pairs', () => {
   assert.ok(has('accent-foreground', 'accent'), 'checked mark');
   assert.ok(has('accent', 'surface'), 'radio dot');
   assert.ok(has('danger', 'surface', 'aria-invalid:'), 'invalid checkbox edge');
-  assert.ok(has('danger', 'surface', 'group-aria-invalid:'), 'invalid radio edge');
+  assert.ok(has('danger', 'surface', 'group-aria-invalid/radio:'), 'invalid radio edge');
   assert.ok(has('foreground-subtle', 'surface-raised', 'peer-disabled:'), 'disabled mark');
+});
+
+test('string literals joined with + are read as one class string', () => {
+  const field = componentPairs().filter((p) => p.file === 'Field.tsx');
+  assert.ok(field.some((p) => p.state === 'read-only:' && p.fg === 'foreground' && p.bg === 'surface-raised'));
 });
 
 test('a new hover background under existing text is caught when it is not a listed pair', () => {
@@ -52,6 +57,6 @@ test('a new hover background under existing text is caught when it is not a list
 test('every pair the components render is listed in PAIRS', () => {
   const rendered = componentPairs();
   assert.ok(rendered.some((p) => p.file === 'Button.tsx' && p.state === 'hover:' && p.bg === 'danger-soft'));
-  const unlisted = rendered.filter((p) => !listed(p.fg, p.bg)).map((p) => `${p.file} ${p.state}${p.fg}/${p.bg}`);
+  const unlisted = rendered.filter((p) => !listed(p.fg, p.bg, p.min)).map((p) => `${p.file} ${p.state}${p.fg}/${p.bg}`);
   assert.deepEqual(unlisted, []);
 });

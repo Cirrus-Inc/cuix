@@ -39,7 +39,7 @@ export function RadioGroup({
     <fieldset
       aria-describedby={describedBy(id, { hint, error })}
       aria-invalid={error ? true : undefined}
-      className={cx('group flex flex-col gap-1', className)}
+      className={cx('group/radio flex flex-col gap-1', className)}
     >
       <legend className="mb-1 text-body-sm font-medium text-foreground">
         {legend}
@@ -59,7 +59,7 @@ export function RadioGroup({
               disabled={o.disabled}
               required={required}
               onChange={() => onValueChange(o.value)}
-              className="peer size-5 cursor-pointer appearance-none rounded-pill border-2 border-border-strong bg-surface group-aria-invalid:border-danger disabled:cursor-not-allowed disabled:bg-surface-raised"
+              className="peer size-5 cursor-pointer appearance-none rounded-pill border-2 border-border-strong bg-surface group-aria-invalid/radio:border-danger disabled:cursor-not-allowed disabled:bg-surface-raised"
             />
             <span
               aria-hidden="true"
