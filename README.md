@@ -229,7 +229,7 @@ Imported from `lumux/react`. Each one documents the accessibility behaviour it g
 | Shell & theme | `AppShell`, `SkipLink`, `useDocumentTitle`, `ThemeProvider`, `useTheme`, `ThemeSwitcher`, `IconProvider` |
 | Actions | `Button`, `IconButton`, `LinkButton`, `ConfirmInline`, `Spinner` |
 | Forms | `Field`, `Input`, `Select`, `Textarea`, `Checkbox`, `RadioGroup`, `Switch`, `SegmentedControl` |
-| Overlays | `Dialog`, `Sheet`, `Drawer`, `Menu`, `Popover`, `Tooltip`, `TooltipProvider` (wrap the app once) |
+| Overlays | `Dialog`, `DialogTrigger`, `DialogClose`, `Sheet`, `SheetTrigger`, `SheetClose`, `Drawer`, `Menu`, `Popover`, `Tooltip`, `TooltipProvider` (wrap the app once) |
 | Content | `Card`, `Badge`, `EmptyState` |
 | Feedback | `ToastProvider`, `useToast`, `ToastLog`, `useToastLog` |
 
@@ -307,6 +307,7 @@ lumux/
 ├── scripts/
 │   ├── build-tokens.ts       → dist/
 │   ├── check-contrast.ts     six themes × every pairing, exit 1 on failure
+│   ├── component-pairs.ts    fg/bg pairs the components render, read by check-contrast
 │   ├── check-*.{mjs,sh}      the three gates
 │   ├── install-gates.sh      copies the gates and a frozen baseline into a consumer
 │   └── release.sh            builds dist/, commits it, tags vX.Y.Z
