@@ -1,6 +1,6 @@
 # Changelog
 
-Every tag, newest first. Entries before the lumux import reference PRs of the private `Cirrus-Inc/cuix` repository; `v0.1.0` and `v0.2.0` were tagged there only and are not installable from lumux. Install a tag with `npm i github:danieloceno/lumux#vX.Y.Z`. Breaking changes are token renames and removals and component API breaks; removed tokens are kept as hand-written deprecated aliases for one minor first. GitHub Releases carry the same notes, generated from merged PR titles. Maintainers update this file when cutting a release.
+Every tag, newest first. Entries before the lumux import reference PRs of the private `Cirrus-Inc/cuix` repository; `v0.1.0` and `v0.2.0` were tagged there only and are not installable from lumux. Install a tag with `npm i github:danieloceno/lumux#vX.Y.Z`. Breaking changes are token renames and removals and component API breaks; removed tokens are kept as hand-written deprecated aliases for one minor first. GitHub Releases carry the same notes, generated from merged PR titles. Every PR adds its bullet under `[Unreleased]`; `scripts/release.sh` folds them into the new tag's section.
 
 ## [Unreleased]
 

@@ -24,7 +24,7 @@ first: `node:alpine` ships without it (`apk add --no-cache git`).
 
 **Monorepo.** `npm i -w <workspace> github:...#tag` can nest lumux under the workspace's
 `node_modules` instead of hoisting it (seen with npm 11.18.0). Every root-relative path then breaks:
-`@source`, `install-gates.sh --src`, tests. Install from the repo root, or run `ls node_modules/lumux`
+a hand-written `@source`, `install-gates.sh --src`, tests. Install from the repo root, or run `ls node_modules/lumux`
 after the install and check it landed where those paths expect.
 
 ## 2. CSS

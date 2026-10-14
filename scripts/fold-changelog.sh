@@ -15,6 +15,7 @@ v="${1:-}"; date="${2:-}"; file="${3:-CHANGELOG.md}"
 [[ $v =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && $date =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || die "usage: fold-changelog.sh X.Y.Z YYYY-MM-DD [file]"
 [[ -f $file ]] || die "$file not found"
 [[ $(grep -c '^## \[Unreleased\]$' "$file") == 1 ]] || die "$file needs exactly one '## [Unreleased]' heading"
+grep -q '^\[Unreleased\]: .*/compare/v[0-9]*\.[0-9]*\.[0-9]*\.\.\.HEAD$' "$file" || die "$file has no '[Unreleased]: .../compare/vX.Y.Z...HEAD' link"
 ! grep -q "^## \[$v\]" "$file" || die "$file already has a [$v] section"
 
 awk '/^## \[Unreleased\]$/ {u=1; next} u && /^## / {exit} u && /^- / {n++} END {exit !n}' "$file" \

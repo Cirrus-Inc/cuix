@@ -64,3 +64,11 @@ test('fold: a section that already exists, or a bad version, fails', () => {
   assert.equal(fold(LOG, '0.4.0').code, 1);
   assert.equal(fold(LOG, 'v0.5').code, 1);
 });
+
+test('fold: a missing Unreleased compare link fails and leaves the file alone', () => {
+  const nolink = LOG.replace(/^\[Unreleased\]: .*\n/m, '');
+  const r = fold(nolink);
+  assert.equal(r.code, 1);
+  assert.match(r.err, /compare/);
+  assert.equal(r.out, nolink);
+});
