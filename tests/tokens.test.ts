@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { COLOR_TOKENS } from '../src/tokens/vocabulary.ts';
@@ -74,6 +75,22 @@ test('theme-init applies a stored theme and ignores anything else', () => {
   for (const theme of THEME_NAMES) assert.equal(run(theme), theme);
   assert.equal(run('violet'), undefined);
   assert.equal(run(null), undefined);
+});
+
+test('theme-init.sha256 is the CSP token of theme-init.js bytes', () => {
+  const expected = `sha256-${createHash('sha256').update(dist('theme-init.js')).digest('base64')}`;
+  assert.equal(dist('theme-init.sha256'), `${expected}\n`);
+});
+
+test('theme.css declares @source for the shipped components and a nested consumer needs none', () => {
+  assert.match(dist('theme.css'), /^@source "\.\/react";$/m);
+  const out = execFileSync(
+    'npx',
+    ['@tailwindcss/cli', '-i', 'tests/fixtures/nested/src/styles/app.css'],
+    { cwd: new URL('..', import.meta.url), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
+  );
+  assert.match(out, /\.bg-overlay-scrim \{[^}]*background-color: var\(--lumux-overlay-scrim\)/);
+  assert.match(out, /\.sm\\:max-w-dialog-md \{[^}]*max-width: var\(--lumux-dialog-md\)/);
 });
 
 test('Tailwind v4 generates the lumux utilities from theme.css', () => {

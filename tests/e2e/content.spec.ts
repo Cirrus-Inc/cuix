@@ -43,19 +43,33 @@ test('confirm inline: focus lands on Keep, Escape backs out, Enter on Delete del
   await expect(page.getByTestId('deleted')).toBeVisible();
 });
 
+test('toasts: both live regions exist and are empty before any toast, and no visible toast is a live region', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('[role="status"][aria-live="polite"]')).toHaveText('');
+  await expect(page.locator('[role="alert"][aria-live="assertive"]')).toHaveText('');
+  await page.getByTestId('toast-success').click();
+  await expect(page.getByRole('region', { name: 'Notifications' }).getByText('Entry saved.')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Notifications' }).locator('[role="status"], [role="alert"], [aria-live]')).toHaveCount(0);
+});
+
 for (const theme of ['day', 'night'] as const) {
   test(`toasts: roles, stickiness, merge, cap, dismiss all, log (${theme})`, async ({ page }) => {
     await open(page, theme);
     await page.getByTestId('toast-error').click();
-    const error = page.getByRole('alert').filter({ hasText: 'Could not save the entry.' });
+    const polite = page.locator('[role="status"][aria-live="polite"]');
+    const assertive = page.locator('[role="alert"][aria-live="assertive"]');
+    const error = page.getByRole('region', { name: 'Notifications' }).getByText('Could not save the entry.');
     await expect(error).toBeVisible();
+    await expect(assertive).toHaveText('Could not save the entry.');
     await page.getByTestId('toast-error').click();
-    await expect(error).toContainText('×2');
-    await expect(page.getByRole('alert').filter({ hasText: 'Could not save' })).toHaveCount(1);
+    await expect(page.getByRole('region', { name: 'Notifications' }).getByText('×2')).toBeVisible();
+    await expect(assertive).toHaveText('Could not save the entry. ×2');
+    await expect(page.getByRole('region', { name: 'Notifications' }).getByText('Could not save')).toHaveCount(1);
 
     await page.getByTestId('toast-success').click();
-    const ok = page.getByRole('status').filter({ hasText: 'Entry saved.' });
+    const ok = page.getByRole('region', { name: 'Notifications' }).getByText('Entry saved.');
     await expect(ok).toBeVisible();
+    await expect(polite).toHaveText('Entry saved.');
     await expect(page.getByRole('button', { name: 'Dismiss all' })).toBeVisible();
     await axe(page);
     await expect(ok).toBeHidden({ timeout: 6000 });
@@ -66,12 +80,13 @@ for (const theme of ['day', 'night'] as const) {
     await page.getByTestId('toast-undo').click();
     await page.getByTestId('toast-undo').click();
     // 1 error + 1 warning + 3 undo toasts = 5 → the oldest (the error) is pushed out.
-    await expect(page.getByRole('region', { name: 'Notifications' }).locator('[role="alert"], [role="status"]')).toHaveCount(4);
+    await expect(page.getByRole('region', { name: 'Notifications' }).locator('.border-l-4')).toHaveCount(4);
     await expect(error).toBeHidden();
     await page.getByRole('button', { name: 'Undo' }).first().click();
-    await expect(page.getByRole('status').filter({ hasText: 'Entry restored.' })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Notifications' }).getByText('Entry restored.')).toBeVisible();
+    await expect(polite).toHaveText('Entry restored.');
     await page.getByRole('button', { name: 'Dismiss all' }).click();
-    await expect(page.getByRole('region', { name: 'Notifications' }).locator('[role="alert"], [role="status"]')).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'Notifications' }).locator('.border-l-4')).toHaveCount(0);
 
     const log = page.getByTestId('toast-log').getByRole('listitem');
     await expect(log.first()).toContainText('Entry restored.');
@@ -82,7 +97,7 @@ for (const theme of ['day', 'night'] as const) {
 test('toasts: a pointer in the region holds the timer, leaving re-arms it', async ({ page }) => {
   await open(page);
   await page.getByTestId('toast-success').click();
-  const ok = page.getByRole('status').filter({ hasText: 'Entry saved.' });
+  const ok = page.getByRole('region', { name: 'Notifications' }).getByText('Entry saved.');
   await ok.hover();
   await page.waitForTimeout(5000);
   await expect(ok).toBeVisible();
