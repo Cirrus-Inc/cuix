@@ -65,6 +65,10 @@
 
 ## Why lumux
 
+lumux is Cirrus's design system: themes, tokens and React components where accessibility is enforced by the build, not by eye. Six WCAG 2.2 AAA themes, 44px touch targets, every color pair checked on each commit. HIVE's screens are built on it.
+
+**NOTE:** Same code as Cirrus-Inc/cuix. It lives temporarily in a public MIT repo under Danny's GitHub because cuix is private and Danny is not an org owner yet. Once he is, cuix goes public and lumux is deleted.
+
 Accessibility is usually a review step. In lumux it is a property of the system. A colour pair that fails contrast breaks the build. A control smaller than 44px cannot be built. A dark theme is authored, not inverted.
 
 Every app that adopts lumux uses the same semantic tokens, mounts the same components and runs the same gates. Changing the palette means changing one file, and moving between apps means relearning nothing.
