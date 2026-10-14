@@ -12,12 +12,16 @@ if (typeof document !== 'undefined') {
   const FOCUSABLE = 'button,a[href],input,select,textarea,summary,[role="button"],[tabindex]';
   const record = (e: Event) => {
     const t = e.target instanceof Element ? e.target : null;
-    pointerTarget = (t?.closest<HTMLElement>(FOCUSABLE) ?? (t as HTMLElement | null)) || null;
+    pointerTarget = t?.closest<HTMLElement>(FOCUSABLE) ?? null;
   };
+  const clear = () => (pointerTarget = null);
   document.addEventListener('pointerdown', record, true);
+  // A pointerdown with no click (touch scroll, drag) must not leak into a later keyboard open.
+  document.addEventListener('pointercancel', clear, true);
+  document.addEventListener('keydown', clear, true);
   document.addEventListener('click', (e) => {
     record(e);
-    setTimeout(() => (pointerTarget = null), 0);
+    setTimeout(clear, 0);
   }, true);
 }
 
