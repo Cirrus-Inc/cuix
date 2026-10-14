@@ -4,6 +4,7 @@ Every tag, newest first. Entries before the lumux import reference PRs of the pr
 
 ## [Unreleased]
 
+- fix(react): `Checkbox` and `RadioGroup` draw their box, circle and checked mark with tokens (`border-strong` edge, `danger` when invalid, `accent` / `accent-foreground` when checked, a dash for `indeterminate`) instead of the browser's `accent-color` rendering, and `check:contrast` derives control edges (`border-*`) at 3:1, so 1.4.11 is verified in all six themes (Cirrus-Inc/cuix#33)
 - fix(react): the `danger-outline` `Button` hover uses `danger-on-soft` on `danger-soft` (7.06:1 in `midnight`, was 6.69:1); `check:contrast` now derives the fg/bg pairs components render, per state, from their class strings and fails on any pair `PAIRS` does not list (Cirrus-Inc/cuix#22)
 - docs(react): document that the native `Select` popup follows the page `color-scheme` in Chrome and the OS in Safari and mobile pickers, and test the scheme without `data-theme` (Cirrus-Inc/cuix#36)
 - feat(react): add `headingLevel` (2-6, default 3) to `Card` so its title fits the page heading outline (Cirrus-Inc/cuix#32)

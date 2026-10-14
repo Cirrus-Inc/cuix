@@ -1,5 +1,5 @@
 import { AxeBuilder } from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 import { THEME_NAMES } from '../../src/tokens/themes.ts';
 
@@ -217,4 +217,52 @@ test('selected segment stays visible in forced colors', async ({ page }) => {
   const other = page.locator('label:has(> input[value="board"])');
   const bg = (l: typeof selected) => l.evaluate((el) => getComputedStyle(el).backgroundColor);
   expect(await bg(selected)).not.toBe(await bg(other));
+});
+
+test('checkbox and radio draw their edges and marks with tokens, in forced colors too', async ({ page }) => {
+  const edge = (l: Locator) =>
+    l.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { width: s.borderTopWidth, style: s.borderTopStyle, color: s.borderTopColor, bg: s.backgroundColor };
+    });
+  const mark = (l: Locator) => l.locator('xpath=following-sibling::span[1]');
+  const token = (name: string) =>
+    page.evaluate((n) => {
+      const probe = document.createElement('i');
+      probe.style.color = `var(--lumux-${n})`;
+      document.body.append(probe);
+      const c = getComputedStyle(probe).color;
+      probe.remove();
+      return c;
+    }, name);
+
+  await open(page, 'day', 'default');
+  const checked = page.getByRole('checkbox', { name: 'Send me product updates' });
+  const invalid = page.getByRole('checkbox', { name: 'Accept the terms' });
+  const disabled = page.getByRole('checkbox', { name: 'Disabled option' });
+  const team = page.getByRole('radio', { name: 'Team' });
+  const solo = page.getByRole('radio', { name: 'Solo' });
+  expect((await edge(solo)).color).toBe(await token('border-strong'));
+  expect((await edge(invalid)).color).toBe(await token('danger'));
+  expect((await edge(disabled)).bg).toBe(await token('surface-raised'));
+  await expect(mark(checked)).toBeVisible();
+  await expect(mark(team)).toBeVisible();
+  await expect(mark(invalid)).toBeHidden();
+  await expect(mark(solo)).toBeHidden();
+  await invalid.check();
+  await expect(mark(invalid)).toBeVisible();
+
+  await page.emulateMedia({ forcedColors: 'active' });
+  await open(page, 'day', 'default');
+  for (const l of [checked, invalid, disabled, team, solo]) {
+    const e = await edge(l);
+    expect(e.style).toBe('solid');
+    expect(e.width).toBe('2px');
+    expect(e.color).not.toBe(e.bg);
+  }
+  await expect(mark(checked).locator('svg')).toBeVisible();
+  await expect(mark(invalid)).toBeHidden();
+  const dot = mark(team).locator('span');
+  const ground = await mark(team).evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(await dot.evaluate((el) => getComputedStyle(el).backgroundColor)).not.toBe(ground);
 });

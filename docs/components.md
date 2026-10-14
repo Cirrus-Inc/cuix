@@ -163,12 +163,12 @@ the error and hint that `aria-describedby` points at.
 
 | Component | Use it for | Notes |
 |---|---|---|
-| `Checkbox` | A choice that is submitted with a form | A native input inside its label; the label row is the 44px target. Takes `hint` / `error`. |
+| `Checkbox` | A choice that is submitted with a form | A native input inside its label; the label row is the 44px target. Takes `hint` / `error`. The box is drawn with tokens, not by the browser: a 2px `border-strong` edge (`danger` when invalid), filled `accent` with an `accent-foreground` check when checked, a dash when the input is `indeterminate` (set it through a `ref`). |
 | `Switch` | One setting that applies immediately | `role="switch"`, with a visible label that is also its name, so the whole row is the target. `disabled` uses `aria-disabled`, so it stays focusable. The off knob is `foreground-muted` (10:1). |
-| `RadioGroup` | One of several, each needing a full label | Native radios in a `fieldset` / `legend`: arrow keys, one tab stop. Takes `hint`, `error` and `required`. |
+| `RadioGroup` | One of several, each needing a full label | Native radios in a `fieldset` / `legend`: arrow keys, one tab stop. Takes `hint`, `error` and `required`. The circle is drawn with tokens: a 2px `border-strong` edge (`danger` when the group has an error), an `accent` ring and dot when checked. |
 | `SegmentedControl` | One of 2–5 short options, all visible (view modes, filters) | Native radios, visually hidden; the label draws the segment and the focus ring. The selected segment is filled `accent` (7:1 against the track); a tint would fail 1.4.11. In forced colors it is painted `Highlight`. |
 
-Anatomy. `Checkbox`: `label` row (the 44px target) → `input[type=checkbox]` → text → hint
+Anatomy. `Checkbox`: `label` row (the 44px target) → `input[type=checkbox]` with its drawn mark → text → hint
 → error. `Switch`: `label` row → `button[role=switch][aria-checked]` with the track and knob →
 text. `RadioGroup`: `fieldset` → `legend` (with the required word) → one `label` row per option
 → hint → error. `SegmentedControl`: `div[role=radiogroup]` → one `label` per segment wrapping a
