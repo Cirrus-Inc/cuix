@@ -65,6 +65,7 @@
     "playground": "vite",
     "e2e": "playwright test",
     "check:all": "npm run check && npm run e2e",
+    "smoke:consumer": "bash scripts/consumer-smoke.sh",
     "release": "bash scripts/release.sh",
     "demo": "vite build"
   },

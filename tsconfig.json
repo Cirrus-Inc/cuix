@@ -25,5 +25,8 @@
     "tests",
     "playground",
     "*.config.ts"
+  ],
+  "exclude": [
+    "tests/consumer"
   ]
 }
