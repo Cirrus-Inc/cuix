@@ -167,7 +167,9 @@ const themeCss =
   HEADER +
   '/* Import after tailwindcss and tokens.css. `inline` makes each utility carry\n' +
   '   var(--lumux-*) itself, so a subtree with its own data-theme or data-density\n' +
-  '   resolves its own values. */\n' +
+  '   resolves its own values. The @source is relative to this file, so Tailwind sees the\n' +
+  '   component classes in ./react wherever the package is installed. */\n' +
+  '@source "./react";\n' +
   block('@theme inline', themeDecls) +
   '\n' +
   Object.keys(Z)

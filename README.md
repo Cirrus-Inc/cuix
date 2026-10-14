@@ -89,8 +89,7 @@ npm i github:danieloceno/lumux#v0.3.0
 /* app.css */
 @import "tailwindcss";
 @import "lumux/tokens.css";
-@import "lumux/theme.css";
-@source "../node_modules/lumux/dist/react";
+@import "lumux/theme.css";   /* also @source's the component classes; no node_modules path needed */
 ```
 
 Inline the pre-paint script in `<head>`, before any CSS, so a stored dark theme never flashes light:

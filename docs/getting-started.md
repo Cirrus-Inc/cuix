@@ -27,10 +27,11 @@ Pin a tag, never a branch. Upgrades are deliberate: bump the tag, re-run `instal
 @import "lumux/tokens.css";   /* custom properties: six themes, type, spacing, focus, motion */
 @import "lumux/theme.css";    /* Tailwind v4 @theme: bg-surface, text-body, rounded-control, min-h-target … */
 @import "@fontsource-variable/inter";
-@source "../node_modules/lumux/dist/react"; /* so Tailwind sees the classes the components use */
 ```
 
-Order matters: `tokens.css` before `theme.css`.
+Order matters: `tokens.css` before `theme.css`. `theme.css` also declares `@source "./react"`
+(relative to itself), so Tailwind finds the component classes wherever the package is installed.
+Only an app that vendors `dist/react` somewhere else adds its own `@source` for that copy.
 
 ## 3. `<head>`
 

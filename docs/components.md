@@ -2,9 +2,9 @@
 
 `import { … } from "lumux/react"`. React 19. Peers: `react`, `react-dom`,
 `lucide-react`, `@radix-ui/react-slot`, `@radix-ui/react-dialog`, `@radix-ui/react-tooltip`,
-`@radix-ui/react-dropdown-menu`, `@radix-ui/react-popover` (the barrel imports all of them). Consumers add
-`@source "../node_modules/lumux/dist/react";` to their CSS, so Tailwind sees the
-classes the components use.
+`@radix-ui/react-dropdown-menu`, `@radix-ui/react-popover` (the barrel imports all of them).
+`theme.css` carries `@source "./react"`, so Tailwind sees the classes the components use with no
+path in your CSS. Only an app that copies `dist/react` elsewhere adds its own `@source`.
 
 No product has migrated to these components yet; HIVE, an internal Cirrus product, is the first consumer.
 

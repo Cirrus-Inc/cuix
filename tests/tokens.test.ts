@@ -76,6 +76,17 @@ test('theme-init applies a stored theme and ignores anything else', () => {
   assert.equal(run(null), undefined);
 });
 
+test('theme.css declares @source for the shipped components and a nested consumer needs none', () => {
+  assert.match(dist('theme.css'), /^@source "\.\/react";$/m);
+  const out = execFileSync(
+    'npx',
+    ['@tailwindcss/cli', '-i', 'tests/fixtures/nested/src/styles/app.css'],
+    { cwd: new URL('..', import.meta.url), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
+  );
+  assert.match(out, /\.bg-overlay-scrim \{[^}]*background-color: var\(--lumux-overlay-scrim\)/);
+  assert.match(out, /\.sm\\:max-w-dialog-md \{[^}]*max-width: var\(--lumux-dialog-md\)/);
+});
+
 test('Tailwind v4 generates the lumux utilities from theme.css', () => {
   const out = execFileSync(
     'npx',
