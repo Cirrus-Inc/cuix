@@ -2,9 +2,9 @@
 
 `import { … } from "lumux/react"`. React 19. Peers: `react`, `react-dom`,
 `lucide-react`, `@radix-ui/react-slot`, `@radix-ui/react-dialog`, `@radix-ui/react-tooltip`,
-`@radix-ui/react-dropdown-menu`, `@radix-ui/react-popover` (the barrel imports all of them). Consumers add
-`@source "../node_modules/lumux/dist/react";` to their CSS, so Tailwind sees the
-classes the components use.
+`@radix-ui/react-dropdown-menu`, `@radix-ui/react-popover` (the barrel imports all of them).
+`theme.css` carries `@source "./react"`, so Tailwind sees the classes the components use with no
+path in your CSS. Only an app that copies `dist/react` elsewhere adds its own `@source`.
 
 No product has migrated to these components yet; HIVE, an internal Cirrus product, is the first consumer.
 
@@ -26,12 +26,18 @@ map. Keyboard behaviour that is the browser's own (Tab, Space on a native input)
 ```tsx
 <ThemeProvider legacy={/* optional */}>
   <IconProvider>
-    <AppShell header={…} sidebar={…}>{routes}</AppShell>
+    <TooltipProvider>
+      <ToastProvider>
+        <AppShell header={…} sidebar={…}>{routes}</AppShell>
+      </ToastProvider>
+    </TooltipProvider>
   </IconProvider>
 </ThemeProvider>
 ```
 
-Plus the inline `theme-init.js` in `<head>` (see docs/tokens.md).
+Without `TooltipProvider`, `Tooltip` throws on render (Radix needs it). Without `ToastProvider`,
+`useToast()` and `useToastLog()` throw. Plus the inline `theme-init.js` in `<head>`: see
+[getting-started.md](./getting-started.md) for the Vite recipe and the CSP hash.
 
 ## ThemeProvider · useTheme · ThemeSwitcher
 
@@ -307,11 +313,14 @@ toast('Could not save the entry.', { type: 'error' });
 toast('Entry deleted.', { action: { label: 'Undo', run: restore } });
 ```
 
-- `error` and `warning` are `role="alert"` and **never auto-dismiss** (2.2.3). `info` and
-  `success` are `role="status"` and go after 4 s, or 8 s when there is an action. A merge
+- `error` and `warning` are announced assertively and **never auto-dismiss** (2.2.3). `info` and
+  `success` are announced politely and go after 4 s, or 8 s when there is an action. A merge
   restarts the clock. Nothing closes while the pointer or focus is in the toast region.
-- The same (message, type) arriving again merges into one toast with ×N, inside the atomic
-  live region, so it is re-announced. A toast with an action never merges.
+- The same (message, type) arriving again merges into one toast with ×N and is re-announced
+  (`Saved ×2`). A toast with an action never merges.
+- Announcements go through two persistent, visually hidden live regions that `ToastProvider`
+  renders from mount (`role="status"` polite, `role="alert"` assertive). Their text is cleared and
+  re-set per toast so a repeat is read again. The visible toasts carry no live role.
 - At most 4 on screen; a fifth pushes out the oldest. "Dismiss all" appears from 2 up.
 - Every toast is also kept in a log (last 50), so it is never the only record of an outcome:
   `useToastLog()` or the ready-made `<ToastLog />` for a settings or help page.
@@ -319,9 +328,9 @@ toast('Entry deleted.', { action: { label: 'Undo', run: restore } });
 - One sentence, ≤90 characters. `labels` translates Dismiss / Dismiss all / the region name.
 
 Anatomy: `section[aria-label=region]` → optional Dismiss all `Button` → one `div` per toast
-with its rail → type icon (`aria-hidden`) → `span[role=alert|status][aria-atomic]` holding the
-message and the ×N count → optional action `Button` → Dismiss `IconButton`. `ToastLog` is an
-`ol` of `li`.
+with its rail → type icon (`aria-hidden`) → `span` holding the message and the ×N count →
+optional action `Button` → Dismiss `IconButton`. After the section, two `sr-only` live regions
+(`role=status` polite, `role=alert` assertive). `ToastLog` is an `ol` of `li`.
 
 | Key | Does |
 |---|---|

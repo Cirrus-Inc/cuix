@@ -3,7 +3,9 @@
 //   dist/theme.css         Tailwind v4 @theme mapping onto those properties
 //   dist/tokens.embed.css  the 16-token :host subset for embeds
 //   dist/theme-init.js     inline pre-paint script: sets data-theme before first paint
+//   dist/theme-init.sha256 the CSP script-src token for that script's exact bytes
 
+import { createHash } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { COLOR_TOKENS, type ColorToken } from '../src/tokens/vocabulary.ts';
@@ -167,7 +169,9 @@ const themeCss =
   HEADER +
   '/* Import after tailwindcss and tokens.css. `inline` makes each utility carry\n' +
   '   var(--lumux-*) itself, so a subtree with its own data-theme or data-density\n' +
-  '   resolves its own values. */\n' +
+  '   resolves its own values. The @source is relative to this file, so Tailwind sees the\n' +
+  '   component classes in ./react wherever the package is installed. */\n' +
+  '@source "./react";\n' +
   block('@theme inline', themeDecls) +
   '\n' +
   Object.keys(Z)
@@ -248,6 +252,8 @@ const hostCss =
 // ── theme-init.js ─────────────────────────────────────────────────────────────
 const initJs = `try{var t=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});if(${JSON.stringify(THEME_NAMES)}.indexOf(t)>-1)document.documentElement.setAttribute("data-theme",t)}catch(e){}\n`;
 
+const initHash = `sha256-${createHash('sha256').update(initJs).digest('base64')}\n`;
+
 mkdirSync(OUT, { recursive: true });
 const files: Record<string, string> = {
   'tokens.css': tokensCss,
@@ -255,6 +261,7 @@ const files: Record<string, string> = {
   'tokens.embed.css': embedCss,
   'tokens.host.css': hostCss,
   'theme-init.js': initJs,
+  'theme-init.sha256': initHash,
 };
 for (const [name, body] of Object.entries(files)) {
   writeFileSync(new URL(name, OUT), body);

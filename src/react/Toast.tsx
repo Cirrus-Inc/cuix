@@ -26,6 +26,8 @@ export type ToastItem = {
   count: number;
   action?: ToastAction;
   at: Date;
+  /** Press order; a merge takes the newer press's number, so the bump is announced. */
+  seq: number;
   /** The press whose timer may close it; a merge hands the lease to the newer press. */
   lease?: number;
 };
@@ -44,6 +46,7 @@ const MAX_LOG = 50;
 const DURATION = { plain: 4000, withAction: 8000 };
 
 let nextId = 0;
+let nextSeq = 0;
 
 // Errors and warnings are assertive and sticky; info and success are polite
 // and time out. The outcome is also kept in the log, so a toast is never the
@@ -61,6 +64,7 @@ const DEFAULT_LABELS: ToastLabels = { dismiss: 'Dismiss', dismissAll: 'Dismiss a
 export function ToastProvider({ children, labels = DEFAULT_LABELS }: { children: ReactNode; labels?: ToastLabels }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [log, setLog] = useState<ToastItem[]>([]);
+  const [live, setLive] = useState({ polite: '', assertive: '' });
 
   const dismiss = useCallback((id: number) => setToasts((prev) => prev.filter((x) => x.id !== id)), []);
   const dismissAll = useCallback(() => setToasts([]), []);
@@ -127,13 +131,41 @@ export function ToastProvider({ children, labels = DEFAULT_LABELS }: { children:
     };
   }, [schedule]);
 
+  // The live regions exist from mount and only their text changes, which is
+  // what screen readers announce reliably. Clearing first re-announces a repeat.
+  const announced = useRef(-1);
+  const announceTimers = useRef(new Set<ReturnType<typeof setTimeout>>());
+  useEffect(() => {
+    const fresh = toasts.filter((x) => x.seq > announced.current).sort((a, b) => a.seq - b.seq);
+    if (!fresh.length) return;
+    announced.current = fresh[fresh.length - 1].seq;
+    for (const kind of ['polite', 'assertive'] as const) {
+      const last = fresh.filter((x) => STYLE[x.type].assertive === (kind === 'assertive')).pop();
+      if (!last) continue;
+      const text = last.count > 1 ? `${last.message} ×${last.count}` : last.message;
+      setLive((prev) => ({ ...prev, [kind]: '' }));
+      const handle = setTimeout(() => {
+        announceTimers.current.delete(handle);
+        setLive((prev) => ({ ...prev, [kind]: text }));
+      }, 50);
+      announceTimers.current.add(handle);
+    }
+  }, [toasts]);
+  useEffect(() => {
+    const pending = announceTimers.current;
+    return () => {
+      pending.forEach(clearTimeout);
+      pending.clear();
+    };
+  }, []);
+
   const toast = useCallback(
     (message: string, { type = 'info', action }: ToastOptions = {}) => {
       // Minted outside the updater: StrictMode runs updaters twice.
       const id = nextId++;
       const transient = !STYLE[type].assertive;
       const lease = transient ? id : undefined;
-      const item: ToastItem = { id, message, type, count: 1, action, at: new Date(), lease };
+      const item: ToastItem = { id, message, type, count: 1, action, at: new Date(), seq: nextSeq++, lease };
       setLog((prev) => [item, ...prev].slice(0, MAX_LOG));
       setToasts((prev) => {
         // Exact (message, type) merges into ×N. A toast with an action never
@@ -142,7 +174,7 @@ export function ToastProvider({ children, labels = DEFAULT_LABELS }: { children:
         if (at !== -1) {
           const next = [...prev];
           // The bump re-announces it, so it gets a full duration from now.
-          next[at] = { ...next[at], count: next[at].count + 1, lease };
+          next[at] = { ...next[at], count: next[at].count + 1, seq: item.seq, lease };
           return next;
         }
         return [...prev, item].slice(-MAX_TOASTS);
@@ -186,10 +218,7 @@ export function ToastProvider({ children, labels = DEFAULT_LABELS }: { children:
                   )}
                 >
                   <Icon aria-hidden="true" className={cx('mt-1 shrink-0', s.accent)} />
-                  {/* The live region is the sentence alone, ×N included (a bump
-                      re-announces it); the buttons stay out so Undo and Dismiss
-                      are not read with every message. */}
-                  <span role={s.assertive ? 'alert' : 'status'} aria-atomic="true" className="flex-1 self-center">
+                  <span className="flex-1 self-center">
                     {item.message}
                     {item.count > 1 && <span className="ml-1 tabular-nums text-foreground-muted">×{item.count}</span>}
                   </span>
@@ -216,6 +245,12 @@ export function ToastProvider({ children, labels = DEFAULT_LABELS }: { children:
             })}
           </div>
         </section>
+        <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+          {live.polite}
+        </div>
+        <div role="alert" aria-live="assertive" aria-atomic="true" className="sr-only">
+          {live.assertive}
+        </div>
       </ToastLogContext.Provider>
     </ToastContext.Provider>
   );

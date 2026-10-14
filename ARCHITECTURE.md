@@ -179,7 +179,7 @@ lucide-react 1.x, named imports, stroke 1.75, sizes 16 (inline, default) / 20 (c
 | D. Monorepo workspace | only if every consumer repo merges | instant | migrating every repo + CI | rejected; not a design-system problem |
 | **E. Git-tag install, `dist/` committed** (`npm i github:danieloceno/lumux#v0.3.0`) | yes | versioned by tag; lockfile pins the commit | zero registry setup; a `prepare`-free build step that commits `dist/` on release | **Decided (D2)** |
 
-Package name `lumux`, subpath exports: `/tokens.css`, `/tokens.embed.css`, `/theme.css` (Tailwind v4 `@theme`), `/theme-init.js` (inline pre-paint script), `/theme` (`applyTheme`, `readTheme`), `/react`. Components use Tailwind v4 utilities that resolve through `theme.css`; consuming apps add `@source "../node_modules/lumux/dist"`. Components are React 19, peer-dep on Radix. A CSS-only consumer imports only CSS and never installs the React peers. pnpm and npm both support git-tag installs; the release script tags and commits `dist/` in the same commit so `git+https` installs need no build.
+Package name `lumux`, subpath exports: `/tokens.css`, `/tokens.embed.css`, `/theme.css` (Tailwind v4 `@theme`), `/theme-init.js` (inline pre-paint script), `/theme` (`applyTheme`, `readTheme`), `/react`. Components use Tailwind v4 utilities that resolve through `theme.css`; `theme.css` declares `@source "./react"` itself, so consuming apps add no `@source`. Components are React 19, peer-dep on Radix. A CSS-only consumer imports only CSS and never installs the React peers. pnpm and npm both support git-tag installs; the release script tags and commits `dist/` in the same commit so `git+https` installs need no build.
 
 ---
 
@@ -275,13 +275,13 @@ lumux/
   ARCHITECTURE.md
 ```
 
-**Consumption.** `npm i github:danieloceno/lumux#vX.Y.Z`, then import `tokens.css` and `@import "lumux/theme.css"`, add `@source "../node_modules/lumux/dist"`, and mount the components from `/react` with `<ThemeProvider>`. A CSS-only consumer copies or imports `tokens.embed.css` and installs no React peers.
+**Consumption.** `npm i github:danieloceno/lumux#vX.Y.Z`, then import `tokens.css` and `@import "lumux/theme.css"` (which carries the `@source`), and mount the components from `/react` with `<ThemeProvider>`. A CSS-only consumer copies or imports `tokens.embed.css` and installs no React peers.
 
 **Versioning.** Semver via git tags; `dist/` committed on the tag commit; the changelog is `CHANGELOG.md`, updated by hand at release. Apps pin exact tags. lumux CI runs contrast + gates + 320px/200% checks on every PR.
 
 **Breaking change.** Major bump. Renamed/removed tokens ship as deprecated aliases for one minor before removal; the token build emits both. Component API breaks get a one-paragraph migration note in the changelog and, where mechanical, a codemod in `scripts/codemods/`. No app is force-upgraded.
 
-**New app onboards.** Tailwind v4, `npm i github:danieloceno/lumux#vX.Y.Z`, import `tokens.css` + `theme.css`, add `@source`, mount `<ThemeProvider>`, run `install-gates.sh`, add `viewport-fit=cover`.
+**New app onboards.** Tailwind v4, `npm i github:danieloceno/lumux#vX.Y.Z`, import `tokens.css` + `theme.css`, mount `<ThemeProvider>`, run `install-gates.sh`, add `viewport-fit=cover`.
 
 **Contribution rule.** A new token or component needs a real use in two consumer apps. One-off needs stay in the app's extension layer.
 
