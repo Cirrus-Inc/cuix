@@ -42,7 +42,7 @@ export const NON_TEXT_MIN = 3;
 
 export type Pair = { fg: ColorToken; bg: ColorToken; min: number; use: string };
 
-const SURFACES = ['background', 'surface', 'surface-raised'] as const;
+export const SURFACES = ['background', 'surface', 'surface-raised'] as const;
 const TEXT_ON_SURFACES = [
   'foreground',
   'foreground-muted',

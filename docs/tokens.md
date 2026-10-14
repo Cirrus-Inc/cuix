@@ -53,7 +53,7 @@ Every app gets the same six in `tokens.css`; which ones it *offers* is the switc
 
 ## Colour
 
-Every text pair below passes **7:1** in all six themes and every boundary passes **3:1**: `npm run check:contrast` enforces it with no exception list. A pair that isn't listed in `src/tokens/vocabulary.ts` (`PAIRS`) is not legal. To add one, add it there and make it pass.
+Every text pair below passes **7:1** in all six themes and every boundary passes **3:1**: `npm run check:contrast` enforces it with no exception list. A pair that isn't listed in `src/tokens/vocabulary.ts` (`PAIRS`) is not legal. To add one, add it there and make it pass. The same run reads every class string in `src/react` and fails on a text/background combination that `PAIRS` does not list, in any state (`hover:`, `data-highlighted:`, `disabled:`, ...): a state keeps the resting text or background it does not set, and text with no background counts on each surface. A component that combines a new fg/bg pair needs a `PAIRS` entry first (`tests/pairs.test.ts` checks the derivation).
 
 ### Surfaces
 
