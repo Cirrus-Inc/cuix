@@ -33,8 +33,6 @@ Not adopted, with reason: AAA 3.1.5 (lower-secondary reading level) is applied t
 
 ---
 
----
-
 ## 4. Phase 1 — The standard
 
 ### 4.1 Color
@@ -183,8 +181,6 @@ Package name `lumux`, subpath exports: `/tokens.css`, `/tokens.embed.css`, `/the
 
 ---
 
----
-
 ## 5. Shared component specification
 
 Same component, same measurements, same behavior in every app. Deviations are named variants.
@@ -253,8 +249,6 @@ Verification: every lumux component has a Playwright check at 320px width and at
 
 ---
 
----
-
 ## 6. Phase 2 — Central repo structure
 
 ```
@@ -287,8 +281,6 @@ lumux/
 
 ---
 
----
-
 ## 10. Kill criteria
 
 Stop and re-plan if any of these happens mid-rollout:
@@ -300,8 +292,6 @@ Stop and re-plan if any of these happens mid-rollout:
 5. Two apps must pin different lumux majors for more than one release → propagation model is broken; move to copy-in for components and keep only tokens shared.
 6. Any consumer forks a lumux component rather than adding a variant → the API is wrong or the "identical everywhere" rule is wrong for that component; decide which before a second fork.
 7. A lumux update breaks a production-critical consumer → that consumer upgrades on a release train, never ad hoc.
-
----
 
 ---
 
