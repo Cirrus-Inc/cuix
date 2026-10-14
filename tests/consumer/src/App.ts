@@ -10,7 +10,8 @@ import {
 } from 'lumux/react';
 import { THEME_NAMES, type ThemeName } from 'lumux/theme';
 
-// ssr.ts fails when lumux/react exports a component this list (and so the tree) misses.
+// ssr.ts fails when lumux/react exports a component this list misses; tsconfig's
+// noUnusedLocals fails when one is imported here but never rendered.
 export const RENDERED = [
   'AppShell', 'Badge', 'Button', 'Card', 'Checkbox', 'ConfirmInline', 'Dialog', 'DialogClose', 'DialogTrigger',
   'Drawer', 'EmptyState', 'Field', 'IconButton', 'IconProvider', 'Input', 'LinkButton', 'Menu', 'Popover',
