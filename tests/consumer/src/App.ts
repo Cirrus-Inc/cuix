@@ -4,7 +4,7 @@ import { createElement as h, type ReactNode } from 'react';
 import {
   AppShell, Badge, Button, Card, Checkbox, ConfirmInline, Dialog, DialogClose, DialogTrigger, Drawer,
   EmptyState, Field, IconButton, IconProvider, Input, LinkButton, Menu, Popover, RadioGroup,
-  SegmentedControl, Select, Sheet, SheetClose, SheetTrigger, SkipLink, Spinner, Switch, Textarea,
+  NativeSelect, SegmentedControl, Select, Sheet, SheetClose, SheetTrigger, SkipLink, Spinner, Switch, Textarea,
   ThemeProvider, ThemeSwitcher, ToastLog, ToastProvider, Tooltip, TooltipProvider,
   useDocumentTitle, useTheme, useToast, useToastLog,
 } from 'lumux/react';
@@ -15,7 +15,7 @@ import { THEME_NAMES, type ThemeName } from 'lumux/theme';
 export const RENDERED = [
   'AppShell', 'Badge', 'Button', 'Card', 'Checkbox', 'ConfirmInline', 'Dialog', 'DialogClose', 'DialogTrigger',
   'Drawer', 'EmptyState', 'Field', 'IconButton', 'IconProvider', 'Input', 'LinkButton', 'Menu', 'Popover',
-  'RadioGroup', 'SegmentedControl', 'Select', 'Sheet', 'SheetClose', 'SheetTrigger', 'SkipLink', 'Spinner',
+  'NativeSelect', 'RadioGroup', 'SegmentedControl', 'Select', 'Sheet', 'SheetClose', 'SheetTrigger', 'SkipLink', 'Spinner',
   'Switch', 'Textarea', 'ThemeProvider', 'ThemeSwitcher', 'ToastLog', 'ToastProvider', 'Tooltip', 'TooltipProvider',
 ];
 
@@ -43,7 +43,8 @@ function Page(): ReactNode {
     h(ThemeSwitcher),
     h(Field, { label: 'Email', hint: 'Work address', children: h(Input, { autoComplete: 'email' }) }),
     h(Field, { label: 'Notes', children: h(Textarea) }),
-    h(Field, { label: 'Size', children: h(Select, null, h('option', null, 'M')) }),
+    h(Field, { label: 'Size', children: h(NativeSelect, null, h('option', null, 'M')) }),
+    h(Field, { label: 'Fit', children: h(Select, { options: [{ value: 'm', label: 'M' }], defaultValue: 'm' }) }),
     h(Checkbox, { label: 'Agree' }),
     h(Switch, { label: 'Alerts', checked: false, onCheckedChange: noop }),
     h(RadioGroup, { legend: 'Plan', name: 'plan', options: [{ value: 'a', label: 'A' }], value: 'a', onValueChange: noop }),

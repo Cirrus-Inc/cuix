@@ -16,7 +16,8 @@ export {
   type ThemeName,
 } from '../theme/index.ts';
 export { Checkbox } from './Checkbox.tsx';
-export { Field, Input, Select, Textarea } from './Field.tsx';
+export { Field, Input, NativeSelect, Textarea } from './Field.tsx';
+export { Select, type SelectOption, type SelectProps } from './Select.tsx';
 export { describedBy, errorId, hintId } from './FieldMessages.tsx';
 export { RadioGroup, type RadioOption } from './RadioGroup.tsx';
 export { SegmentedControl, type Segment } from './SegmentedControl.tsx';

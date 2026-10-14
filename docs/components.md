@@ -2,7 +2,7 @@
 
 `import { … } from "lumux/react"`. React 19. Peers: `react`, `react-dom`,
 `lucide-react`, `@radix-ui/react-slot`, `@radix-ui/react-dialog`, `@radix-ui/react-tooltip`,
-`@radix-ui/react-dropdown-menu`, `@radix-ui/react-popover` (the barrel imports all of them).
+`@radix-ui/react-dropdown-menu`, `@radix-ui/react-popover`, `@radix-ui/react-select` (the barrel imports all of them).
 `theme.css` carries `@source "./react"`, so Tailwind sees the classes the components use with no
 path in your CSS. Only an app that copies `dist/react` elsewhere adds its own `@source`.
 
@@ -124,7 +124,7 @@ export default [...lumuxA11y /*, your config */];
 
 This is `eslint-plugin-jsx-a11y` strict, plus a ban on `title` on interactive elements.
 
-## Field · Input · Textarea · Select
+## Field · Input · Textarea · Select · NativeSelect
 
 ```tsx
 <Field label="Email" hint="We only use it for sign-in links." error={errors.email} required>
@@ -144,10 +144,20 @@ This is `eslint-plugin-jsx-a11y` strict, plus a ban on `title` on interactive el
 - Validation stays with the app (RHF, zod or none). Timing: on submit, then on change for
   fields that have already errored. Never validate on the first blur of an untouched
   field.
-- `Input` takes an optional decorative `icon`. `Select` is native, so phones get their
-  platform picker. Its popup follows the page's `color-scheme` (set on `:root` and per
-  theme in `tokens.css`) in Chrome; Safari and mobile pickers follow the OS appearance and
-  that is accepted, because the platform picker is the point. `Textarea` resizes vertically.
+- `Input` takes an optional decorative `icon`. `Textarea` resizes vertically.
+- `Select` is a Radix Select, so the popup is drawn by lumux in every browser and follows the
+  theme (the native popup follows the OS in Safari). It takes `options`
+  (`{ value, label, disabled? }`, `value` non-empty), `value` / `defaultValue` /
+  `onValueChange`, `placeholder`, `name`, `disabled` and `required`; inside a `Field` it gets
+  `id`, `aria-describedby`, `aria-invalid` and `required` like `Input`, and the label focuses
+  the trigger. The popup is anchored to the trigger (`position="popper"`) and as wide as it.
+  Items are 44px tall, dense included, like `Menu` items; the selected one shows a check and is
+  painted `Highlight` in forced colors. No search, multi-select or virtualised lists: those
+  are a separate component.
+- `NativeSelect` is the previous `Select`: a native `<select>` with `<option>` children, for
+  forms that want the platform picker on phones. Its popup follows the page's `color-scheme`
+  (set on `:root` and per theme in `tokens.css`) in Chrome; Safari and mobile pickers follow
+  the OS appearance and that is accepted, because the platform picker is the point.
 - Pass `autoComplete` whenever the field has a known purpose (1.3.5), and never ask again
   for something the session knows (3.3.7).
 - Disabled and read-only fields use `surface-raised` with a 7:1 text pair. An invalid
@@ -159,6 +169,11 @@ with its icon. `Input` with an `icon` wraps the control in a relative `div`; the
 
 Keyboard: the browser's own. Tab reaches every control, including disabled ones' labels through
 the error and hint that `aria-describedby` points at.
+
+`Select` anatomy: `button[role=combobox]` (value or placeholder, chevron) → `div[role=listbox]` →
+`div[role=option]` per option (text, check when selected). Keys on the trigger: Enter, Space or
+↓ opens; once open: ↑ ↓ move, Home / End jump, a letter type-aheads, Enter or Space selects and
+closes, Escape closes. Focus returns to the trigger. Tab closes the popup and moves on.
 
 ## Checkbox · Switch · RadioGroup · SegmentedControl
 

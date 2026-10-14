@@ -73,7 +73,7 @@ export function Field({ label, hint, error, required = false, requiredLabel, id,
   );
 }
 
-function useFieldProps(own: { id?: string; 'aria-describedby'?: string; required?: boolean }) {
+export function useFieldProps(own: { id?: string; 'aria-describedby'?: string; required?: boolean }) {
   const field = useContext(FieldContext);
   const setControlId = field?.setControlId;
   useIsoLayoutEffect(() => {
@@ -93,11 +93,11 @@ function useFieldProps(own: { id?: string; 'aria-describedby'?: string; required
 }
 
 // 16px on every coarse pointer is enforced in tokens.css, dense included.
-const CONTROL =
+export const CONTROL =
   'w-full rounded-control border bg-surface text-body text-foreground placeholder:text-foreground-subtle transition-colors duration-fast ease-lumux ' +
   'disabled:cursor-not-allowed disabled:bg-surface-raised disabled:text-foreground-subtle read-only:bg-surface-raised';
 
-const EDGE = (invalid: boolean) => (invalid ? 'border-danger' : 'border-border-strong');
+export const EDGE = (invalid: boolean) => (invalid ? 'border-danger' : 'border-border-strong');
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   /** Decorative leading icon (search, mail). */
@@ -138,7 +138,7 @@ export function Textarea({ className, rows = 4, ...rest }: TextareaHTMLAttribute
 }
 
 /** Native <select>: the platform picker on phones, full keyboard and screen-reader support for free. */
-export function Select({ className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {
+export function NativeSelect({ className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {
   const { invalid, props } = useFieldProps(rest);
   return (
     <div className={cx('relative flex items-center', className)}>

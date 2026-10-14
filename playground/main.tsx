@@ -9,6 +9,7 @@ import {
   Input,
   RadioGroup,
   SegmentedControl,
+  NativeSelect,
   Select,
   Switch,
   Textarea,
@@ -63,11 +64,31 @@ function Forms() {
         <Field label="Search">
           <Input type="search" icon={<Search />} placeholder="Name or email" autoComplete="off" />
         </Field>
-        <Field label="Country">
-          <Select autoComplete="country-name" defaultValue="ar">
-            <option value="ar">Argentina</option>
-            <option value="us">United States</option>
-          </Select>
+        <Field label="Country" hint="Where invoices are issued.">
+          <Select
+            autoComplete="country-name"
+            defaultValue="ar"
+            options={[
+              { value: 'ar', label: 'Argentina' },
+              { value: 'br', label: 'Brazil', disabled: true },
+              { value: 'us', label: 'United States' },
+            ]}
+          />
+        </Field>
+        <Field label="Region" error="Pick a region.">
+          <Select
+            placeholder="Choose a region"
+            options={[
+              { value: 'na', label: 'North America' },
+              { value: 'sa', label: 'South America' },
+            ]}
+          />
+        </Field>
+        <Field label="Language">
+          <NativeSelect defaultValue="es">
+            <option value="es">Español</option>
+            <option value="en">English</option>
+          </NativeSelect>
         </Field>
         <Field label="Notes" hint="Visible to your team only.">
           <Textarea />
