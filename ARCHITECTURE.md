@@ -27,11 +27,9 @@ alternative, the decision log names the cost. Reopen one with a written case, no
 | Redundant entry, auth | AA 3.3.7, **AAA 3.3.9** | Forms never re-ask what the session knows; lumux ships no authentication UI that would need a cognitive test; lumux forms expose autocomplete tokens. |
 | Skip links & landmarks | A 2.4.1 | `SkipLink` + `id="main"` are part of the lumux `AppShell`, not opt-in. |
 | Audit | — | `@axe-core/playwright` runs on every lumux component at 320px and 200% zoom in lumux CI; consumers run it on every route. Manual screen-reader pass (VoiceOver + NVDA) per component before a minor release. |
-| Maintainable by 1–2 devs | — | One package, one token source, generated outputs, five scripts. No Storybook, no VRT SaaS, no Style Dictionary. |
+| Maintainable by 1–2 devs | — | One package, one token source, generated outputs, seven scripts and one shared module in `scripts/`. No Storybook, no VRT SaaS, no Style Dictionary. |
 
 Not adopted, with reason: AAA 3.1.5 (lower-secondary reading level) is applied to copy rules (§5.6) as guidance, not gated. AAA 1.2.6 (sign language for prerecorded audio) is a content requirement, not a UI-system one; it is the product itself.
-
----
 
 ---
 
@@ -179,9 +177,7 @@ lucide-react 1.x, named imports, stroke 1.75, sizes 16 (inline, default) / 20 (c
 | D. Monorepo workspace | only if every consumer repo merges | instant | migrating every repo + CI | rejected; not a design-system problem |
 | **E. Git-tag install, `dist/` committed** (`npm i github:danieloceno/lumux#v0.3.0`) | yes | versioned by tag; lockfile pins the commit | zero registry setup; a `prepare`-free build step that commits `dist/` on release | **Decided (D2)** |
 
-Package name `lumux`, subpath exports: `/tokens.css`, `/tokens.embed.css`, `/theme.css` (Tailwind v4 `@theme`), `/theme-init.js` (inline pre-paint script), `/theme` (`applyTheme`, `readTheme`), `/react`. Components use Tailwind v4 utilities that resolve through `theme.css`; `theme.css` declares `@source "./react"` itself, so consuming apps add no `@source`. Components are React 19, peer-dep on Radix. A CSS-only consumer imports only CSS and never installs the React peers. pnpm and npm both support git-tag installs; the release script tags and commits `dist/` in the same commit so `git+https` installs need no build.
-
----
+Package name `lumux`, subpath exports: `/tokens.css`, `/tokens.embed.css`, `/theme.css` (Tailwind v4 `@theme`), `/tokens.host.css` (tokens on `:host`), `/theme-init.js` (inline pre-paint script), `/theme-init.sha256` (its CSP hash), `/theme` (`applyTheme`, `readTheme`), `/react`, `/eslint` (jsx-a11y strict config). Components use Tailwind v4 utilities that resolve through `theme.css`; `theme.css` declares `@source "./react"` itself, so consuming apps add no `@source`. Components are React 19, peer-dep on Radix. A CSS-only consumer imports only CSS and never installs the React peers. pnpm and npm both support git-tag installs; the release script tags and commits `dist/` in the same commit so `git+https` installs need no build.
 
 ---
 
@@ -253,8 +249,6 @@ Verification: every lumux component has a Playwright check at 320px width and at
 
 ---
 
----
-
 ## 6. Phase 2 — Central repo structure
 
 ```
@@ -267,6 +261,7 @@ lumux/
   scripts/
     build-tokens.ts      → dist/tokens.css, tokens.embed.css, theme.css (TW4 @theme)
     check-contrast.ts    all sets × modes × pairings, exit 1 on any failure
+    component-pairs.ts   derives the fg/bg pairs components render; check-contrast fails on any unlisted one
     check-ui-className.mjs, check-disabled-title.sh, check-nested-scrollers.sh   (lifted, parameterized)
     install-gates.sh     copies the three gates + baseline into a consumer repo (lumux-gates.json holds the consumer's roots and exceptions; lumux runs the same gates on itself)
     release.sh           builds dist/, commits it, tags vX.Y.Z
@@ -279,13 +274,11 @@ lumux/
 
 **Versioning.** Semver via git tags; `dist/` committed on the tag commit; the changelog is `CHANGELOG.md`, updated by hand at release. Apps pin exact tags. lumux CI runs contrast + gates + 320px/200% checks on every PR.
 
-**Breaking change.** Major bump. A token author who renames or removes a token keeps the old name as an alias of the new one (`--lumux-old: var(--lumux-new)`) for one minor before deleting it; there is no alias mechanism in `scripts/build-tokens.ts` yet, so the alias is added by hand. Component API breaks get a one-paragraph migration note in the changelog and, where mechanical, a codemod in `scripts/codemods/`. No app is force-upgraded.
+**Breaking change.** Major bump (a minor while lumux is `0.x`, called out in the changelog). A token author who renames or removes a token keeps the old name as an alias of the new one (`--lumux-old: var(--lumux-new)`) for one minor before deleting it; there is no alias mechanism in `scripts/build-tokens.ts` yet, so the alias is added by hand. Component API breaks get a one-paragraph migration note in the changelog and, where mechanical, a codemod in `scripts/codemods/`. No app is force-upgraded.
 
 **New app onboards.** Tailwind v4, `npm i github:danieloceno/lumux#vX.Y.Z`, import `tokens.css` + `theme.css`, mount `<ThemeProvider>`, run `install-gates.sh`, add `viewport-fit=cover`.
 
 **Contribution rule.** A new token or component needs a real use in two consumer apps. One-off needs stay in the app's extension layer.
-
----
 
 ---
 
@@ -300,8 +293,6 @@ Stop and re-plan if any of these happens mid-rollout:
 5. Two apps must pin different lumux majors for more than one release → propagation model is broken; move to copy-in for components and keep only tokens shared.
 6. Any consumer forks a lumux component rather than adding a variant → the API is wrong or the "identical everywhere" rule is wrong for that component; decide which before a second fork.
 7. A lumux update breaks a production-critical consumer → that consumer upgrades on a release train, never ad hoc.
-
----
 
 ---
 

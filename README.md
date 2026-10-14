@@ -55,6 +55,7 @@
 - [Repo layout](#repo-layout)
 - [Development](#development)
 - [Versioning](#versioning)
+- [Release](#release)
 - [Contributing](#contributing)
 - [Documents](#documents)
 - [Roadmap](#roadmap)
@@ -68,6 +69,11 @@ Accessibility is usually a review step. In lumux it is a property of the system.
 
 Every app that adopts lumux uses the same semantic tokens, mounts the same components and runs the same gates. Changing the palette means changing one file, and moving between apps means relearning nothing.
 
+- **AAA tokens.** One semantic vocabulary; every legal text pair is held to 7:1 and verified in all themes.
+- **Six themes.** Two families, each authored on its own, not inverted.
+- **Installable gates.** `install-gates.sh` puts the same UI checks, with a frozen baseline, into any consumer.
+- **Git-tag install.** `npm i github:danieloceno/lumux#vX.Y.Z`; no registry, and nothing upgrades until you change the tag.
+
 ## Status
 
 | Area | Scope | State |
@@ -75,16 +81,16 @@ Every app that adopts lumux uses the same semantic tokens, mounts the same compo
 | Tokens & themes | Token source of truth, six AAA themes, contrast gate, focus and motion primitives | ✅ Shipped · [`docs/tokens.md`](./docs/tokens.md) |
 | Components | React 19 set on Radix: actions, forms, overlays, content, toasts | ✅ Shipped · [`docs/components.md`](./docs/components.md) |
 | Gates | className, disabled-title and nested-scroller checks, installable into any consumer | ✅ Shipped · [`docs/gates.md`](./docs/gates.md) |
-| Adoption | No product has migrated to lumux yet; HIVE, an internal Cirrus product, is the first consumer | ⏳ In progress |
+| Adoption | HIVE, an internal Cirrus product, is the first consumer (lumux `v0.5.0`); no other product has migrated yet | ⏳ In progress |
 | `1.0.0` | API freeze | ⏳ Planned |
 
 Pre-release: expect breaking changes before `1.0.0`. Pin an exact tag.
 
 ## Consumers
 
-| Consumer | What it is | Constraint |
-|---|---|---|
-| HIVE | Internal Cirrus business platform (React 19, Vite, Tailwind 4) | Greenfield, so lumux from day one |
+| Consumer | What it is | lumux | Constraint |
+|---|---|---|---|
+| HIVE | Internal Cirrus business platform (React 19, Vite, Tailwind 4) | `v0.5.0` | Greenfield, so lumux from day one |
 
 ## Quick start
 
@@ -132,14 +138,20 @@ flowchart LR
     S["sets/<br/>core · extended"]
     SC["scale.ts<br/>type · spacing · radius · motion · z · targets"]
     B["build-tokens.ts"]
+    TS["tsc<br/>tsconfig.build.json"]
     C["check-contrast.ts<br/>six themes × every pairing"]
     R["src/react/<br/>components + ThemeProvider"]
     D["dist/<br/>tokens.css · tokens.host.css<br/>tokens.embed.css · theme.css · theme-init.js"]
+    DR["dist/react · dist/theme<br/>JS + .d.ts"]
+    G["check:gates<br/>className · disabled-title · nested-scrollers"]
     V --> B
     T --> B
     S --> B
     SC --> B
     B --> D
+    R --> TS
+    TS --> DR
+    G -. "fails the build" .-> R
     V --> C
     S --> C
     C -. "exit 1 on any failure" .-> D
@@ -148,10 +160,10 @@ flowchart LR
   D -- "theme.css (@theme)" --> A["Tailwind v4 apps"]
   D -- "tokens.host.css" --> SR["Shadow-root UIs"]
   D -- "tokens.embed.css<br/>(16 tokens, no Tailwind)" --> E["Embeds"]
-  R --> A
+  DR --> A
 ```
 
-CSS custom properties are the contract. Tailwind v4 reads them through `theme.css`. Embeds and shadow roots use them directly, without Tailwind.
+`npm run build` runs `build-tokens.ts` (CSS and `theme-init.js` into `dist/`) and then `tsc` (`dist/react`, `dist/theme`). `npm run check` runs contrast, gates and build together. CSS custom properties are the contract. Tailwind v4 reads them through `theme.css`. Embeds and shadow roots use them directly, without Tailwind.
 
 ## Themes
 
@@ -160,7 +172,7 @@ Six themes in two families, all on one vocabulary, all at AAA.
 - **core** (`day` / `night`): the default pair. `system` resolves to it.
 - **extended** (`dawn` / `midnight` / `forest` / `ocean`): each keeps its source palette's hue and saturation. Only lightness moved, until every pair passed.
 
-| `data-theme` | Scheme | Canvas / surface | Accent |
+| `data-theme` | Scheme | Background / surface | Accent |
 |---|---|---|---|
 | `day` | light | `#f6f8fa` / `#ffffff` | `#005778` |
 | `night` | dark | `#0a1d2a` / `#112634` | `#00cde0` |
@@ -217,7 +229,7 @@ Imported from `lumux/react`. Each one documents the accessibility behaviour it g
 | Shell & theme | `AppShell`, `SkipLink`, `useDocumentTitle`, `ThemeProvider`, `useTheme`, `ThemeSwitcher`, `IconProvider` |
 | Actions | `Button`, `IconButton`, `LinkButton`, `ConfirmInline`, `Spinner` |
 | Forms | `Field`, `Input`, `Select`, `Textarea`, `Checkbox`, `RadioGroup`, `Switch`, `SegmentedControl` |
-| Overlays | `Dialog`, `Sheet`, `Drawer`, `Menu`, `Popover`, `Tooltip` |
+| Overlays | `Dialog`, `DialogTrigger`, `DialogClose`, `Sheet`, `SheetTrigger`, `SheetClose`, `Drawer`, `Menu`, `Popover`, `Tooltip`, `TooltipProvider` (wrap the app once) |
 | Content | `Card`, `Badge`, `EmptyState` |
 | Feedback | `ToastProvider`, `useToast`, `ToastLog`, `useToastLog` |
 
@@ -274,6 +286,7 @@ Config, ratchets and blind spots are in [docs/gates.md](./docs/gates.md).
 | `lumux/tokens.embed.css` | 16-token `:host` subset for embeds, minified, no Tailwind |
 | `lumux/tokens.host.css` | Every token on `:host`, for UI inside shadow roots |
 | `lumux/theme-init.js` | Pre-paint script, to inline |
+| `lumux/theme-init.sha256` | CSP hash of `theme-init.js` |
 | `lumux/theme` | `applyTheme`, `readTheme`, `resolvedTheme`, `resolvedScheme`, `THEME_NAMES` |
 | `lumux/react` | Components, `ThemeProvider`, `ThemeSwitcher` |
 | `lumux/eslint` | `eslint-plugin-jsx-a11y` strict config |
@@ -294,13 +307,15 @@ lumux/
 ├── scripts/
 │   ├── build-tokens.ts       → dist/
 │   ├── check-contrast.ts     six themes × every pairing, exit 1 on failure
+│   ├── component-pairs.ts    fg/bg pairs the components render, read by check-contrast
 │   ├── check-*.{mjs,sh}      the three gates
 │   ├── install-gates.sh      copies the gates and a frozen baseline into a consumer
 │   └── release.sh            builds dist/, commits it, tags vX.Y.Z
 ├── eslint/a11y.js            jsx-a11y strict config, exported as lumux/eslint
 ├── playground/               the demo page, also driven by the e2e harness
 ├── tests/                    unit (node --test) · e2e (Playwright + axe)
-└── docs/                     getting-started · tokens · components · gates · copy
+├── docs/                     getting-started · tokens · components · gates · copy
+└── lumux-gates.json          the gates' config, with a frozen baseline beside it
 ```
 
 ## Development
@@ -316,11 +331,17 @@ CI runs both suites on every PR. Every push to `main` publishes the demo to GitH
 
 ## Versioning
 
-Semantic versioning on git tags, with `dist/` committed on the tag commit only. Token renames and removals are breaking. Authors keep a removed token as a hand-written alias of its replacement for one minor before deletion (`build-tokens.ts` has no alias mechanism yet). Pin an exact tag and upgrade on purpose; updates never arrive silently.
+lumux is pre-release (`0.x`): breaking changes can land in a minor, and each one is called out in [`CHANGELOG.md`](./CHANGELOG.md). Breaking means token renames and removals and component API breaks. Semantic versioning on git tags, with `dist/` committed on the tag commit only. A removed token stays as a deprecated alias for one minor before deletion. The alias is hand-written by the author (`build-tokens.ts` has no alias mechanism yet). Pin an exact tag and upgrade on purpose; updates never arrive silently.
+
+## Release
+
+Maintainers cut a tag from a clean, up-to-date `main`:
 
 ```sh
-npm run release -- X.Y.Z   # from a clean main
+npm run release -- X.Y.Z   # scripts/release.sh
 ```
+
+The script bumps the version and the install snippets in this README and `docs/getting-started.md`, runs `npm run check`, and commits `dist/` on a `release/` branch. It tags that commit `vX.Y.Z`, then untracks `dist/` in a second commit, so `main` never carries build output. It pushes the branch and the tag, opens the release PR and publishes a GitHub release. A minor also needs the manual screen-reader pass (VoiceOver + NVDA). `dist/` exists only on tag commits, which is what a `github:danieloceno/lumux#vX.Y.Z` install fetches. The script uses the maintainers' `git smart` tool, so outside contributors do not run it. The entry for the tag goes in [`CHANGELOG.md`](./CHANGELOG.md).
 
 ## Contributing
 
@@ -337,10 +358,21 @@ See [`CONTRIBUTING.md`](./CONTRIBUTING.md). In short: the decisions in [`ARCHITE
 | [docs/copy.md](./docs/copy.md) | UI copy rules and what is never removed |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | The standard and decisions D1-D23 |
 | [CHANGELOG.md](./CHANGELOG.md) | Every tag, newest first |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Contribution rules, installing a tag, how releases are cut |
+| [SECURITY.md](./SECURITY.md) | How to report a vulnerability |
 
 ## Roadmap
 
-HIVE adopts lumux first and feeds fixes back; other Cirrus products follow, each upgrading to Tailwind v4 before it adopts. Open work is tracked in [issues](https://github.com/danieloceno/lumux/issues).
+HIVE adopts lumux first and feeds fixes back; other Cirrus products follow, each upgrading to Tailwind v4 before it adopts. Open work is tracked in the private cuix repo (`Cirrus-Inc/cuix`, the CHANGELOG's reference convention). Next up:
+
+- `Cirrus-Inc/cuix#35`: make cuix public
+- `Cirrus-Inc/cuix#27`: a consumer smoke test that installs the packed tarball
+- `Cirrus-Inc/cuix#28`: rulesets protecting `main` and release tags
+- `Cirrus-Inc/cuix#40`: sticky toasts can obscure the focused element on phones (2.4.11 / 2.4.12)
+- `Cirrus-Inc/cuix#41`: TypeScript-aware pair derivation in the contrast gate
+- `Cirrus-Inc/cuix#42`: `release.sh` folds `[Unreleased]` into the new version section
+
+Then `1.0.0`, the API freeze. Bugs and requests from outside go in this repo's [issues](https://github.com/danieloceno/lumux/issues).
 
 Kill criteria are explicit and live in [`ARCHITECTURE.md §10`](./ARCHITECTURE.md#10-kill-criteria). The most likely to fire: a hue that cannot reach 7:1 in two authoring rounds moves a step darker (light theme) or lighter (dark theme), never relaxed.
 
