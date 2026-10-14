@@ -17,11 +17,12 @@ npx playwright install chromium webkit   # first time, for the e2e harness
 
 ## Gates
 
-Run both before opening a PR; CI runs the same.
+Run them before opening a PR; CI runs the same.
 
 ```sh
 npm run check   # typecheck, lint, contrast, the three gates, build, unit tests
 npm run e2e     # axe, 44px targets, focus, 320px / 200% zoom, in every theme; overlays also on WebKit
+npm run smoke:consumer   # packs, installs the tarball into tests/consumer: exports, types, Tailwind classes, SSR
 ```
 
 `npm run playground` serves the page the e2e harness drives. When another checkout already holds port 5179, run `E2E_PORT=5189 npm run e2e`: locally the harness reuses a running server, so it would test the other checkout.

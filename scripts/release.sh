@@ -5,8 +5,9 @@
 #
 # From a clean, up-to-date main, this script:
 #   1. bumps the version, points the install snippets at the new tag, runs the
-#      full gate and builds dist/, then folds CHANGELOG.md's [Unreleased] into a
-#      dated [X.Y.Z] section (fails if [Unreleased] has no bullets)
+#      full gate and the consumer smoke (the packed tarball, installed) and builds
+#      dist/, then folds CHANGELOG.md's [Unreleased] into a dated [X.Y.Z] section
+#      (fails if [Unreleased] has no bullets)
 #   2. commits package.json + docs + CHANGELOG.md + dist/ on a release/ branch and
 #      tags that commit
 #   3. untracks dist/ in a second commit, so merging the branch brings only the
@@ -51,6 +52,7 @@ perl -pi -e "s#(github:danieloceno/lumux\#)v\\d+\\.\\d+\\.\\d+#\${1}$tag#g" "${P
 rm -rf dist
 [[ $(node -p "require('./package.json').version") == "$v" ]] || npm version "$v" --no-git-tag-version >/dev/null
 npm run check || { git checkout -- package.json package-lock.json "${PINNED[@]}"; die "gate failed; version bump reverted"; }
+npm run smoke:consumer || { git checkout -- package.json package-lock.json "${PINNED[@]}"; die "consumer smoke failed; version bump reverted"; }
 
 bash scripts/fold-changelog.sh "$v" "$(date -u +%F)" || { git checkout -- package.json package-lock.json CHANGELOG.md "${PINNED[@]}"; die "CHANGELOG.md not folded; version bump reverted"; }
 

@@ -4,6 +4,7 @@ Every tag, newest first. Entries before the lumux import reference PRs of the pr
 
 ## [Unreleased]
 
+- chore(ci): `consumer-smoke` job (`npm run smoke:consumer`, also run by `scripts/release.sh` before tagging) packs the package, installs the tarball into a Vite + React 19 + Tailwind 4 app (`tests/consumer`) and fails on a missing `exports` target, types that do not resolve under `moduleResolution: bundler`, component classes Tailwind does not find, or an SSR `renderToString` of any exported component that breaks (Cirrus-Inc/cuix#27)
 - docs: README accuracy pass for v0.5.0
 - docs: getting-started covers the `git` a Docker builder stage needs for the GitHub pin, `ThemeProvider` wrapping unauthenticated pages, the byte-exact `theme-init.sha256` (trailing newline, no `trim()`), and monorepo installs that nest lumux under the workspace (Cirrus-Inc/cuix#38)
 - chore(release): `scripts/release.sh` folds `[Unreleased]` into a dated `[X.Y.Z]` section with its release link (`scripts/fold-changelog.sh`), opens a fresh `[Unreleased]`, commits `CHANGELOG.md` on the release commit and fails when `[Unreleased]` has no bullets (Cirrus-Inc/cuix#42)
