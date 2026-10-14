@@ -7,6 +7,24 @@ import { cx } from './cx.ts';
 
 // Internal pieces shared by Dialog, Sheet and Drawer. Not exported from the barrel.
 
+let pointerTarget: HTMLElement | null = null;
+if (typeof document !== 'undefined') {
+  const FOCUSABLE = 'button,a[href],input,select,textarea,summary,[role="button"],[tabindex]';
+  const record = (e: Event) => {
+    const t = e.target instanceof Element ? e.target : null;
+    pointerTarget = t?.closest<HTMLElement>(FOCUSABLE) ?? null;
+  };
+  const clear = () => (pointerTarget = null);
+  document.addEventListener('pointerdown', record, true);
+  // A pointerdown with no click (touch scroll, drag) must not leak into a later keyboard open.
+  document.addEventListener('pointercancel', clear, true);
+  document.addEventListener('keydown', clear, true);
+  document.addEventListener('click', (e) => {
+    record(e);
+    setTimeout(clear, 0);
+  }, true);
+}
+
 /**
  * Focus return for imperative opens.
  * Radix returns focus to a `Trigger`; most lumux dialogs open from a row click
@@ -19,13 +37,16 @@ export function useFocusReturn(open: boolean) {
   const opener = useRef<HTMLElement | null>(null);
   const wasOpen = useRef(false);
   if (open && !wasOpen.current && typeof document !== 'undefined') {
-    opener.current = document.activeElement as HTMLElement | null;
+    const active = document.activeElement as HTMLElement | null;
+    // Safari doesn't focus a clicked button: focus stays on body, or lands on a
+    // focusable ancestor (e.g. main[tabindex=-1]). Fall back to the pointer target.
+    const unfocused = !active || active === document.body || (!!pointerTarget && active.contains(pointerTarget));
+    opener.current = unfocused ? (pointerTarget ?? active) : active;
   }
   wasOpen.current = open;
   return (event: Event) => {
     const el = opener.current;
-    // Nothing usable was focused (Safari doesn't focus a clicked button; a row
-    // replaced by a refresh is detached): let Radix return focus to its Trigger.
+    // Nothing usable was focused (a row replaced by a refresh is detached): let Radix return focus to its Trigger.
     if (!el || el === document.body || !el.isConnected) return;
     event.preventDefault();
     el.focus();

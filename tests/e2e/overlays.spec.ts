@@ -102,6 +102,17 @@ for (const theme of ['day', 'night'] as const) {
   }
 }
 
+test('dialog: opened by click, Escape returns focus to the opener (Safari does not focus clicked buttons)', async ({ page }) => {
+  await open(page);
+  const opener = page.getByTestId('open-dialog');
+  await opener.click();
+  const dialog = page.getByRole('dialog', { name: 'Edit profile' });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  await expect(opener).toBeFocused();
+});
+
 test('dialog: overlay click closes unless dismissOnOverlay is false', async ({ page }) => {
   await open(page);
   await page.getByTestId('open-dialog').click();
