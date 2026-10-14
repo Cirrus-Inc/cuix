@@ -74,7 +74,7 @@ tag is invisible to your copy until you re-paste it: re-paste on every upgrade.
 (`node_modules/lumux/dist/theme-init.sha256`) holds the ready-made token:
 
 ```
-script-src 'self' 'sha256-<contents of theme-init.sha256 after the "sha256-" prefix>';
+script-src 'self' 'sha256-…';   # the single line in theme-init.sha256, quoted, without its newline
 ```
 
 The hash covers the exact bytes of `theme-init.js`, including its single trailing newline (it equals
@@ -106,6 +106,12 @@ createRoot(document.getElementById("root")!).render(
   </ThemeProvider>,
 );
 ```
+
+- `AppShell` gives you the skip link, the `<header>` / `<main id="main">` landmarks and safe
+  areas. Keep your own navigation inside it; lumux ships primitives, not shells.
+- `ThemeSwitcher` without `themes` offers the default pair plus System. Pass `THEME_NAMES` for all six.
+  An app that pins one theme sets `data-theme` on `<html>` and mounts no switcher.
+- Each route calls `useDocumentTitle("Contacts", "Acme")`.
 
 Mount all four providers, in this order (the playground does). `TooltipProvider` and
 `ToastProvider` are easy to forget, and the harness never shows it because the playground mounts them. Missing:

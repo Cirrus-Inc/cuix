@@ -42,6 +42,7 @@
 
 - [Why lumux](#why-lumux)
 - [Status](#status)
+- [Consumers](#consumers)
 - [Quick start](#quick-start)
 - [How it fits together](#how-it-fits-together)
 - [Themes](#themes)
@@ -77,13 +78,13 @@ Every app that adopts lumux uses the same semantic tokens, mounts the same compo
 | Adoption | No product has migrated to lumux yet; HIVE, an internal Cirrus product, is the first consumer | ⏳ In progress |
 | `1.0.0` | API freeze | ⏳ Planned |
 
+Pre-release: expect breaking changes before `1.0.0`. Pin an exact tag.
+
 ## Consumers
 
 | Consumer | What it is | Constraint |
 |---|---|---|
 | HIVE | Internal Cirrus business platform (React 19, Vite, Tailwind 4) | Greenfield, so lumux from day one |
-
-Pre-release: expect breaking changes before `1.0.0`. Pin an exact tag.
 
 ## Quick start
 

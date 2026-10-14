@@ -1,7 +1,7 @@
 'use client';
 
 import * as D from '@radix-ui/react-dialog';
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { cx } from './cx.ts';
 import { OverlayBody, OverlayFooter, OverlayHeader, PANEL, useFocusReturn } from './overlay.tsx';
 
@@ -56,7 +56,9 @@ export function Dialog({
   children,
 }: DialogProps) {
   const depth = useContext(Depth);
-  if (depth > 1 && DEV) console.error('lumux Dialog: only one level of nesting is allowed (§5.4)');
+  useEffect(() => {
+    if (depth > 1 && DEV) console.error('lumux Dialog: only one level of nesting is allowed (§5.4)');
+  }, [depth]);
   const onCloseAutoFocus = useFocusReturn(open);
   const z = depth === 0 ? 'z-modal' : 'z-modal-top';
   const full = size === 'full';
