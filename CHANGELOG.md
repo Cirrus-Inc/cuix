@@ -9,6 +9,7 @@ Every tag, newest first. Entries before the lumux import reference PRs of the pr
 - Remove internal analysis prompts and private product inventories from the repository and from `ARCHITECTURE.md`; the install no longer mentions private-repo access.
 - Add `CODEOWNERS`, a pull request template and bug / feature issue templates.
 - chore(release): sync the install pin and release notes on release (Cirrus-Inc/cuix#18)
+- chore(tooling): `install-gates.sh` reports a missing `--src` / `--ui` value, surfaces the gate's error when the baseline cannot be written, and says when `--src` / `--ui` are ignored; `ThemeProvider` follows theme changes from other tabs; `Menu` items accept an optional `id` key; add `sideEffects` to `package.json` (Cirrus-Inc/cuix#34)
 
 ## [0.3.0] - 2026-10-08
 

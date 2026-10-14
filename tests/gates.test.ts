@@ -266,3 +266,37 @@ test('install-gates.sh: a custom baseline path is kept on re-run, never re-froze
   assert.match(r.out, /gates\/base\.json kept/);
   assert.equal(readFileSync(join(dir, 'gates/base.json'), 'utf8'), frozen);
 });
+
+const fresh = (files: Record<string, string> = { 'src/a.tsx': CLEAN }) => {
+  const dir = consumer(files);
+  writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'consumer' }));
+  spawnSync('rm', [join(dir, 'lumux-gates.json')]);
+  return dir;
+};
+
+test('install-gates.sh: --src or --ui without a value is a usage error, not an unbound variable', () => {
+  for (const flag of ['--src', '--ui']) {
+    const r = run('bash', [gate('install-gates.sh'), flag], fresh());
+    assert.equal(r.code, 1);
+    assert.match(r.out, new RegExp(`install-gates: ${flag} needs a value`));
+    assert.doesNotMatch(r.out, /unbound variable/);
+  }
+});
+
+test('install-gates.sh: a baseline that cannot be written surfaces the gate\'s own error', () => {
+  const dir = fresh();
+  writeFileSync(join(dir, 'lumux-gates.json'), JSON.stringify({ src: ['src'], baseline: 'nodir/base.json' }));
+  const r = run('bash', [gate('install-gates.sh')], dir);
+  assert.equal(r.code, 1);
+  assert.match(r.out, /ENOENT/);
+  assert.match(r.out, /could not write the baseline/);
+});
+
+test('install-gates.sh: --src/--ui against an existing config print the ignored notice', () => {
+  const dir = fresh();
+  assert.equal(run('bash', [gate('install-gates.sh'), '--ui', 'src/ui'], dir).code, 0);
+  const r = run('bash', [gate('install-gates.sh'), '--ui', 'x'], dir);
+  assert.match(r.out, /lumux-gates\.json kept; --src\/--ui ignored, edit the file/);
+  const plain = run('bash', [gate('install-gates.sh')], dir);
+  assert.doesNotMatch(plain.out, /ignored/);
+});
