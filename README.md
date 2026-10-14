@@ -56,6 +56,7 @@
 - [Versioning](#versioning)
 - [Contributing](#contributing)
 - [Documents](#documents)
+- [Roadmap](#roadmap)
 - [License](#license)
 
 ---
@@ -73,6 +74,7 @@ Every app that adopts lumux uses the same semantic tokens, mounts the same compo
 | Tokens & themes | Token source of truth, six AAA themes, contrast gate, focus and motion primitives | ✅ Shipped · [`docs/tokens.md`](./docs/tokens.md) |
 | Components | React 19 set on Radix: actions, forms, overlays, content, toasts | ✅ Shipped · [`docs/components.md`](./docs/components.md) |
 | Gates | className, disabled-title and nested-scroller checks, installable into any consumer | ✅ Shipped · [`docs/gates.md`](./docs/gates.md) |
+| Adoption | No product has migrated to lumux yet; HIVE, an internal Cirrus product, is the first consumer | ⏳ In progress |
 | `1.0.0` | API freeze | ⏳ Planned |
 
 Pre-release: expect breaking changes before `1.0.0`. Pin an exact tag.
@@ -316,9 +318,7 @@ npm run release -- X.Y.Z   # from a clean main
 
 ## Contributing
 
-1. A new token or component needs a real use in at least two apps. One-off needs stay in the app.
-2. Every PR passes `npm run check` and `npm run e2e`.
-3. Commits follow [Conventional Commits](https://www.conventionalcommits.org/).
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md). In short: the decisions in [`ARCHITECTURE.md`](./ARCHITECTURE.md) are settled (reopen one with a written case, not a PR); a new token or component needs a real use in at least two consumer apps; every PR passes `npm run check` and `npm run e2e`; commits follow [Conventional Commits](https://www.conventionalcommits.org/). Security reports: [`SECURITY.md`](./SECURITY.md).
 
 ## Documents
 
@@ -329,10 +329,18 @@ npm run release -- X.Y.Z   # from a clean main
 | [docs/components.md](./docs/components.md) | Component contracts, props and the a11y behaviour each one guarantees |
 | [docs/gates.md](./docs/gates.md) | The three gates: what each catches, install, config, ratchets, blind spots |
 | [docs/copy.md](./docs/copy.md) | UI copy rules and what is never removed |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | The standard and decisions D1-D23 |
+| [CHANGELOG.md](./CHANGELOG.md) | Every tag, newest first |
+
+## Roadmap
+
+HIVE adopts lumux first and feeds fixes back; other Cirrus products follow, each upgrading to Tailwind v4 before it adopts. Open work is tracked in [issues](https://github.com/danieloceno/lumux/issues).
+
+Kill criteria are explicit and live in [`ARCHITECTURE.md §10`](./ARCHITECTURE.md#10-kill-criteria). The most likely to fire: a hue that cannot reach 7:1 in two authoring rounds moves a step darker (light theme) or lighter (dark theme), never relaxed.
 
 ## License
 
-[MIT](./LICENSE)
+MIT. See [`LICENSE`](./LICENSE).
 
 ---
 

@@ -45,7 +45,7 @@ fi
 PINNED=(README.md docs/getting-started.md)
 perl -pi -e "s#(github:danieloceno/lumux\#)v\\d+\\.\\d+\\.\\d+#\${1}$tag#g" "${PINNED[@]}"
 
-npm version "$v" --no-git-tag-version >/dev/null
+[[ $(node -p "require('./package.json').version") == "$v" ]] || npm version "$v" --no-git-tag-version >/dev/null
 npm run check || { git checkout -- package.json package-lock.json "${PINNED[@]}"; die "gate failed; version bump reverted"; }
 
 git add package.json package-lock.json "${PINNED[@]}"
@@ -59,7 +59,7 @@ git smart chore "untrack dist after $tag" release
 git push -q -u origin HEAD
 git push -q origin "$tag"
 
-gh pr create --base main --title "chore(release): $tag" --label enhancement \
+git diff --quiet origin/main HEAD || gh pr create --base main --title "chore(release): $tag" --label enhancement \
   --body "Tag \`$tag\` is pushed and carries \`dist/\`. This PR brings the version bump to main; \`dist/\` is untracked again."
 
 # Release PRs are excluded by branch, not title: tooling PRs also use chore(release).
