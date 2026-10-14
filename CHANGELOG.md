@@ -4,6 +4,7 @@ Every tag, newest first. Entries before the lumux import reference PRs of the pr
 
 ## [Unreleased]
 
+- fix(react): `Dialog`, `Sheet` and `Drawer` return focus to the clicked opener in Safari, which does not focus a clicked button, by falling back to the pointer target when nothing was focused at open (Cirrus-Inc/cuix#39)
 - docs(react): document that the native `Select` popup follows the page `color-scheme` in Chrome and the OS in Safari and mobile pickers, and test the scheme without `data-theme` (Cirrus-Inc/cuix#36)
 - feat(react): add `headingLevel` (2-6, default 3) to `Card` so its title fits the page heading outline (Cirrus-Inc/cuix#32)
 - fix(react): `Field` labels the control by its own `id` when it has one, so `<Field label="Email"><Input id="email" /></Field>` keeps its accessible name (Cirrus-Inc/cuix#26)
