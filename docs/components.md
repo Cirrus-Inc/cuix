@@ -138,7 +138,9 @@ This is `eslint-plugin-jsx-a11y` strict, plus a ban on `title` on interactive el
   fields that have already errored. Never validate on the first blur of an untouched
   field.
 - `Input` takes an optional decorative `icon`. `Select` is native, so phones get their
-  platform picker. `Textarea` resizes vertically.
+  platform picker. Its popup follows the page's `color-scheme` (set on `:root` and per
+  theme in `tokens.css`) in Chrome; Safari and mobile pickers follow the OS appearance and
+  that is accepted, because the platform picker is the point. `Textarea` resizes vertically.
 - Pass `autoComplete` whenever the field has a known purpose (1.3.5), and never ask again
   for something the session knows (3.3.7).
 - Disabled and read-only fields use `surface-raised` with a 7:1 text pair. An invalid
