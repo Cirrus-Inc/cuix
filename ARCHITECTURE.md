@@ -15,7 +15,7 @@ alternative, the decision log names the cost. Reopen one with a written case, no
 
 | Requirement | Level | Mechanism |
 |---|---|---|
-| Contrast, text | **AAA 1.4.6: 7:1** body, 4.5:1 large (≥24px, or ≥18.66px bold) | Every legal fg/bg pairing is enumerated in the token source; `scripts/check-contrast.ts` runs all six themes and exits non-zero; every text pair is held to 7:1, with no large-text discount. No exception list. A theme that fails is re-authored (§10, criterion 1), never relaxed. The earlier AA-era core accent `#0079a8` is 4.88:1, so it moves to `#005778` (§4.1). |
+| Contrast, text | **AAA 1.4.6: 7:1** body, 4.5:1 large (≥24px, or ≥18.66px bold) | Every legal fg/bg pairing is enumerated in the token source; `scripts/check-contrast.ts` runs all eight themes and exits non-zero; every text pair is held to 7:1, with no large-text discount. No exception list. A theme that fails is re-authored (§10, criterion 1), never relaxed. The earlier AA-era core accent `#0079a8` is 4.88:1, so it moves to `#005778` (§4.1). |
 | Contrast, non-text | AA 1.4.11: 3:1 for UI boundaries, focus rings, icons | Same script, same run. |
 | Visible focus | **AAA 2.4.13**: ≥2px solid, 3:1 against adjacent colors, never obscured (**AA 2.4.11**) | One global `:focus-visible` rule in `tokens.css` (2px solid `--focus-ring`, 2px offset). Components never restyle it. Sticky headers and toasts reserve space so a focused element is never under them. `outline-none` without `focus-visible` in the same class string is a CI failure. |
 | Target sizes | **AAA 2.5.5: 44×44 CSS px, every pointer, no exception** | `--target-min: 44px`. Any `h-*`/`size-*`/`min-h-*` under 44 inside lumux components fails CI (the blocking sizing gate, now unconditional). Inline text links are exempt per the SC. |
@@ -56,7 +56,7 @@ Dropped from shadcn's vocabulary on purpose: `card`, `popover`, `primary`, `seco
 
 **Content colors** are not tokens: user-chosen label swatches, chroma-key greens, brand marks. They stay hardcoded with a `/* content color */` marker so the hex gate can skip them.
 
-**Six themes, two families (D19, revised 2026-10-08).** core day and night (the default pair, `system` resolves to it) plus the extended four (dawn, midnight, forest, ocean), each a single named theme with its own light/dark scheme. The 2026-10-04 revision had collapsed to the core pair alone; the maintainers reinstated the extended four on 2026-10-08. No `data-palette`: the theme name is the whole selection. Every theme passes the same AAA gate (378 pairs). The extended themes keep the source hues and move lightness only; `src/tokens/sets/extended.ts` lists each change. The registry is `src/tokens/themes.ts`; the colours join in `src/tokens/sets/index.ts`.
+**Eight themes, three families (D19, revised 2026-10-08, extended 2026-10-14).** core day and night (the default pair, `system` resolves to it), the extended four (dawn, midnight, forest, ocean) and the hive pair (hive-day, hive-night, the HIVE mockup palette, Cirrus-Inc/cuix#44), each a single named theme with its own light/dark scheme. The 2026-10-04 revision had collapsed to the core pair alone; the maintainers reinstated the extended four on 2026-10-08. No `data-palette`: the theme name is the whole selection. Every theme passes the same AAA gate (504 pairs). The extended themes keep the source hues and move lightness only; `src/tokens/sets/extended.ts` lists each change. The hive themes keep the mockup values that pass and move each failing one to the nearest passing colour at the same hue; `docs/tokens.md` has the deviation table. The registry is `src/tokens/themes.ts`; the colours join in `src/tokens/sets/index.ts`.
 
 Origin: the CSS custom properties of an existing brand site, chosen by the maintainers. There is no brand guide and no Figma. The hues were first shipped at AA; lumux takes them to AAA. The source scale:
 
@@ -67,7 +67,7 @@ Origin: the CSS custom properties of an existing brand site, chosen by the maint
 | cyan | bright `#00cde0` · light `#7bf6ff` |
 | status | green `#14860b` · orange `#e66f00` · red `#c93312` |
 
-**Final values (Phase 1, 2026-10-04; extended themes added 2026-10-08).** `npm run check:contrast` passes all 378 pairs: 63 per theme × six; every text pair at 7:1; boundaries, focus and chart marks at 3:1. The core source is `src/tokens/sets/core.ts`, the extended source `extended.ts`, and `docs/tokens.md` documents each token and theme.
+**Final values (Phase 1, 2026-10-04; extended themes added 2026-10-08; hive family added 2026-10-14).** `npm run check:contrast` passes all 504 pairs: 63 per theme × eight; every text pair at 7:1; boundaries, focus and chart marks at 3:1. The core source is `src/tokens/sets/core.ts`, the extended source `extended.ts`, and `docs/tokens.md` documents each token and theme.
 
 | Token | Day | Night | Note |
 |---|---|---|---|
@@ -318,7 +318,7 @@ Stop and re-plan if any of these happens mid-rollout:
 | D16 | Product-specific; not part of this public document | | |
 | D17 | Extension-layer tokens per app (namespaced, contrast-checked, never shared) | fold into lumux | Keeps the vocabulary small; domain colors survive |
 | D18 | Rollout: cheapest consumer first, riskiest last | baseline first | Proof on the cheapest app; acceptance on the riskiest |
-| D19 | **Six named themes, two families: core day/night + extended dawn/midnight/forest/ocean**, all in every app's CSS, each app offering a subset (revised 2026-10-08; 2026-10-04 had core alone; originally four sets × day/night) | core alone; four sets × day/night with `data-palette` | Maintainers' call: core is the brand and the `system` pair; the extended four are wanted as-is, at AAA. Named themes instead of set × mode because forest/ocean are not a day/night pair. Cost: 378 pairs to verify (automated), +1.3 KB gz in tokens.css, the embed subset still ships core only; midnight's violet is lavender at 7:1 |
+| D19 | **Eight named themes, three families: core day/night + extended dawn/midnight/forest/ocean + hive hive-day/hive-night**, all in every app's CSS, each app offering a subset (revised 2026-10-08, hive added 2026-10-14; 2026-10-04 had core alone; originally four sets × day/night) | core alone; four sets × day/night with `data-palette` | Maintainers' call: core is the brand and the `system` pair; the extended four are wanted as-is, at AAA. Named themes instead of set × mode because forest/ocean are not a day/night pair. Cost: 504 pairs to verify (automated), +1.3 KB gz in tokens.css, the embed subset still ships core only; midnight's violet is lavender at 7:1 |
 | D20 | No Storybook / VRT SaaS / token toolchain | add them | 1–2 maintainers |
 | D21 | **Tailwind v4 only**; consumers on v3 upgrade before adopting lumux | ship a v3 preset too | One output to maintain; the upgrade is due anyway. Cost: +1–3 days per app up front |
 | D22 | Body 16 / dense variant, radius 4/8 (D10 revised), dialog footer cancel-left, helper text ≤90 chars, no bottom tab bar, cheapest-first rollout | as listed in D5/D10/D12/D15/D18 | Confirmed as recommended |

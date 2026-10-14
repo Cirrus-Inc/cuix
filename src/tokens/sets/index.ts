@@ -5,6 +5,7 @@ import type { ThemeColors } from '../vocabulary.ts';
 import { THEME_META, type Scheme, type ThemeName } from '../themes.ts';
 import { core } from './core.ts';
 import { dawn, forest, midnight, ocean } from './extended.ts';
+import { hiveDay, hiveNight } from './hive.ts';
 
 const COLORS: Record<ThemeName, ThemeColors> = {
   day: core.day,
@@ -13,6 +14,8 @@ const COLORS: Record<ThemeName, ThemeColors> = {
   midnight,
   forest,
   ocean,
+  'hive-day': hiveDay,
+  'hive-night': hiveNight,
 };
 
 export const THEMES: Record<ThemeName, { scheme: Scheme; colors: ThemeColors }> = Object.fromEntries(
