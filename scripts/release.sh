@@ -5,8 +5,10 @@
 #
 # From a clean, up-to-date main, this script:
 #   1. bumps the version, points the install snippets at the new tag, runs the
-#      full gate and builds dist/
-#   2. commits package.json + docs + dist/ on a release/ branch and tags that commit
+#      full gate and builds dist/, then folds CHANGELOG.md's [Unreleased] into a
+#      dated [X.Y.Z] section (fails if [Unreleased] has no bullets)
+#   2. commits package.json + docs + CHANGELOG.md + dist/ on a release/ branch and
+#      tags that commit
 #   3. untracks dist/ in a second commit, so merging the branch brings only the
 #      version bump to main
 #   4. pushes the branch and the tag, opens the PR, and publishes a GitHub
@@ -50,7 +52,9 @@ rm -rf dist
 [[ $(node -p "require('./package.json').version") == "$v" ]] || npm version "$v" --no-git-tag-version >/dev/null
 npm run check || { git checkout -- package.json package-lock.json "${PINNED[@]}"; die "gate failed; version bump reverted"; }
 
-git add package.json package-lock.json "${PINNED[@]}"
+bash scripts/fold-changelog.sh "$v" "$(date -u +%F)" || { git checkout -- package.json package-lock.json CHANGELOG.md "${PINNED[@]}"; die "CHANGELOG.md not folded; version bump reverted"; }
+
+git add package.json package-lock.json CHANGELOG.md "${PINNED[@]}"
 git add -f dist
 git smart release "$tag" release
 git tag -a "$tag" -m "$tag"

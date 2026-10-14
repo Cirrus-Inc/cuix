@@ -5,6 +5,10 @@ Every tag, newest first. Entries before the lumux import reference PRs of the pr
 ## [Unreleased]
 
 - docs: getting-started covers the `git` a Docker builder stage needs for the GitHub pin, `ThemeProvider` wrapping unauthenticated pages, the byte-exact `theme-init.sha256` (trailing newline, no `trim()`), and monorepo installs that nest lumux under the workspace (Cirrus-Inc/cuix#38)
+- chore(release): `scripts/release.sh` folds `[Unreleased]` into a dated `[X.Y.Z]` section with its release link (`scripts/fold-changelog.sh`), opens a fresh `[Unreleased]`, commits `CHANGELOG.md` on the release commit and fails when `[Unreleased]` has no bullets (Cirrus-Inc/cuix#42)
+
+## [0.5.0] - 2026-10-14
+
 - fix(react): `Checkbox` and `RadioGroup` draw their box, circle and checked mark with tokens (`border-strong` edge, `danger` when invalid, `accent` / `accent-foreground` when checked, a dash for `indeterminate`) instead of the browser's `accent-color` rendering, and `check:contrast` derives control edges (`border-*`) at 3:1, so 1.4.11 is verified in all six themes (Cirrus-Inc/cuix#33)
 - fix(react): the `danger-outline` `Button` hover uses `danger-on-soft` on `danger-soft` (7.06:1 in `midnight`, was 6.69:1); `check:contrast` now derives the fg/bg pairs components render, per state, from their class strings and fails on any pair `PAIRS` does not list (Cirrus-Inc/cuix#22)
 - fix(tokens): `forced-selected` wins over `bg-*` / `text-*` in forced colors, so the selected `SegmentedControl` segment and `ThemeSwitcher` button are painted `Highlight` / `HighlightText` as documented (Chromium kept `bg-accent`)
@@ -63,6 +67,7 @@ Phase 1: core day/night tokens at AAA, generated `tokens.css` / `theme.css` / `t
 - docs(tokens): adopt core day/night as the only palette at AAA (Cirrus-Inc/cuix#2)
 - docs: README with Mermaid, badges and decision index (Cirrus-Inc/cuix#1)
 
-[Unreleased]: https://github.com/danieloceno/lumux/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/danieloceno/lumux/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/danieloceno/lumux/releases/tag/v0.5.0
 [0.4.0]: https://github.com/danieloceno/lumux/releases/tag/v0.4.0
 [0.3.0]: https://github.com/danieloceno/lumux/releases/tag/v0.3.0
