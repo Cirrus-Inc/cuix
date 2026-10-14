@@ -99,7 +99,7 @@ Pre-release: expect breaking changes before `1.0.0`. Pin an exact tag.
 ## Quick start
 
 ```sh
-npm i github:danieloceno/lumux#v0.5.0
+npm i github:danieloceno/lumux#v0.7.0
 ```
 
 ```css

@@ -4,6 +4,8 @@ Every tag, newest first. Entries before the lumux import reference PRs of the pr
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-14
+
 Breaking: `Select` is now a Radix Select with an `options` prop, not a native `<select>` with `<option>` children. Forms that want the platform control rename it to `NativeSelect`, which is the previous component unchanged. `@radix-ui/react-select` joins the optional peers (`^2`): the `lumux/react` barrel imports it, so a React consumer must `npm i @radix-ui/react-select` when it moves to this release, Select user or not, or its build fails to resolve it.
 
 - feat(tokens): `hive` family, `hive-day` (light) and `hive-night` (dark), from the HIVE mockup palette at the same AAA gate (504/504 pairs, no exception list); failing mockup values moved to the nearest passing colour and are listed in docs/tokens.md#hive-deviations. `hive-day`'s accent is ink, not coral (coral at 7:1 is brick and collides with `danger`). `theme-init.js`, its sha256, `ThemeSwitcher` labels (`Hive Day`, `Hive Night`) and the playground cover both; `SYSTEM_THEME` is unchanged. Apps that inline `theme-init.js` must copy the new bytes and CSP hash (Cirrus-Inc/cuix#44)
@@ -73,7 +75,8 @@ Phase 1: core day/night tokens at AAA, generated `tokens.css` / `theme.css` / `t
 - docs(tokens): adopt core day/night as the only palette at AAA (Cirrus-Inc/cuix#2)
 - docs: README with Mermaid, badges and decision index (Cirrus-Inc/cuix#1)
 
-[Unreleased]: https://github.com/danieloceno/lumux/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/danieloceno/lumux/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/danieloceno/lumux/releases/tag/v0.7.0
 [0.5.0]: https://github.com/danieloceno/lumux/releases/tag/v0.5.0
 [0.4.0]: https://github.com/danieloceno/lumux/releases/tag/v0.4.0
 [0.3.0]: https://github.com/danieloceno/lumux/releases/tag/v0.3.0
