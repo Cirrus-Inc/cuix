@@ -8,7 +8,7 @@ Every tag, newest first. Entries before the lumux import reference PRs of the pr
 - fix(react): a `Menu` item `id` with whitespace no longer breaks the disabled reason's `aria-describedby`; the reason's element id is built from the item index
 - chore(ci): workflow action SHA pin comments name the exact version (checkout and setup-node v4.4.0, upload-pages-artifact v3.0.1, deploy-pages v4.0.5)
 - docs: reconcile docs with code: `ConfirmInline` anatomy and focus after `onConfirm`, axe covers resting states only, the token alias policy is a rule for authors, not a build feature (Cirrus-Inc/cuix#30)
-- fix(react): a `Toast` with an `action` no longer auto-dismisses (an Undo is a function with a time limit, WCAG 2.2.1 / 2.2.3); it is announced with an action hint ("Entry deleted. Undo available.", `ToastLabels.actionHint` is optional); the polite and assertive live regions are emptied 5 s after the last toast of their kind is gone; `ToastItem.seq` is marked `@internal` (Cirrus-Inc/cuix#25)
+- fix(react): a `Toast` with an `action` no longer auto-dismisses (an Undo is a function with a time limit, WCAG 2.2.1 / 2.2.3); it is announced with an action hint ("Entry deleted. Undo available.", `ToastLabels.actionHint` is optional); the polite and assertive live regions are emptied 5 s after the last toast of their kind is gone; `ToastItem.seq` is marked `@internal`; a full stack pushes out the oldest toast without an action before an Undo (Cirrus-Inc/cuix#25)
 
 ## [0.4.0] - 2026-10-14
 

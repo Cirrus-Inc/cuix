@@ -172,7 +172,10 @@ export function ToastProvider({ children, labels = DEFAULT_LABELS }: { children:
       const last = fresh.filter((x) => STYLE[x.type].assertive === (kind === 'assertive')).pop();
       if (!last) continue;
       let text = last.count > 1 ? `${last.message} ×${last.count}` : last.message;
-      if (last.action) text += `${/[.!?]$/.test(text) ? '' : '.'} ${actionHint(last.action.label)}.`;
+      if (last.action) {
+        const hint = actionHint(last.action.label);
+        text += `${/[.!?]$/.test(text) ? '' : '.'} ${hint}${/[.!?]$/.test(hint) ? '' : '.'}`;
+      }
       setLive((prev) => ({ ...prev, [kind]: '' }));
       const handle = setTimeout(() => {
         announceTimers.current.delete(handle);
@@ -188,6 +191,7 @@ export function ToastProvider({ children, labels = DEFAULT_LABELS }: { children:
       pending.forEach(clearTimeout);
       pending.clear();
       Object.values(stale).forEach(clearTimeout);
+      clearTimers.current = {};
     };
   }, []);
 
@@ -209,7 +213,11 @@ export function ToastProvider({ children, labels = DEFAULT_LABELS }: { children:
           next[at] = { ...next[at], count: next[at].count + 1, seq: item.seq, lease };
           return next;
         }
-        return [...prev, item].slice(-MAX_TOASTS);
+        if (prev.length < MAX_TOASTS) return [...prev, item];
+        // Full: the oldest toast without an action goes first, so new toasts
+        // never push an untimed Undo off screen while a plain one could go.
+        const drop = Math.max(0, prev.findIndex((x) => !x.action));
+        return [...prev.slice(0, drop), ...prev.slice(drop + 1), item];
       });
       if (lease !== undefined) schedule(lease, DURATION);
     },

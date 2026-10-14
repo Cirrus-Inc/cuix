@@ -333,7 +333,8 @@ toast('Entry deleted.', { action: { label: 'Undo', run: restore } });
   is gone, so nobody browsing later meets a stale message. A toast with an action is announced
   with a hint, "Entry deleted. Undo available." (`labels.actionHint(label)` translates it). The
   visible toasts carry no live role.
-- At most 4 on screen; a fifth pushes out the oldest. "Dismiss all" appears from 2 up.
+- At most 4 on screen; a fifth pushes out the oldest toast without an action, or the oldest
+  one when all four have an action. "Dismiss all" appears from 2 up.
 - Every toast is also kept in a log (last 50), so it is never the only record of an outcome:
   `useToastLog()` or the ready-made `<ToastLog />` for a settings or help page.
 - Phone: top of the screen under the safe area. Desktop: bottom-right.
