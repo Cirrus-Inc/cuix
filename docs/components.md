@@ -6,6 +6,8 @@
 `@source "../node_modules/lumux/dist/react";` to their CSS, so Tailwind sees the
 classes the components use.
 
+No product has migrated to these components yet; HIVE, an internal Cirrus product, is the first consumer.
+
 Every component here passes the harness (`npm run e2e`):
 - zero axe violations, AAA contrast included;
 - no horizontal overflow and every target ≥44×44, in all six themes, default and dense,
@@ -53,8 +55,6 @@ Plus the inline `theme-init.js` in `<head>` (see docs/tokens.md).
   - `labels` translates the visible labels and the group name.
 
 ## AppShell · SkipLink · useDocumentTitle
-
-Used by all three React apps.
 
 - `AppShell` renders, in order:
   1. a `SkipLink` (2.4.1);
