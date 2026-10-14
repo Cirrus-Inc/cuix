@@ -11,7 +11,7 @@ alternative, the decision log names the cost. Reopen one with a written case, no
 
 ## 3. Hard requirements — how the standard meets them
 
-**Conformance level (D23): WCAG 2.2 AAA wherever achievable, AA as the absolute floor. Accessibility is the company's product; a token, component or pattern that cannot meet AA is a defect, and one that could meet AAA and doesn't is a finding.** The prompt asked for AA; this is stricter and overrides every earlier number below.
+**Conformance level (D23): WCAG 2.2 AAA wherever achievable, AA as the absolute floor. Accessibility is the company's product; a token, component or pattern that cannot meet AA is a defect, and one that could meet AAA and doesn't is a finding.** This is stricter than AA and overrides every other number below.
 
 | Requirement | Level | Mechanism |
 |---|---|---|

@@ -45,6 +45,8 @@ fi
 PINNED=(README.md docs/getting-started.md)
 perl -pi -e "s#(github:danieloceno/lumux\#)v\\d+\\.\\d+\\.\\d+#\${1}$tag#g" "${PINNED[@]}"
 
+# The build writes into dist/ without cleaning it; stale files would ship on the tag.
+rm -rf dist
 [[ $(node -p "require('./package.json').version") == "$v" ]] || npm version "$v" --no-git-tag-version >/dev/null
 npm run check || { git checkout -- package.json package-lock.json "${PINNED[@]}"; die "gate failed; version bump reverted"; }
 
