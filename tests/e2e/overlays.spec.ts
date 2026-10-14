@@ -121,6 +121,20 @@ test('dialog: one level of nesting stacks and Escape closes only the top', async
   await expect(page.getByRole('button', { name: 'Save' })).toBeFocused();
 });
 
+test('dialog: a third level never throws and logs in development', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+  await open(page);
+  await page.getByTestId('open-dialog').click();
+  await page.getByRole('button', { name: 'Save' }).click();
+  await page.getByTestId('open-third').click();
+  await expect(page.getByRole('dialog', { name: 'Third level' })).toBeVisible();
+  await expect(page.locator('h1')).toBeAttached();
+  expect(errors.some((e) => e.includes('§5.4'))).toBe(true);
+  expect(errors.filter((e) => e.startsWith('pageerror'))).toEqual([]);
+});
+
 // Its own describe with test.use, not a second context: a second page in the
 // same browser steals window focus from the other tests' pages (tooltip blur).
 test.describe('coarse pointer', () => {

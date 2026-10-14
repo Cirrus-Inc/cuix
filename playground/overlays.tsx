@@ -28,6 +28,7 @@ function Section({ id, title, children }: { id: string; title: string; children:
 export function Overlays() {
   const [dialog, setDialog] = useState(false);
   const [nested, setNested] = useState(false);
+  const [third, setThird] = useState(false);
   const [guarded, setGuarded] = useState(false);
   const [sheetA, setSheetA] = useState(false);
   const [sheetB, setSheetB] = useState(false);
@@ -81,6 +82,12 @@ export function Overlays() {
             }
           >
             <p className="text-body">Save the new name?</p>
+            <Button data-testid="open-third" variant="secondary" onClick={() => setThird(true)}>
+              Too deep
+            </Button>
+            <Dialog open={third} onOpenChange={setThird} title="Third level" size="sm">
+              <p className="text-body">Not supported, but it must not crash.</p>
+            </Dialog>
           </Dialog>
         </Dialog>
         <Dialog
