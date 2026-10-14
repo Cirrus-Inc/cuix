@@ -2,7 +2,9 @@
 
 import { ChevronDown } from 'lucide-react';
 import {
+  Children,
   createContext,
+  isValidElement,
   useContext,
   useEffect,
   useId,
@@ -52,9 +54,12 @@ export function Field({ label, hint, error, required = false, requiredLabel, id,
   const generated = useId();
   const fieldId = id ?? generated;
   const [controlId, setControlId] = useState<string>();
+  // Server render and first paint: read a single child's own id, before the control registers it.
+  const only = Children.count(children) === 1 && isValidElement<{ id?: unknown }>(children) ? children.props.id : undefined;
+  const childId = typeof only === 'string' ? only : undefined;
   return (
     <div className={cx('flex flex-col gap-1', className)}>
-      <label htmlFor={controlId ?? fieldId} className="text-body-sm font-medium text-foreground">
+      <label htmlFor={controlId ?? childId ?? fieldId} className="text-body-sm font-medium text-foreground">
         {label}
         {required && <RequiredMark label={requiredLabel} />}
       </label>
