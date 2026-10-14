@@ -189,5 +189,5 @@ Details: [gates.md](./gates.md).
 
 ## 10. Upgrading
 
-Bump the tag. Breaking changes are token renames and removals; they ship as deprecated aliases
-for one minor first. Read the tag's notes, run your gates, done.
+Bump the tag. Breaking changes are token renames and removals; the old name is kept as a
+hand-written alias for one minor first. Read the tag's notes, run your gates, done.

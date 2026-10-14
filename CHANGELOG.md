@@ -1,9 +1,10 @@
 # Changelog
 
-Every tag, newest first. Entries before the lumux import reference PRs of the private `Cirrus-Inc/cuix` repository; `v0.1.0` and `v0.2.0` were tagged there only and are not installable from lumux. Install a tag with `npm i github:danieloceno/lumux#vX.Y.Z`. Breaking changes are token renames and removals and component API breaks; removed tokens ship as deprecated aliases for one minor first. GitHub Releases carry the same notes, generated from merged PR titles. Maintainers update this file when cutting a release.
+Every tag, newest first. Entries before the lumux import reference PRs of the private `Cirrus-Inc/cuix` repository; `v0.1.0` and `v0.2.0` were tagged there only and are not installable from lumux. Install a tag with `npm i github:danieloceno/lumux#vX.Y.Z`. Breaking changes are token renames and removals and component API breaks; removed tokens are kept as hand-written deprecated aliases for one minor first. GitHub Releases carry the same notes, generated from merged PR titles. Maintainers update this file when cutting a release.
 
 ## [Unreleased]
 
+- docs: reconcile docs with code: `ConfirmInline` anatomy and focus after `onConfirm`, axe covers resting states only, the token alias policy is a rule for authors, not a build feature (Cirrus-Inc/cuix#30)
 - fix(react): a `Toast` with an `action` no longer auto-dismisses (an Undo is a function with a time limit, WCAG 2.2.1 / 2.2.3); it is announced with an action hint ("Entry deleted. Undo available.", `ToastLabels.actionHint` is optional); the polite and assertive live regions are emptied 5 s after the last toast of their kind is gone; `ToastItem.seq` is marked `@internal` (Cirrus-Inc/cuix#25)
 
 ## [0.4.0] - 2026-10-14

@@ -316,7 +316,7 @@ CI runs both suites on every PR. Every push to `main` publishes the demo to GitH
 
 ## Versioning
 
-Semantic versioning on git tags, with `dist/` committed on the tag commit only. Token renames and removals are breaking. Removed tokens ship as deprecated aliases for one minor before deletion. Pin an exact tag and upgrade on purpose; updates never arrive silently.
+Semantic versioning on git tags, with `dist/` committed on the tag commit only. Token renames and removals are breaking. Authors keep a removed token as a hand-written alias of its replacement for one minor before deletion (`build-tokens.ts` has no alias mechanism yet). Pin an exact tag and upgrade on purpose; updates never arrive silently.
 
 ```sh
 npm run release -- X.Y.Z   # from a clean main
