@@ -19,6 +19,14 @@ npm i @fontsource-variable/inter                             # the font; `geist`
 
 Pin a tag, never a branch. Upgrades are deliberate: bump the tag, re-run `install-gates.sh`, run your gates.
 
+The pin is a GitHub dependency, so npm shells out to `git`. A Docker builder stage must install it
+first: `node:alpine` ships without it (`apk add --no-cache git`).
+
+**Monorepo.** `npm i -w <workspace> github:...#tag` can nest lumux under the workspace's
+`node_modules` instead of hoisting it (seen with npm 11.18.0). Every root-relative path then breaks:
+a hand-written `@source`, `install-gates.sh --src`, tests. Install from the repo root, or run `ls node_modules/lumux`
+after the install and check it landed where those paths expect.
+
 ## 2. CSS
 
 ```css
@@ -80,9 +88,12 @@ script-src 'self' 'sha256-…';   # the single line in theme-init.sha256, quoted
 The hash covers the exact bytes of `theme-init.js`, including its single trailing newline (it equals
 `openssl dgst -sha256 -binary dist/theme-init.js | base64`). The Vite recipe emits those bytes
 unchanged. A hand-pasted copy must also match byte for byte, newline included, or the browser
-rejects it; with a nonce-based CSP, put the nonce on the tag instead.
+rejects it; with a nonce-based CSP, put the nonce on the tag instead. Inline the file byte-exact:
+no `trim()`, no formatter pass, or the hash differs and the CSP blocks the script.
 
 ## 4. React root
+
+> **Warning:** `ThemeProvider` must wrap the whole app, unauthenticated pages (login, signup, errors) included.
 
 ```tsx
 import {
@@ -169,6 +180,8 @@ export default [...lumuxA11y /*, your config */];
 bash node_modules/lumux/scripts/install-gates.sh --src src        # add --ui <dir> if you keep your own primitives
 npm run check:gates
 ```
+
+In a monorepo, check `ls node_modules/lumux` first: a nested install breaks the path (see section 1).
 
 Copies the three gates into `scripts/`, freezes today's drift counts as the baseline and adds
 `check:gates` to `package.json`. Commit it and run it in CI. Re-run after each lumux upgrade.
