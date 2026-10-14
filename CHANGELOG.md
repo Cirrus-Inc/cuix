@@ -16,6 +16,8 @@ Every tag, newest first. Entries before the lumux import reference PRs of the pr
 - Remove internal analysis prompts and private product inventories from the repository and from `ARCHITECTURE.md`; the install no longer mentions private-repo access.
 - Add `CODEOWNERS`, a pull request template and bug / feature issue templates.
 - chore(release): sync the install pin and release notes on release (Cirrus-Inc/cuix#18)
+- chore(tooling): `install-gates.sh` reports a missing `--src` / `--ui` value, surfaces the gate's error when the baseline cannot be written, and says when `--src` / `--ui` are ignored; `ThemeProvider` follows theme changes from other tabs; `Menu` items accept an optional `id` key; add `sideEffects` to `package.json` (Cirrus-Inc/cuix#34)
+- chore(ci): least-privilege `permissions`, `concurrency` and commit-SHA-pinned actions in the workflows; add grouped Dependabot updates (npm weekly, github-actions monthly); run the overlay e2e specs on WebKit as well as Chromium; the focus-return specs open their dialog by keyboard because WebKit does not focus a clicked button (Cirrus-Inc/cuix#31)
 
 ## [0.3.0] - 2026-10-08
 

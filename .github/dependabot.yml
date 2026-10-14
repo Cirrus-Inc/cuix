@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      radix:
+        patterns: ["@radix-ui/*"]
+      tailwind:
+        patterns: ["tailwindcss", "@tailwindcss/*"]
+      react:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom", "@vitejs/plugin-react"]
+      playwright-axe:
+        patterns: ["@playwright/test", "@axe-core/*"]
+      lint-types:
+        patterns: ["eslint", "eslint-plugin-*", "typescript", "typescript-eslint", "@types/node"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

@@ -1,5 +1,5 @@
 import { AxeBuilder } from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 // Phase 2c: every overlay open, in day and night, desktop and 320px.
 const INTERACTIVE = 'a[href], button, input, select, textarea, [role="menuitem"]';
@@ -7,6 +7,15 @@ const INTERACTIVE = 'a[href], button, input, select, textarea, [role="menuitem"]
 async function open(page: Page, theme = 'day') {
   await page.goto(`/?theme=${theme}`);
   await page.locator('h1').waitFor();
+}
+
+// WebKit does not focus a clicked button, so there the opener is activated by
+// keyboard; Chromium keeps the mouse path, which is what most users take.
+async function activate(page: Page, el: Locator, browserName: string) {
+  if (browserName !== 'webkit') return el.click();
+  await el.focus();
+  await expect(el).toBeFocused();
+  await page.keyboard.press('Enter');
 }
 
 async function axe(page: Page) {
@@ -36,10 +45,10 @@ for (const theme of ['day', 'night'] as const) {
     test.describe(`${theme} · ${vp.name}`, () => {
       test.use({ viewport: { width: vp.width, height: vp.height } });
 
-      test('dialog: named, trapped, 44px, axe clean, closes on Escape, returns focus', async ({ page }) => {
+      test('dialog: named, trapped, 44px, axe clean, closes on Escape, returns focus', async ({ page, browserName }) => {
         await open(page, theme);
         const opener = page.getByTestId('open-dialog');
-        await opener.click();
+        await activate(page, opener, browserName);
         const dialog = page.getByRole('dialog', { name: 'Edit profile' });
         await expect(dialog).toBeVisible();
         await expect(dialog).toHaveAccessibleDescription('Changes apply to every workspace.');
@@ -107,10 +116,14 @@ test('dialog: overlay click closes unless dismissOnOverlay is false', async ({ p
   await expect(guarded).toBeHidden();
 });
 
-test('dialog: one level of nesting stacks and Escape closes only the top', async ({ page }) => {
+test('dialog: one level of nesting stacks and Escape closes only the top', async ({ page, browserName }) => {
   await open(page);
   await page.getByTestId('open-dialog').click();
-  await page.getByRole('button', { name: 'Save' }).click();
+  // Radix moves focus into the dialog on mount; activating Save before that
+  // lands lets the mount focus win and Enter hit another control.
+  const first = page.getByRole('dialog', { name: 'Edit profile' });
+  await expect.poll(() => first.evaluate((el) => el.contains(document.activeElement))).toBe(true);
+  await activate(page, page.getByRole('button', { name: 'Save' }), browserName);
   const top = page.getByRole('dialog', { name: 'Confirm save' });
   await expect(top).toBeVisible();
   // The scrim carries the layer: z-modal-top for the second level.

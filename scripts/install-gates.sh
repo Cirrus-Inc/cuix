@@ -26,10 +26,11 @@ command -v node >/dev/null || die "node is required"
 
 SRC=()
 UI=""
+FLAGS=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --src) SRC+=("$2"); shift 2 ;;
-    --ui) UI="$2"; shift 2 ;;
+    --src) [[ $# -ge 2 ]] || die "--src needs a value"; SRC+=("$2"); FLAGS=1; shift 2 ;;
+    --ui) [[ $# -ge 2 ]] || die "--ui needs a value"; UI="$2"; FLAGS=1; shift 2 ;;
     *) die "unknown argument: $1" ;;
   esac
 done
@@ -60,7 +61,7 @@ require('fs').writeFileSync('lumux-gates.json', `${JSON.stringify(config, null, 
 NODE
   echo "install-gates: wrote lumux-gates.json (src: ${SRC[*]}${UI:+, ui: $UI})"
 else
-  echo "install-gates: lumux-gates.json kept"
+  echo "install-gates: lumux-gates.json kept${FLAGS:+; --src/--ui ignored, edit the file}"
 fi
 
 # The config may name its own baseline path; checking the default name would
@@ -68,7 +69,9 @@ fi
 baseline="$(node -p "JSON.parse(require('fs').readFileSync('lumux-gates.json','utf8')).baseline ?? 'lumux-gates.baseline.json'")" ||
   die "could not read lumux-gates.json"
 if [[ ! -f "$baseline" ]]; then
-  node scripts/check-ui-className.mjs --update-baseline >/dev/null 2>&1 || true
+  if ! freeze_out="$(node scripts/check-ui-className.mjs --update-baseline 2>&1)"; then
+    echo "$freeze_out" >&2
+  fi
   [[ -f "$baseline" ]] || die "could not write the baseline"
   echo "install-gates: froze $baseline"
 else

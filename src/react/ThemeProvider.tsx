@@ -72,6 +72,18 @@ export function ThemeProvider({ children, legacy }: { children: ReactNode; legac
     return () => mq.removeEventListener('change', onChange);
   }, [theme]);
 
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== null && e.key !== THEME_STORAGE_KEY) return;
+      const next = readTheme();
+      applyTheme({ theme: next, persist: false });
+      setThemeState(next);
+      setResolved(resolvedTheme(next));
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
   const setTheme = useCallback((next: ThemeChoice) => {
     applyTheme({ theme: next });
     setThemeState(next);

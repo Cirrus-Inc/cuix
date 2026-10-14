@@ -39,6 +39,10 @@
     },
     "./eslint": "./eslint/a11y.js"
   },
+  "sideEffects": [
+    "*.css",
+    "./dist/theme-init.js"
+  ],
   "files": [
     "dist",
     "eslint",
