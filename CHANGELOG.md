@@ -4,6 +4,7 @@ Every tag, newest first. Entries before the lumux import reference PRs of the pr
 
 ## [Unreleased]
 
+- fix(react): `Dialog`, `Sheet` and `Drawer` return focus to the clicked opener in Safari, which does not focus a clicked button, by falling back to the pointer target when nothing was focused at open (Cirrus-Inc/cuix#39)
 - fix(tooling): `install-gates.sh` rejects a `--src` / `--ui` value that starts with `--`, so `--src --ui x` is a usage error
 - fix(react): a `Menu` item `id` with whitespace no longer breaks the disabled reason's `aria-describedby`; the reason's element id is built from the item index
 - chore(ci): workflow action SHA pin comments name the exact version (checkout and setup-node v4.4.0, upload-pages-artifact v3.0.1, deploy-pages v4.0.5)
