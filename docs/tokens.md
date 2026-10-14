@@ -26,17 +26,17 @@ What each token means, when to use it, and what never to do with it. The source 
 
 | | |
 |---|---|
-| Attribute | `data-theme` on `<html>`, one of six names (table below). Absent = follow the OS, live, through `prefers-color-scheme`, with the default pair (`day` / `night`). Any element can carry it to flip its subtree. |
-| Persistence | `localStorage["lumux-theme"]`, one of the six names. No key = system. |
+| Attribute | `data-theme` on `<html>`, one of eight names (table below). Absent = follow the OS, live, through `prefers-color-scheme`, with the default pair (`day` / `night`). Any element can carry it to flip its subtree. |
+| Persistence | `localStorage["lumux-theme"]`, one of the eight names. No key = system. |
 | Runtime | `import { applyTheme, readTheme, resolvedTheme, resolvedScheme, THEME_NAMES } from "lumux/theme"`. `applyTheme({ theme: "ocean" })` sets the attribute, persists the choice and updates `<meta name="theme-color">`. `{ theme: "system" }` clears both. `persist: false` applies without storing it. `resolvedScheme()` answers `light` / `dark` for anything that is not a token. |
 | Pre-paint | `theme-init.js` reads the key and sets the attribute before first paint. Without it, a stored dark theme flashes light on load. `theme-init.sha256` is its CSP `script-src` hash ([getting-started.md](./getting-started.md)). |
-| Pinning | An app that offers only some themes lists them in `<ThemeSwitcher themes={…}>`; an app that must stay in one (an embed) sets `data-theme` and doesn't mount a switcher. The token files always carry all six. |
+| Pinning | An app that offers only some themes lists them in `<ThemeSwitcher themes={…}>`; an app that must stay in one (an embed) sets `data-theme` and doesn't mount a switcher. The token files always carry all eight. |
 | Embeds | `tokens.embed.css`: a `:host` block with 16 tokens that follows the host's `prefers-color-scheme` and never persists. |
 | Shadow roots | `tokens.host.css`: every token on `:host`, no base rules, so nothing leaks onto the host page. Put `data-theme` on the shadow host; without it the OS decides. Bring your own focus rule inside the shadow root (copy the one under Focus). |
 
 `color-scheme` is set per theme, so native scrollbars, form controls and the canvas follow it.
 
-### The six themes
+### The eight themes
 
 | `data-theme` | Scheme | Family | Canvas / surface | Accent | Character |
 |---|---|---|---|---|---|
@@ -46,14 +46,39 @@ What each token means, when to use it, and what never to do with it. The source 
 | `midnight` | dark | extended | `#0e0e11` / `#17171c` | `#b69ffa` | Near-black, violet. |
 | `forest` | light | extended | `#f3f6f5` / `#ffffff` | `#1a5a3a` | Green on paper; its amber accent is `warning`. |
 | `ocean` | dark | extended | `#0f131a` / `#171d26` | `#24c0f3` | Navy, cyan; its violet accent is `info`. |
+| `hive-day` | light | hive | `#f7f7f2` / `#ffffff` | `#172f37` | HIVE paper and ink. Accent is ink, see below. |
+| `hive-night` | dark | hive | `#10272e` / `#172f37` | `#fcaf9a` | HIVE ink-deep, paper text, coral accent. |
 
 The extended four keep their source palettes' hue and saturation in every value and move only lightness until the pair passes (`src/tokens/sets/extended.ts` lists what moved). A dark theme's accent at 7:1 on near-black is pale by necessity: `midnight` reads lavender, not the violet glow of the 4:1 original.
 
-Every app gets the same six in `tokens.css`; which ones it *offers* is the switcher's `themes` prop. Most apps offer the default pair; some offer all six.
+### hive deviations
+
+`hive-day` and `hive-night` come from the HIVE v6 mockup palette (`Cirrus-Inc/hive` `docs/mockup/css/hive.css` and `cirrus.css`; Cirrus-Inc/cuix#44). A mockup value that passes ships unchanged: paper `#f7f7f2`, white, hover `#edf1e8`, ink `#172f37`, ink-deep `#10272e`, line `#dce2dc` (decorative `border` only), selected `#edf4eb`, mint `#d7e8d5`, the form error pair `#fff2ee` / `#832a1d`, and on dark the footer text `#d7e1dc` / `#b9cbc4` and edge `#6f8480`. A value that fails moves to the nearest passing colour: same OKLCH hue, smallest OKLab ΔE. Same gate as every theme, no exception list. The source is `src/tokens/sets/hive.ts`.
+
+| Theme | Token | Mockup | Shipped | Pair | Before → after | Why |
+|---|---|---|---|---|---|---|
+| hive-day | `accent` (and `focus-ring`, `info`) | coral `#f5a18b` | ink `#172f37` | accent on `surface-raised` | 1.77 → 12.25 | `accent` is also link and selected-state text. Coral at 7:1 at its own hue is brick `#903016`, ΔE 1 from `danger`, so the primary and the destructive button would look the same. The mockup draws every selected, pressed, checked and focus state in ink and has an ink button (`button-dark`), so ink takes the role. Coral is not in `hive-day`'s vocabulary except as `chart-1`. |
+| hive-day | `foreground-muted`, `foreground-subtle` | muted `#52646a` | `#435359` | on paper / on `surface-raised` | 5.76 → 7.46 / 5.41 → 7.00 | Text is 7:1. The mockup has one secondary text colour, so both roles get it. |
+| hive-day | `border-strong` | line `#dce2dc` | `#888b88` | on paper / on `surface-raised` | 1.22 → 3.21 / 1.15 → 3.01 | A control edge is 3:1 (1.4.11). `#dce2dc` stays as the decorative `border`. |
+| hive-day | `danger` | rust `#a13624` | `#942b19` | white on danger / danger on `surface-raised` | 6.84 → 8.02 / 5.98 → 7.01 | Label on the fill and text on every surface are 7:1. ΔE 3.7. |
+| hive-day | `success` | checked-choice green `#445e46` | `#374f39` | on `surface-raised` / on mint (`success-soft`) | 6.25 → 7.84 / 5.58 → 7.01 | Text on every surface and on its tint is 7:1. |
+| hive-day | `warning` | none (lumux `day` `#813e00`) | `#803e02` | on `surface-raised` | 6.99 → 7.04 | The mockup has no warning; lumux `day`'s value is 6.99 on this floor. ΔE 0.2. |
+| hive-day | `chart-1` | coral-dark `#d7755c` | `#d26e55` | on `surface-raised` | 2.78 → 3.01 | A chart mark is 3:1. ΔE 1.9. |
+| hive-night | `accent` (and `focus-ring`, `info`) | coral `#f5a18b` | `#fcaf9a` | on `surface` (ink) / on `surface-raised` | 6.91 → 7.83 / 6.18 → 7.00 | Coral passes on ink-deep (7.66) but not on the two lighter surfaces. ΔE 3.7. |
+| hive-night | `accent-foreground` | ink `#172f37` on coral | ink-deep `#10272e` | on coral | 6.91 → 7.66 (8.68 on the shipped accent) | The mockup's ink on coral is 6.91. Darkening the label to ink-deep fixes it without moving coral. |
+| hive-night | `success` | map edge `#a9c2a5` | `#afc9ab` | on `surface-raised` | 6.53 → 7.02 | ΔE 2.1. |
+| hive-night | `warning` | none (lumux `night` `#f6a95a`) | `#fdb266` | on `surface-raised` | 6.41 → 7.00 | ΔE 2.6. |
+| hive-night | `danger` | rust `#a13624` | `#fbafa0` | on `surface-raised` | 1.83 → 7.00 | Rust is a light-theme colour. At 7:1 on ink it is salmon, ΔE 0.8 from the accent: no red at that lightness separates from coral. Status never travels by colour alone (1.4.1), so the word or icon tells them apart. |
+
+The mockup has no dark mode, so `hive-night` keeps ink-deep surfaces, paper text and a coral accent, and invents only what the vocabulary needs and the mockup does not have: `surface-raised` `#1f373f` (one more ink-deep → ink step), `accent-strong` `#ffc1b0` and `danger-strong` `#ffc1b4` (one step lighter), the `*-soft` tints (dark sage for `accent`/`info` as in `hive-day`, then green, amber and red; at or below the raised step so their `-on-soft` text stays 7:1, so they differ from the surfaces by hue, not lightness) and `chart-2` … `chart-5` (lumux `night`'s cyan, violet, green, magenta; its orange sits on coral). `hive-day`'s `chart-2` … `chart-5` are lumux `day`'s blue, violet, green, magenta for the same reason.
+
+Out of scope: the map colours (`map-idle`, `map-filled`) are app-only and live in HIVE as `--app-*` with its own contrast check (Extension layer, below). Fonts: lumux ships no font files; the mockup's DM Sans and Manrope are not part of these themes.
+
+Every app gets the same eight in `tokens.css`; which ones it *offers* is the switcher's `themes` prop. Most apps offer the default pair; some offer all eight.
 
 ## Colour
 
-Every text pair below passes **7:1** in all six themes and every boundary passes **3:1**: `npm run check:contrast` enforces it with no exception list. A pair that isn't listed in `src/tokens/vocabulary.ts` (`PAIRS`) is not legal. To add one, add it there and make it pass. The same run reads every class string in `src/react` and fails on a text/background combination that `PAIRS` does not list, in any state (`hover:`, `data-highlighted:`, `disabled:`, ...): a state keeps the resting text or background it does not set, text with no background counts on each surface, and a control edge (`border-*`, except the decorative `border`) counts on each surface at 3:1. A component that combines a new fg/bg pair needs a `PAIRS` entry first (`tests/pairs.test.ts` checks the derivation). The derivation reads one class string at a time (literals joined with `+` count as one): it does not see a text class and a background class that only meet through `cx()`, text on a parent element's background, or a fill nested in another fill (a switch knob on its track, a segment on its track). List those pairs by hand.
+Every text pair below passes **7:1** in all eight themes and every boundary passes **3:1**: `npm run check:contrast` enforces it with no exception list. A pair that isn't listed in `src/tokens/vocabulary.ts` (`PAIRS`) is not legal. To add one, add it there and make it pass. The same run reads every class string in `src/react` and fails on a text/background combination that `PAIRS` does not list, in any state (`hover:`, `data-highlighted:`, `disabled:`, ...): a state keeps the resting text or background it does not set, text with no background counts on each surface, and a control edge (`border-*`, except the decorative `border`) counts on each surface at 3:1. A component that combines a new fg/bg pair needs a `PAIRS` entry first (`tests/pairs.test.ts` checks the derivation). The derivation reads one class string at a time (literals joined with `+` count as one): it does not see a text class and a background class that only meet through `cx()`, text on a parent element's background, or a fill nested in another fill (a switch knob on its track, a segment on its track). List those pairs by hand.
 
 ### Surfaces
 
@@ -100,7 +125,7 @@ The `day` accent is `#005778`, not the source brand blue `#009fda`, which is 3.0
 - Status never travels by colour alone: an icon or a word goes with it (1.4.1).
 - `danger` is for destructive actions and errors only, never for emphasis.
 - `danger-strong` is the hover and pressed fill of a danger button, with `danger-foreground` on it. Only danger has a `-strong` step, because it is the only status that is a button variant.
-- `info` equals `accent` in the core themes. In the extended themes it carries the source palette's second accent (sky in dawn/midnight, violet in ocean), which is why it is a separate token.
+- `info` equals `accent` in the core and hive themes. In the extended themes it carries the source palette's second accent (sky in dawn/midnight, violet in ocean), which is why it is a separate token.
 
 ### Charts
 

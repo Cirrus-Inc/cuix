@@ -32,7 +32,7 @@ after the install and check it landed where those paths expect.
 ```css
 /* app.css */
 @import "tailwindcss";
-@import "lumux/tokens.css";   /* custom properties: six themes, type, spacing, focus, motion */
+@import "lumux/tokens.css";   /* custom properties: eight themes, type, spacing, focus, motion */
 @import "lumux/theme.css";    /* Tailwind v4 @theme: bg-surface, text-body, rounded-control, min-h-target … */
 @import "@fontsource-variable/inter";
 ```
@@ -120,7 +120,7 @@ createRoot(document.getElementById("root")!).render(
 
 - `AppShell` gives you the skip link, the `<header>` / `<main id="main">` landmarks and safe
   areas. Keep your own navigation inside it; lumux ships primitives, not shells.
-- `ThemeSwitcher` without `themes` offers the default pair plus System. Pass `THEME_NAMES` for all six.
+- `ThemeSwitcher` without `themes` offers the default pair plus System. Pass `THEME_NAMES` for all eight.
   An app that pins one theme sets `data-theme` on `<html>` and mounts no switcher.
 - Each route calls `useDocumentTitle("Contacts", "Acme")`.
 
@@ -138,7 +138,7 @@ Mount all four providers, in this order (the playground does). `TooltipProvider`
 
 Decide before the first screen:
 
-- Which themes the product offers (all six via `THEME_NAMES`, or a subset in `ThemeSwitcher themes`).
+- Which themes the product offers (all eight via `THEME_NAMES`, or a subset in `ThemeSwitcher themes`).
 - A switcher, or one pinned theme: set `data-theme` on `<html>` and mount no switcher.
 - Gates installed (section 7) and run in CI.
 - An axe pass in every theme you offer in CI (section 8).
@@ -190,7 +190,7 @@ Details: [gates.md](./gates.md).
 ## 8. CI
 
 - Run your own axe / Playwright pass in every theme you offer. lumux guarantees its components in
-  all six; your layouts are yours.
+  all eight; your layouts are yours.
 
 ## 9. Without React, or inside a shadow root
 

@@ -58,7 +58,7 @@ test('toasts: both live regions exist and are empty before any toast, and no vis
   await expect(page.getByRole('region', { name: 'Notifications' }).locator('[role="status"], [role="alert"], [aria-live]')).toHaveCount(0);
 });
 
-for (const theme of ['day', 'night'] as const) {
+for (const theme of ['day', 'night', 'hive-day', 'hive-night'] as const) {
   test(`toasts: roles, stickiness, merge, cap, dismiss all, log (${theme})`, async ({ page }) => {
     await open(page, theme);
     await page.getByTestId('toast-error').click();

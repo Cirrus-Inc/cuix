@@ -15,7 +15,7 @@ const themeBlock = (theme: (typeof THEME_NAMES)[number]) =>
   [`color-scheme: ${THEMES[theme].scheme};`, ...COLOR_TOKENS.map((t) => `--lumux-${t}: ${THEMES[theme].colors[t]};`)];
 
 test('every theme fills every colour token with a hex value', () => {
-  assert.equal(THEME_NAMES.length, 6);
+  assert.equal(THEME_NAMES.length, 8);
   for (const theme of THEME_NAMES) {
     assert.deepEqual(Object.keys(THEMES[theme].colors).sort(), [...COLOR_TOKENS].sort());
     for (const [k, v] of Object.entries(THEMES[theme].colors)) {

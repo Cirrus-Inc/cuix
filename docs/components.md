@@ -11,7 +11,7 @@ No product has migrated to these components yet; HIVE, an internal Cirrus produc
 Every component here passes the harness (`npm run e2e`):
 - zero axe violations in the resting state (hover and pressed pairs are covered by
   `check-contrast`, which checks every legal pair, not by axe);
-- no horizontal overflow and every target ≥44×44, in all six themes, default and dense,
+- no horizontal overflow and every target ≥44×44, in all eight themes, default and dense,
   at 1280px, 320px and 200% zoom;
 - a 2px solid focus outline on every focusable element, including under forced colors.
 
@@ -52,10 +52,10 @@ Without `TooltipProvider`, `Tooltip` throws on render (Radix needs it). Without 
   screen (the default pair when `theme` is `system`); `scheme` is `light` / `dark`.
 - `ThemeSwitcher` is a row of labelled toggles with `aria-pressed`, inside `role="group"`.
   - `themes` lists what the app offers, default the pair `["day", "night"]`. Pass
-    `THEME_NAMES` for all six. The row wraps. Below `sm` the labels are hidden only when every
+    `THEME_NAMES` for all eight. The row wraps. Below `sm` the labels are hidden only when every
     theme has its own icon (one light, one dark); with repeated icons they stay drawn.
   - `system={false}` removes "follow the OS" for an app that pins its themes.
-  - A stored theme that is not in `themes` still applies (the CSS carries all six) but no
+  - A stored theme that is not in `themes` still applies (the CSS carries all eight) but no
     toggle reads as pressed. List every theme the app ever offered, or migrate the key.
   - Below `sm` the labels become screen-reader only, because labelled toggles don't fit at
     320px. Each toggle keeps a sun or moon icon by scheme.

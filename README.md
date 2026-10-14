@@ -2,7 +2,7 @@
 
 <p align="center">
   <strong>Accessible themes and components, with contrast enforced at build time.</strong><br>
-  Six WCAG 2.2 AAA themes, one semantic token vocabulary, one React component set.
+  Eight WCAG 2.2 AAA themes, one semantic token vocabulary, one React component set.
 </p>
 
 <p align="center">
@@ -24,8 +24,8 @@
   <a href="#accessibility"><img alt="WCAG 2.2 AAA" src="https://img.shields.io/badge/WCAG_2.2-AAA-1f6f43?style=flat-square"></a>
   <a href="#accessibility"><img alt="Text contrast 7:1" src="https://img.shields.io/badge/text_contrast-7%3A1-1f6f43?style=flat-square"></a>
   <a href="#accessibility"><img alt="Touch targets 44px" src="https://img.shields.io/badge/touch_targets-44px-1f6f43?style=flat-square"></a>
-  <a href="#themes"><img alt="Six themes" src="https://img.shields.io/badge/themes-6-005778?style=flat-square"></a>
-  <a href="#themes"><img alt="378 pairs checked" src="https://img.shields.io/badge/contrast_pairs-378_checked-005778?style=flat-square"></a>
+  <a href="#themes"><img alt="Eight themes" src="https://img.shields.io/badge/themes-8-005778?style=flat-square"></a>
+  <a href="#themes"><img alt="504 pairs checked" src="https://img.shields.io/badge/contrast_pairs-504_checked-005778?style=flat-square"></a>
 </p>
 
 <p align="center">
@@ -65,7 +65,7 @@
 
 ## Why lumux
 
-lumux is Cirrus's design system: themes, tokens and React components where accessibility is enforced by the build, not by eye. Six WCAG 2.2 AAA themes, 44px touch targets, every color pair checked on each commit. HIVE's screens are built on it.
+lumux is Cirrus's design system: themes, tokens and React components where accessibility is enforced by the build, not by eye. Eight WCAG 2.2 AAA themes, 44px touch targets, every color pair checked on each commit. HIVE's screens are built on it.
 
 **NOTE:** Same code as Cirrus-Inc/cuix. It lives temporarily in a public MIT repo under Danny's GitHub because cuix is private and Danny is not an org owner yet. Once he is, cuix goes public and lumux is deleted.
 
@@ -74,7 +74,7 @@ Accessibility is usually a review step. In lumux it is a property of the system.
 Every app that adopts lumux uses the same semantic tokens, mounts the same components and runs the same gates. Changing the palette means changing one file, and moving between apps means relearning nothing.
 
 - **AAA tokens.** One semantic vocabulary; every legal text pair is held to 7:1 and verified in all themes.
-- **Six themes.** Two families, each authored on its own, not inverted.
+- **Eight themes.** Three families, each authored on its own, not inverted.
 - **Installable gates.** `install-gates.sh` puts the same UI checks, with a frozen baseline, into any consumer.
 - **Git-tag install.** `npm i github:danieloceno/lumux#vX.Y.Z`; no registry, and nothing upgrades until you change the tag.
 
@@ -82,7 +82,7 @@ Every app that adopts lumux uses the same semantic tokens, mounts the same compo
 
 | Area | Scope | State |
 |---|---|---|
-| Tokens & themes | Token source of truth, six AAA themes, contrast gate, focus and motion primitives | ✅ Shipped · [`docs/tokens.md`](./docs/tokens.md) |
+| Tokens & themes | Token source of truth, eight AAA themes, contrast gate, focus and motion primitives | ✅ Shipped · [`docs/tokens.md`](./docs/tokens.md) |
 | Components | React 19 set on Radix: actions, forms, overlays, content, toasts | ✅ Shipped · [`docs/components.md`](./docs/components.md) |
 | Gates | className, disabled-title and nested-scroller checks, installable into any consumer | ✅ Shipped · [`docs/gates.md`](./docs/gates.md) |
 | Adoption | HIVE, an internal Cirrus product, is the first consumer (lumux `v0.5.0`); no other product has migrated yet | ⏳ In progress |
@@ -112,7 +112,7 @@ npm i github:danieloceno/lumux#v0.5.0
 Inline the pre-paint script in `<head>`, before any CSS, so a stored dark theme never flashes light (a Vite plugin that injects the shipped file, and the CSP hash in `lumux/theme-init.sha256`, are in [`docs/getting-started.md`](./docs/getting-started.md)):
 
 ```html
-<script>try{var t=localStorage.getItem("lumux-theme");if(["day","night","dawn","midnight","forest","ocean"].indexOf(t)>-1)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<script>try{var t=localStorage.getItem("lumux-theme");if(["day","night","dawn","midnight","forest","ocean","hive-day","hive-night"].indexOf(t)>-1)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 ```
 
 ```tsx
@@ -138,12 +138,12 @@ flowchart LR
   subgraph lumux["lumux"]
     direction TB
     V["vocabulary.ts<br/>token names + legal fg/bg pairs"]
-    T["themes.ts<br/>six names + scheme"]
+    T["themes.ts<br/>eight names + scheme"]
     S["sets/<br/>core · extended"]
     SC["scale.ts<br/>type · spacing · radius · motion · z · targets"]
     B["build-tokens.ts"]
     TS["tsc<br/>tsconfig.build.json"]
-    C["check-contrast.ts<br/>six themes × every pairing"]
+    C["check-contrast.ts<br/>eight themes × every pairing"]
     R["src/react/<br/>components + ThemeProvider"]
     D["dist/<br/>tokens.css · tokens.host.css<br/>tokens.embed.css · theme.css · theme-init.js"]
     DR["dist/react · dist/theme<br/>JS + .d.ts"]
@@ -171,10 +171,11 @@ flowchart LR
 
 ## Themes
 
-Six themes in two families, all on one vocabulary, all at AAA.
+Eight themes in three families, all on one vocabulary, all at AAA.
 
 - **core** (`day` / `night`): the default pair. `system` resolves to it.
 - **extended** (`dawn` / `midnight` / `forest` / `ocean`): each keeps its source palette's hue and saturation. Only lightness moved, until every pair passed.
+- **hive** (`hive-day` / `hive-night`): the HIVE mockup palette. Values that failed the gate moved to the nearest passing colour; [docs/tokens.md](./docs/tokens.md#hive-deviations) lists each one.
 
 | `data-theme` | Scheme | Background / surface | Accent |
 |---|---|---|---|
@@ -184,8 +185,10 @@ Six themes in two families, all on one vocabulary, all at AAA.
 | `midnight` | dark | `#0e0e11` / `#17171c` | `#b69ffa` |
 | `forest` | light | `#f3f6f5` / `#ffffff` | `#1a5a3a` |
 | `ocean` | dark | `#0f131a` / `#171d26` | `#24c0f3` |
+| `hive-day` | light | `#f7f7f2` / `#ffffff` | `#172f37` |
+| `hive-night` | dark | `#10272e` / `#172f37` | `#fcaf9a` |
 
-`npm run check:contrast` checks 378 legal pairs, 63 per theme: text at 7:1, and boundaries, focus rings and chart marks at 3:1. Full values are in [docs/tokens.md](./docs/tokens.md). [`src/tokens/sets/extended.ts`](./src/tokens/sets/extended.ts) has the derivation notes.
+`npm run check:contrast` checks 504 legal pairs, 63 per theme: text at 7:1, and boundaries, focus rings and chart marks at 3:1. Full values are in [docs/tokens.md](./docs/tokens.md). [`src/tokens/sets/extended.ts`](./src/tokens/sets/extended.ts) and [`hive.ts`](./src/tokens/sets/hive.ts) have the derivation notes.
 
 ```mermaid
 flowchart TD
@@ -202,7 +205,7 @@ flowchart TD
 
 - One `<html>` attribute selects the theme: `data-theme`.
 - The choice persists in `localStorage["lumux-theme"]`. Embeds never persist it.
-- The CSS always ships all six themes. An app offers a subset through `<ThemeSwitcher themes={…}>`.
+- The CSS always ships all eight themes. An app offers a subset through `<ThemeSwitcher themes={…}>`.
 
 ## Accessibility
 
@@ -210,7 +213,7 @@ WCAG 2.2 **AAA wherever achievable, AA as the floor**. Each rule is enforced, no
 
 | Criterion | lumux rule | Enforced by |
 |---|---|---|
-| 1.4.6 Contrast (Enhanced) | Every text pair 7:1 in all six themes, with no large-text discount | `check-contrast.ts` in CI (exit 1 on failure), axe in the e2e harness |
+| 1.4.6 Contrast (Enhanced) | Every text pair 7:1 in all eight themes, with no large-text discount | `check-contrast.ts` in CI (exit 1 on failure), axe in the e2e harness |
 | 1.4.11 Non-text contrast | Control edges, focus rings and chart marks 3:1 on every surface | `check-contrast.ts` |
 | 2.5.5 Target size (Enhanced) | 44 × 44px minimum for every pointer, dense layouts included | e2e measures every target in every theme, density and viewport |
 | 2.4.13 Focus appearance | 2px solid outline, never obscured, one definition, forced-colors safe | Focus primitive, per-element focus-visible diff in e2e |
@@ -237,7 +240,7 @@ Imported from `lumux/react`. Each one documents the accessibility behaviour it g
 | Content | `Card`, `Badge`, `EmptyState` |
 | Feedback | `ToastProvider`, `useToast`, `ToastLog`, `useToastLog` |
 
-The [live demo](https://danieloceno.github.io/lumux/) shows every component in every state, in all six themes. The e2e suite runs against that same page.
+The [live demo](https://danieloceno.github.io/lumux/) shows every component in every state, in all eight themes. The e2e suite runs against that same page.
 
 ## Gates
 
@@ -259,7 +262,7 @@ Config, ratchets and blind spots are in [docs/gates.md](./docs/gates.md).
 
 **Semantic tokens, never raw values.** Apps reference `background`, `foreground`, `accent`, `danger`. Never a hex, a pixel or a per-component colour.
 
-**Every theme is authored.** A dark theme is not an inverted light one. Each of the six is designed and verified on its own.
+**Every theme is authored.** A dark theme is not an inverted light one. Each of the eight is designed and verified on its own.
 
 **Identical everywhere.** Same component, same behaviour, same measurements, same copy conventions. A deviation is a documented variant with a stated reason.
 
@@ -285,7 +288,7 @@ Config, ratchets and blind spots are in [docs/gates.md](./docs/gates.md).
 
 | Subpath | Contents |
 |---|---|
-| `lumux/tokens.css` | All six themes, density, focus, motion, base rules |
+| `lumux/tokens.css` | All eight themes, density, focus, motion, base rules |
 | `lumux/theme.css` | Tailwind v4 `@theme` mapping |
 | `lumux/tokens.embed.css` | 16-token `:host` subset for embeds, minified, no Tailwind |
 | `lumux/tokens.host.css` | Every token on `:host`, for UI inside shadow roots |
@@ -303,14 +306,14 @@ lumux/
 ├── src/
 │   ├── tokens/
 │   │   ├── vocabulary.ts     token names + legal fg/bg pairings
-│   │   ├── themes.ts         the six theme names and their light/dark scheme
-│   │   ├── sets/             core.ts (day, night) · extended.ts (dawn, midnight, forest, ocean)
+│   │   ├── themes.ts         the eight theme names and their light/dark scheme
+│   │   ├── sets/             core.ts (day, night) · extended.ts (dawn, midnight, forest, ocean) · hive.ts (hive-day, hive-night)
 │   │   └── scale.ts          type · spacing · radius · motion · z · targets
 │   ├── theme/                applyTheme · readTheme · resolvedTheme, framework-free
 │   └── react/                one file per component, barrel index
 ├── scripts/
 │   ├── build-tokens.ts       → dist/
-│   ├── check-contrast.ts     six themes × every pairing, exit 1 on failure
+│   ├── check-contrast.ts     eight themes × every pairing, exit 1 on failure
 │   ├── component-pairs.ts    fg/bg pairs the components render, read by check-contrast
 │   ├── check-*.{mjs,sh}      the three gates
 │   ├── install-gates.sh      copies the gates and a frozen baseline into a consumer
@@ -356,7 +359,7 @@ See [`CONTRIBUTING.md`](./CONTRIBUTING.md). In short: the decisions in [`ARCHITE
 | Document | Purpose |
 |---|---|
 | [docs/getting-started.md](./docs/getting-started.md) | Adopting lumux: install, CSS, `<head>`, React root, lint, CI, shadow roots |
-| [docs/tokens.md](./docs/tokens.md) | Token reference: the six themes, every colour, type, spacing, motion, focus |
+| [docs/tokens.md](./docs/tokens.md) | Token reference: the eight themes, every colour, type, spacing, motion, focus |
 | [docs/components.md](./docs/components.md) | Component contracts, props and the a11y behaviour each one guarantees |
 | [docs/gates.md](./docs/gates.md) | The three gates: what each catches, install, config, ratchets, blind spots |
 | [docs/copy.md](./docs/copy.md) | UI copy rules and what is never removed |

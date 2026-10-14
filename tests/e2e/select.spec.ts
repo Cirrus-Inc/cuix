@@ -85,7 +85,7 @@ test('Select: Tab stays in the open list', async ({ page }) => {
   await expect(country).toBeFocused();
 });
 
-for (const theme of ['day', 'night'] as const) {
+for (const theme of ['day', 'night', 'hive-day', 'hive-night'] as const) {
   test(`Select popup is axe clean in ${theme}`, async ({ page }) => {
     await open(page, theme);
     await page.getByRole('combobox', { name: 'Country' }).focus();

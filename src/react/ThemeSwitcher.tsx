@@ -15,6 +15,8 @@ const DEFAULT_LABELS: Required<ThemeSwitcherLabels> = {
   midnight: 'Midnight',
   forest: 'Forest',
   ocean: 'Ocean',
+  'hive-day': 'Hive Day',
+  'hive-night': 'Hive Night',
   system: 'System',
 };
 

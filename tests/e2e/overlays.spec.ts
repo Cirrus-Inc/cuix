@@ -1,7 +1,7 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
-// Phase 2c: every overlay open, in day and night, desktop and 320px.
+// Phase 2c: every overlay open, in day, night and the hive pair, desktop and 320px.
 const INTERACTIVE = 'a[href], button, input, select, textarea, [role="menuitem"]';
 
 async function open(page: Page, theme = 'day') {
@@ -37,7 +37,7 @@ async function targets(page: Page, within: string) {
   expect(small).toEqual([]);
 }
 
-for (const theme of ['day', 'night'] as const) {
+for (const theme of ['day', 'night', 'hive-day', 'hive-night'] as const) {
   for (const vp of [
     { name: 'desktop', width: 1280, height: 800 },
     { name: '320px', width: 320, height: 640 },
