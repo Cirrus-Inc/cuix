@@ -70,26 +70,28 @@ export const hiveNight: ThemeColors = {
   accent: '#fcaf9a', // coral #f5a18b lifted to 7:1 on ink and the raised step
   'accent-strong': '#ffc1b0', // one step lighter, like the mockup's coral hover
   'accent-foreground': '#10272e',
-  'accent-soft': '#283539', // 10% coral on ink-deep
+  // Dark tints sit at or below the raised step (the 7:1 floor), so they carry
+  // hue, not lightness: sage for selected (as hive-day), green, amber, red.
+  'accent-soft': '#18362f', // the mockup's selected sage, dark
   'accent-on-soft': '#fcaf9a',
   success: '#afc9ab', // map edge #a9c2a5 lifted to 7:1
   'success-foreground': '#10272e',
-  'success-soft': '#20373b',
+  'success-soft': '#183723',
   'success-on-soft': '#afc9ab',
   warning: '#fdb266', // lumux night #f6a95a lifted to 7:1
   'warning-foreground': '#10272e',
-  'warning-soft': '#283534',
+  'warning-soft': '#3a2d18',
   'warning-on-soft': '#fdb266',
   // Rust at 7:1 on ink is salmon, within ΔE 1 of the accent: at this lightness
   // no red separates from coral. The icon or word that every status carries does.
   danger: '#fbafa0',
   'danger-foreground': '#10272e',
-  'danger-soft': '#283539',
+  'danger-soft': '#3d201c', // red, not coral: the tint is what separates it from accent
   'danger-on-soft': '#fbafa0',
   'danger-strong': '#ffc1b4',
   info: '#fcaf9a',
   'info-foreground': '#10272e',
-  'info-soft': '#283539',
+  'info-soft': '#18362f',
   'info-on-soft': '#fcaf9a',
   'focus-ring': '#fcaf9a', // the mockup's on-dark focus is coral
   'overlay-scrim': '#000000a3',

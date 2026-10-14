@@ -70,7 +70,7 @@ The extended four keep their source palettes' hue and saturation in every value 
 | hive-night | `warning` | none (lumux `night` `#f6a95a`) | `#fdb266` | on `surface-raised` | 6.41 → 7.00 | ΔE 2.6. |
 | hive-night | `danger` | rust `#a13624` | `#fbafa0` | on `surface-raised` | 1.83 → 7.00 | Rust is a light-theme colour. At 7:1 on ink it is salmon, ΔE 0.8 from the accent: no red at that lightness separates from coral. Status never travels by colour alone (1.4.1), so the word or icon tells them apart. |
 
-The mockup has no dark mode, so `hive-night` keeps ink-deep surfaces, paper text and a coral accent, and invents only what the vocabulary needs and the mockup does not have: `surface-raised` `#1f373f` (one more ink-deep → ink step), `accent-strong` `#ffc1b0` and `danger-strong` `#ffc1b4` (one step lighter), the `*-soft` tints (10% of the colour on ink-deep) and `chart-2` … `chart-5` (lumux `night`'s cyan, violet, green, magenta; its orange sits on coral). `hive-day`'s `chart-2` … `chart-5` are lumux `day`'s blue, violet, green, magenta for the same reason.
+The mockup has no dark mode, so `hive-night` keeps ink-deep surfaces, paper text and a coral accent, and invents only what the vocabulary needs and the mockup does not have: `surface-raised` `#1f373f` (one more ink-deep → ink step), `accent-strong` `#ffc1b0` and `danger-strong` `#ffc1b4` (one step lighter), the `*-soft` tints (dark sage for `accent`/`info` as in `hive-day`, then green, amber and red; at or below the raised step so their `-on-soft` text stays 7:1, so they differ from the surfaces by hue, not lightness) and `chart-2` … `chart-5` (lumux `night`'s cyan, violet, green, magenta; its orange sits on coral). `hive-day`'s `chart-2` … `chart-5` are lumux `day`'s blue, violet, green, magenta for the same reason.
 
 Out of scope: the map colours (`map-idle`, `map-filled`) are app-only and live in HIVE as `--app-*` with its own contrast check (Extension layer, below). Fonts: lumux ships no font files; the mockup's DM Sans and Manrope are not part of these themes.
 
@@ -125,7 +125,7 @@ The `day` accent is `#005778`, not the source brand blue `#009fda`, which is 3.0
 - Status never travels by colour alone: an icon or a word goes with it (1.4.1).
 - `danger` is for destructive actions and errors only, never for emphasis.
 - `danger-strong` is the hover and pressed fill of a danger button, with `danger-foreground` on it. Only danger has a `-strong` step, because it is the only status that is a button variant.
-- `info` equals `accent` in the core themes. In the extended themes it carries the source palette's second accent (sky in dawn/midnight, violet in ocean), which is why it is a separate token.
+- `info` equals `accent` in the core and hive themes. In the extended themes it carries the source palette's second accent (sky in dawn/midnight, violet in ocean), which is why it is a separate token.
 
 ### Charts
 

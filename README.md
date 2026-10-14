@@ -2,7 +2,7 @@
 
 <p align="center">
   <strong>Accessible themes and components, with contrast enforced at build time.</strong><br>
-  Six WCAG 2.2 AAA themes, one semantic token vocabulary, one React component set.
+  Eight WCAG 2.2 AAA themes, one semantic token vocabulary, one React component set.
 </p>
 
 <p align="center">
@@ -24,7 +24,7 @@
   <a href="#accessibility"><img alt="WCAG 2.2 AAA" src="https://img.shields.io/badge/WCAG_2.2-AAA-1f6f43?style=flat-square"></a>
   <a href="#accessibility"><img alt="Text contrast 7:1" src="https://img.shields.io/badge/text_contrast-7%3A1-1f6f43?style=flat-square"></a>
   <a href="#accessibility"><img alt="Touch targets 44px" src="https://img.shields.io/badge/touch_targets-44px-1f6f43?style=flat-square"></a>
-  <a href="#themes"><img alt="Six themes" src="https://img.shields.io/badge/themes-6-005778?style=flat-square"></a>
+  <a href="#themes"><img alt="Eight themes" src="https://img.shields.io/badge/themes-8-005778?style=flat-square"></a>
   <a href="#themes"><img alt="504 pairs checked" src="https://img.shields.io/badge/contrast_pairs-504_checked-005778?style=flat-square"></a>
 </p>
 
@@ -65,7 +65,7 @@
 
 ## Why lumux
 
-lumux is Cirrus's design system: themes, tokens and React components where accessibility is enforced by the build, not by eye. Six WCAG 2.2 AAA themes, 44px touch targets, every color pair checked on each commit. HIVE's screens are built on it.
+lumux is Cirrus's design system: themes, tokens and React components where accessibility is enforced by the build, not by eye. Eight WCAG 2.2 AAA themes, 44px touch targets, every color pair checked on each commit. HIVE's screens are built on it.
 
 **NOTE:** Same code as Cirrus-Inc/cuix. It lives temporarily in a public MIT repo under Danny's GitHub because cuix is private and Danny is not an org owner yet. Once he is, cuix goes public and lumux is deleted.
 
@@ -74,7 +74,7 @@ Accessibility is usually a review step. In lumux it is a property of the system.
 Every app that adopts lumux uses the same semantic tokens, mounts the same components and runs the same gates. Changing the palette means changing one file, and moving between apps means relearning nothing.
 
 - **AAA tokens.** One semantic vocabulary; every legal text pair is held to 7:1 and verified in all themes.
-- **Six themes.** Two families, each authored on its own, not inverted.
+- **Eight themes.** Three families, each authored on its own, not inverted.
 - **Installable gates.** `install-gates.sh` puts the same UI checks, with a frozen baseline, into any consumer.
 - **Git-tag install.** `npm i github:danieloceno/lumux#vX.Y.Z`; no registry, and nothing upgrades until you change the tag.
 
