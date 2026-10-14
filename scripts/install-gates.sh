@@ -29,8 +29,8 @@ UI=""
 FLAGS=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --src) [[ $# -ge 2 ]] || die "--src needs a value"; SRC+=("$2"); FLAGS=1; shift 2 ;;
-    --ui) [[ $# -ge 2 ]] || die "--ui needs a value"; UI="$2"; FLAGS=1; shift 2 ;;
+    --src) [[ $# -ge 2 && $2 != --* ]] || die "--src needs a value"; SRC+=("$2"); FLAGS=1; shift 2 ;;
+    --ui) [[ $# -ge 2 && $2 != --* ]] || die "--ui needs a value"; UI="$2"; FLAGS=1; shift 2 ;;
     *) die "unknown argument: $1" ;;
   esac
 done

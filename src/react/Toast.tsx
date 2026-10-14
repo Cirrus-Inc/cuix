@@ -26,7 +26,10 @@ export type ToastItem = {
   count: number;
   action?: ToastAction;
   at: Date;
-  /** Press order; a merge takes the newer press's number, so the bump is announced. */
+  /**
+   * @internal Press order; a merge takes the newer press's number, so the bump is announced.
+   * Set by `ToastProvider`; do not construct `ToastItem`s yourself.
+   */
   seq: number;
   /** The press whose timer may close it; a merge hands the lease to the newer press. */
   lease?: number;
@@ -42,14 +45,17 @@ const ToastLogContext = createContext<ToastLogValue | null>(null);
 // an unbounded stack would grow off the top of the window, ✕ included.
 const MAX_TOASTS = 4;
 const MAX_LOG = 50;
-// Transient types: 4 s, 8 s with an action to reach for (2.2.1, 2.2.3).
-const DURATION = { plain: 4000, withAction: 8000 };
+// Transient toasts (info, success) go after 4 s. A toast with an action never
+// times out: an Undo is a function with a time limit (2.2.1, 2.2.3).
+const DURATION = 4000;
+// How long a live region keeps its text after its last toast is gone.
+const LIVE_CLEAR = 5000;
 
 let nextId = 0;
 let nextSeq = 0;
 
 // Errors and warnings are assertive and sticky; info and success are polite
-// and time out. The outcome is also kept in the log, so a toast is never the
+// and time out unless they carry an action. The outcome is also kept in the log, so a toast is never the
 // only record of it.
 const STYLE: Record<ToastType, { icon: typeof Info; accent: string; rail: string; assertive: boolean }> = {
   error: { icon: XCircle, accent: 'text-danger', rail: 'border-l-danger', assertive: true },
@@ -58,8 +64,15 @@ const STYLE: Record<ToastType, { icon: typeof Info; accent: string; rail: string
   info: { icon: Info, accent: 'text-info', rail: 'border-l-info', assertive: false },
 };
 
-export type ToastLabels = { dismiss: string; dismissAll: string; region: string };
+export type ToastLabels = {
+  dismiss: string;
+  dismissAll: string;
+  region: string;
+  /** Appended to the announcement of a toast with an action, so the button is discoverable. */
+  actionHint?: (actionLabel: string) => string;
+};
 const DEFAULT_LABELS: ToastLabels = { dismiss: 'Dismiss', dismissAll: 'Dismiss all', region: 'Notifications' };
+const defaultActionHint = (label: string) => `${label} available`;
 
 export function ToastProvider({ children, labels = DEFAULT_LABELS }: { children: ReactNode; labels?: ToastLabels }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -110,7 +123,7 @@ export function ToastProvider({ children, labels = DEFAULT_LABELS }: { children:
     const set = (key: 'pointer' | 'focus', on: boolean) => {
       hold.current[key] = on;
       if (hold.current.pointer || hold.current.focus) return;
-      parked.current.forEach((lease) => schedule(lease, DURATION.plain));
+      parked.current.forEach((lease) => schedule(lease, DURATION));
       parked.current.clear();
     };
     const enter = () => set('pointer', true);
@@ -135,14 +148,34 @@ export function ToastProvider({ children, labels = DEFAULT_LABELS }: { children:
   // what screen readers announce reliably. Clearing first re-announces a repeat.
   const announced = useRef(-1);
   const announceTimers = useRef(new Set<ReturnType<typeof setTimeout>>());
+  const clearTimers = useRef<Partial<Record<'polite' | 'assertive', ReturnType<typeof setTimeout>>>>({});
+  const actionHint = labels.actionHint ?? defaultActionHint;
   useEffect(() => {
+    // Once no toast of a kind is left, its region is emptied after a while, so
+    // a screen-reader user browsing later does not land on a stale message.
+    for (const kind of ['polite', 'assertive'] as const) {
+      const shown = toasts.some((x) => STYLE[x.type].assertive === (kind === 'assertive'));
+      if (shown) {
+        clearTimeout(clearTimers.current[kind]);
+        delete clearTimers.current[kind];
+      } else if (!clearTimers.current[kind]) {
+        clearTimers.current[kind] = setTimeout(() => {
+          delete clearTimers.current[kind];
+          setLive((prev) => (prev[kind] ? { ...prev, [kind]: '' } : prev));
+        }, LIVE_CLEAR);
+      }
+    }
     const fresh = toasts.filter((x) => x.seq > announced.current).sort((a, b) => a.seq - b.seq);
     if (!fresh.length) return;
     announced.current = fresh[fresh.length - 1].seq;
     for (const kind of ['polite', 'assertive'] as const) {
       const last = fresh.filter((x) => STYLE[x.type].assertive === (kind === 'assertive')).pop();
       if (!last) continue;
-      const text = last.count > 1 ? `${last.message} ×${last.count}` : last.message;
+      let text = last.count > 1 ? `${last.message} ×${last.count}` : last.message;
+      if (last.action) {
+        const hint = actionHint(last.action.label);
+        text += `${/[.!?]$/.test(text) ? '' : '.'} ${hint}${/[.!?]$/.test(hint) ? '' : '.'}`;
+      }
       setLive((prev) => ({ ...prev, [kind]: '' }));
       const handle = setTimeout(() => {
         announceTimers.current.delete(handle);
@@ -150,12 +183,15 @@ export function ToastProvider({ children, labels = DEFAULT_LABELS }: { children:
       }, 50);
       announceTimers.current.add(handle);
     }
-  }, [toasts]);
+  }, [toasts, actionHint]);
   useEffect(() => {
     const pending = announceTimers.current;
+    const stale = clearTimers.current;
     return () => {
       pending.forEach(clearTimeout);
       pending.clear();
+      Object.values(stale).forEach(clearTimeout);
+      clearTimers.current = {};
     };
   }, []);
 
@@ -163,7 +199,7 @@ export function ToastProvider({ children, labels = DEFAULT_LABELS }: { children:
     (message: string, { type = 'info', action }: ToastOptions = {}) => {
       // Minted outside the updater: StrictMode runs updaters twice.
       const id = nextId++;
-      const transient = !STYLE[type].assertive;
+      const transient = !STYLE[type].assertive && !action;
       const lease = transient ? id : undefined;
       const item: ToastItem = { id, message, type, count: 1, action, at: new Date(), seq: nextSeq++, lease };
       setLog((prev) => [item, ...prev].slice(0, MAX_LOG));
@@ -177,9 +213,13 @@ export function ToastProvider({ children, labels = DEFAULT_LABELS }: { children:
           next[at] = { ...next[at], count: next[at].count + 1, seq: item.seq, lease };
           return next;
         }
-        return [...prev, item].slice(-MAX_TOASTS);
+        if (prev.length < MAX_TOASTS) return [...prev, item];
+        // Full: the oldest toast without an action goes first, so new toasts
+        // never push an untimed Undo off screen while a plain one could go.
+        const drop = Math.max(0, prev.findIndex((x) => !x.action));
+        return [...prev.slice(0, drop), ...prev.slice(drop + 1), item];
       });
-      if (lease !== undefined) schedule(lease, action ? DURATION.withAction : DURATION.plain);
+      if (lease !== undefined) schedule(lease, DURATION);
     },
     [schedule],
   );

@@ -110,3 +110,43 @@ test('toasts: a pointer in the region holds the timer, leaving re-arms it', asyn
   await page.mouse.move(0, 0);
   await expect(ok).toBeHidden({ timeout: 6000 });
 });
+
+test('toasts: an action toast stays until dismissed and announces its action', async ({ page }) => {
+  await page.clock.install();
+  await open(page);
+  const region = page.getByRole('region', { name: 'Notifications' });
+  const polite = page.locator('[role="status"][aria-live="polite"]');
+  await page.getByTestId('toast-undo').click();
+  const deleted = region.getByText('Entry deleted.');
+  await expect(deleted).toBeVisible();
+  await expect(polite).toHaveText('Entry deleted. Undo available.');
+  await page.mouse.move(0, 0);
+  await page.clock.runFor(60_000);
+  await expect(deleted).toBeVisible();
+  await region.getByRole('button', { name: 'Dismiss', exact: true }).click();
+  await expect(deleted).toBeHidden();
+});
+
+test('toasts: a full stack pushes out a toast without an action before an Undo', async ({ page }) => {
+  await open(page);
+  const region = page.getByRole('region', { name: 'Notifications' });
+  for (const id of ['toast-undo', 'toast-error', 'toast-warning', 'toast-success', 'toast-undo']) await page.getByTestId(id).click();
+  await expect(region.getByText('Entry deleted.')).toHaveCount(2);
+  await expect(region.getByText('Could not save the entry.')).toBeHidden();
+  await expect(region.getByText('Timer still running.')).toBeVisible();
+});
+
+test('toasts: the live regions are emptied a few seconds after the last toast goes', async ({ page }) => {
+  await page.clock.install();
+  await open(page);
+  const polite = page.locator('[role="status"][aria-live="polite"]');
+  await page.getByTestId('toast-success').click();
+  await expect(polite).toHaveText('Entry saved.');
+  await page.mouse.move(0, 0);
+  await page.clock.runFor(4_000);
+  await expect(page.getByRole('region', { name: 'Notifications' }).getByText('Entry saved.')).toBeHidden();
+  await page.clock.runFor(4_900);
+  await expect(polite).toHaveText('Entry saved.');
+  await page.clock.runFor(200);
+  await expect(polite).toHaveText('');
+});
