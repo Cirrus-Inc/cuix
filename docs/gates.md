@@ -17,7 +17,9 @@ lumux runs them on itself (`npm run check:gates`, part of `npm run check`).
 
 ## Install
 
-From the consumer's root, once:
+From the consumer's root, once. In a monorepo, first check that `ls node_modules/lumux` resolves
+there: `npm i -w <workspace> github:...#tag` can nest lumux under the workspace instead of hoisting
+it (seen with npm 11.18.0), which breaks this path and `--src`. Install from the repo root.
 
 ```sh
 bash node_modules/lumux/scripts/install-gates.sh --src src --ui src/ui

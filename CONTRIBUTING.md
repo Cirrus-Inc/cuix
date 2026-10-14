@@ -47,7 +47,7 @@ Releases are cut by maintainers from a clean, up-to-date `main`:
 npm run release -- X.Y.Z
 ```
 
-The script bumps the version and the install snippets, runs the full gate, commits `dist/` on the tagged commit, untracks `dist/` again on the release branch, pushes the tag, opens the release PR and publishes the GitHub release. It uses the maintainers' internal `git smart` commit tool, so it is not runnable by outside contributors. Maintainers also add the new tag's entry to [`CHANGELOG.md`](./CHANGELOG.md).
+The script bumps the version and the install snippets, runs the full gate, commits `dist/` on the tagged commit, untracks `dist/` again on the release branch, pushes the tag, opens the release PR and publishes the GitHub release. It uses the maintainers' internal `git smart` commit tool, so it is not runnable by outside contributors. It also folds [`CHANGELOG.md`](./CHANGELOG.md)'s `[Unreleased]` section into the new tag's entry, so every PR adds its own bullet under `[Unreleased]`; the release fails when there are none.
 
 ## Security
 
