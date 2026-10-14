@@ -14,6 +14,12 @@ async function axe(page: Page) {
   expect(violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
 }
 
+test('Card title is an h3 by default and follows headingLevel', async ({ page }) => {
+  await open(page);
+  await expect(page.getByRole('heading', { level: 2, name: 'Plan summary' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 3, name: 'Invoice #1042' })).toBeVisible();
+});
+
 test('badges carry a word, empty states have a role, card padding follows density', async ({ page }) => {
   await open(page);
   const badges = page.locator('#badge-h ~ div > span');

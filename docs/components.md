@@ -270,7 +270,7 @@ arrow, `z-tooltip`. `Menu`: trigger → `div[role=menu]` → `div[role=menuitem]
 
 | Component | Use it for | Notes |
 |---|---|---|
-| `Card` | A surface lifted off the canvas: one record, one panel | `surface`, 1px `border`, `rounded-card`, `p-card` (16, dense 12). `elevation="raised"` only when it floats. `rail` colours the left edge (`accent` or a status); the meaning is in the content. `title` + `action` make a header, `footer` a footer; `pad="none"` for a divided list. `as` picks `li` / `article` / `section`. |
+| `Card` | A surface lifted off the canvas: one record, one panel | `surface`, 1px `border`, `rounded-card`, `p-card` (16, dense 12). `elevation="raised"` only when it floats. `rail` colours the left edge (`accent` or a status); the meaning is in the content. `title` + `action` make a header (`title` is an `h3`; `headingLevel` 2-6 fits the page outline), `footer` a footer; `pad="none"` for a divided list. `as` picks `li` / `article` / `section`. |
 | `Badge` | A status word: Paid, Overdue, Scheduled | A dot plus the word, never the dot alone (1.4.1). `tone` neutral / accent / status; `filled` adds the `-soft` tint. Square corners: a pill reads as pressable. No `title`. |
 | `EmptyState` | A list or screen with nothing in it, or that failed to load | Title ≤5 words, one line ≤90 characters saying what would fill it, at most one action. `tone="error"` is `role="alert"`, otherwise `role="status"`. |
 | `ConfirmInline` | The confirm before a destructive row action | Replaces `window.confirm`: a group with the question, the destructive verb (`danger`) and Keep. Focus lands on Keep on mount, so a stray Enter keeps; Escape backs out. It replaces its trigger, so on `onCancel` the caller re-renders the trigger and focuses it (2.4.3). |
