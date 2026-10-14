@@ -4,7 +4,11 @@ Every tag, newest first. Entries before the lumux import reference PRs of the pr
 
 ## [Unreleased]
 
+- fix(react): a `Toast` with an `action` no longer auto-dismisses (an Undo is a function with a time limit, WCAG 2.2.1 / 2.2.3); it is announced with an action hint ("Entry deleted. Undo available.", `ToastLabels.actionHint` is optional); the polite and assertive live regions are emptied 5 s after the last toast of their kind is gone; `ToastItem.seq` is marked `@internal` (Cirrus-Inc/cuix#25)
+
 ## [0.4.0] - 2026-10-14
+
+Breaking: `ToastItem` (returned by `useToastLog()`) gained a required `seq: number`. Code that builds `ToastItem` values by hand, such as test fixtures, must add it; `ToastProvider` sets it. It is internal and is marked so from the next release.
 
 - docs(react): document that the native `Select` popup follows the page `color-scheme` in Chrome and the OS in Safari and mobile pickers, and test the scheme without `data-theme` (Cirrus-Inc/cuix#36)
 - feat(react): add `headingLevel` (2-6, default 3) to `Card` so its title fits the page heading outline (Cirrus-Inc/cuix#32)

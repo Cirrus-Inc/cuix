@@ -314,18 +314,22 @@ toast('Entry deleted.', { action: { label: 'Undo', run: restore } });
 ```
 
 - `error` and `warning` are announced assertively and **never auto-dismiss** (2.2.3). `info` and
-  `success` are announced politely and go after 4 s, or 8 s when there is an action. A merge
-  restarts the clock. Nothing closes while the pointer or focus is in the toast region.
+  `success` are announced politely and go after 4 s. A toast with an `action` never auto-dismisses
+  either: it closes on Dismiss, Dismiss all or running the action. A merge restarts the clock.
+  Nothing closes while the pointer or focus is in the toast region.
 - The same (message, type) arriving again merges into one toast with ×N and is re-announced
   (`Saved ×2`). A toast with an action never merges.
 - Announcements go through two persistent, visually hidden live regions that `ToastProvider`
   renders from mount (`role="status"` polite, `role="alert"` assertive). Their text is cleared and
-  re-set per toast so a repeat is read again. The visible toasts carry no live role.
+  re-set per toast so a repeat is read again, and emptied 5 s after the last toast of that kind
+  is gone, so nobody browsing later meets a stale message. A toast with an action is announced
+  with a hint, "Entry deleted. Undo available." (`labels.actionHint(label)` translates it). The
+  visible toasts carry no live role.
 - At most 4 on screen; a fifth pushes out the oldest. "Dismiss all" appears from 2 up.
 - Every toast is also kept in a log (last 50), so it is never the only record of an outcome:
   `useToastLog()` or the ready-made `<ToastLog />` for a settings or help page.
 - Phone: top of the screen under the safe area. Desktop: bottom-right.
-- One sentence, ≤90 characters. `labels` translates Dismiss / Dismiss all / the region name.
+- One sentence, ≤90 characters. `labels` translates Dismiss / Dismiss all / the region name / the action hint.
 
 Anatomy: `section[aria-label=region]` → optional Dismiss all `Button` → one `div` per toast
 with its rail → type icon (`aria-hidden`) → `span` holding the message and the ×N count →

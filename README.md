@@ -199,7 +199,7 @@ WCAG 2.2 **AAA wherever achievable, AA as the floor**. Each rule is enforced, no
 | 2.5.5 Target size (Enhanced) | 44 × 44px minimum for every pointer, dense layouts included | e2e measures every target in every theme, density and viewport |
 | 2.4.13 Focus appearance | 2px solid outline, never obscured, one definition, forced-colors safe | Focus primitive, per-element focus-visible diff in e2e |
 | 2.1.3 Keyboard (no exception) | Everything works without a pointer; nothing depends on hover | Component contracts, manual screen-reader pass |
-| 2.2.3 No timing | No time limits; error toasts never auto-dismiss | `ToastProvider`, `role=alert`, a reachable toast log |
+| 2.2.3 No timing | No time limits; error, warning and action toasts never auto-dismiss | `ToastProvider`, `role=alert`, a reachable toast log |
 | 2.3.3 Animation from interactions | Motion tokens collapse under `prefers-reduced-motion` | Motion primitive |
 | 2.4.1 Bypass blocks | Skip link in every app shell | `AppShell`, e2e |
 | 1.3.5 / 3.3.x Forms | `autocomplete` on every field; errors as icon + text with `role=alert` and `aria-invalid` | `Field`, `eslint-plugin-jsx-a11y` strict config |

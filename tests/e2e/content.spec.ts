@@ -110,3 +110,27 @@ test('toasts: a pointer in the region holds the timer, leaving re-arms it', asyn
   await page.mouse.move(0, 0);
   await expect(ok).toBeHidden({ timeout: 6000 });
 });
+
+test('toasts: an action toast stays until dismissed and announces its action', async ({ page }) => {
+  await open(page);
+  const region = page.getByRole('region', { name: 'Notifications' });
+  const polite = page.locator('[role="status"][aria-live="polite"]');
+  await page.getByTestId('toast-undo').click();
+  const deleted = region.getByText('Entry deleted.');
+  await expect(deleted).toBeVisible();
+  await expect(polite).toHaveText('Entry deleted. Undo available.');
+  await page.waitForTimeout(10000);
+  await expect(deleted).toBeVisible();
+  await region.getByRole('button', { name: 'Dismiss' }).click();
+  await expect(deleted).toBeHidden();
+});
+
+test('toasts: the live regions are emptied a few seconds after the last toast goes', async ({ page }) => {
+  await open(page);
+  const polite = page.locator('[role="status"][aria-live="polite"]');
+  await page.getByTestId('toast-success').click();
+  await expect(polite).toHaveText('Entry saved.');
+  await expect(page.getByRole('region', { name: 'Notifications' }).getByText('Entry saved.')).toBeHidden({ timeout: 6000 });
+  await expect(polite).toHaveText('Entry saved.');
+  await expect(polite).toHaveText('', { timeout: 8000 });
+});
