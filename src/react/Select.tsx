@@ -32,9 +32,12 @@ export type SelectProps = {
   className?: string;
 };
 
+// No outline-none: Radix moves DOM focus through the items, so the global ring marks the keyboard
+// position (the only marker left in forced colors, where the highlight background is erased). Inset,
+// because the viewport scrolls and would clip a ring drawn outside the item.
 const ITEM =
-  'flex min-h-target cursor-default select-none items-center gap-2 rounded-inset px-3 text-body text-foreground outline-none ' +
-  'data-highlighted:bg-surface-raised data-disabled:cursor-not-allowed data-disabled:text-foreground-subtle';
+  'flex min-h-target cursor-default select-none items-center gap-2 rounded-inset px-3 text-body text-foreground ' +
+  'focus-visible:-outline-offset-2 data-highlighted:bg-surface-raised data-disabled:cursor-not-allowed data-disabled:text-foreground-subtle';
 
 // Radix Select: the same popup in every browser, styled like Menu. Arrow
 // keys, Home / End, type-ahead, Escape and focus return come from Radix; the

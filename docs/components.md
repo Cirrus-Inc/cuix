@@ -150,9 +150,10 @@ This is `eslint-plugin-jsx-a11y` strict, plus a ban on `title` on interactive el
   (`{ value, label, disabled? }`, `value` non-empty), `value` / `defaultValue` /
   `onValueChange`, `placeholder`, `name`, `disabled` and `required`; inside a `Field` it gets
   `id`, `aria-describedby`, `aria-invalid` and `required` like `Input`, and the label focuses
-  the trigger. The popup is anchored to the trigger (`position="popper"`) and as wide as it.
+  the trigger (it moves focus, it does not open the popup). `value=""` clears a controlled
+  `Select` back to the placeholder; `undefined` would switch it to uncontrolled. The popup is anchored to the trigger (`position="popper"`) and as wide as it.
   Items are 44px tall, dense included, like `Menu` items; the selected one shows a check and is
-  painted `Highlight` in forced colors. No search, multi-select or virtualised lists: those
+  painted `Highlight` in forced colors; the keyboard position carries the global focus ring, inset. No search, multi-select or virtualised lists: those
   are a separate component.
 - `NativeSelect` is the previous `Select`: a native `<select>` with `<option>` children, for
   forms that want the platform picker on phones. Its popup follows the page's `color-scheme`
@@ -173,7 +174,8 @@ the error and hint that `aria-describedby` points at.
 `Select` anatomy: `button[role=combobox]` (value or placeholder, chevron) → `div[role=listbox]` →
 `div[role=option]` per option (text, check when selected). Keys on the trigger: Enter, Space or
 ↓ opens; once open: ↑ ↓ move, Home / End jump, a letter type-aheads, Enter or Space selects and
-closes, Escape closes. Focus returns to the trigger. Tab closes the popup and moves on.
+closes, Escape closes. Focus returns to the trigger. Tab does nothing while the popup is open
+(Radix keeps focus in the list, like a native picker); close it first.
 
 ## Checkbox · Switch · RadioGroup · SegmentedControl
 

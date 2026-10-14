@@ -21,7 +21,7 @@ alternative, the decision log names the cost. Reopen one with a written case, no
 | Target sizes | **AAA 2.5.5: 44×44 CSS px, every pointer, no exception** | `--target-min: 44px`. Any `h-*`/`size-*`/`min-h-*` under 44 inside lumux components fails CI (the blocking sizing gate, now unconditional). Inline text links are exempt per the SC. |
 | Motion | AAA 2.3.3 | All `--motion-*` durations collapse to `0.01ms` under `prefers-reduced-motion` and under `[data-reduce-motion="true"]` (test hook). State never conveyed by animation alone. No parallax, no autoplay. |
 | Timing | AAA 2.2.3 / 2.2.4 | No time limits on any task. No auto-dismiss of anything the user must act on; errors are sticky. Status toasts may auto-dismiss (they are not required to act on) but are also logged to a reachable list. |
-| Keyboard | AAA 2.1.3: everything, no exceptions | Radix for dialog/popover/menu/tooltip; native inputs kept native. Hover-only is banned (§5.5). Focus order tested per component. |
+| Keyboard | AAA 2.1.3: everything, no exceptions | Radix for dialog/popover/menu/tooltip/select; other inputs kept native (`NativeSelect` keeps the platform picker). Hover-only is banned (§5.5). Focus order tested per component. |
 | Dragging | AA 2.5.7 | Every drag has a click/keyboard alternative. |
 | Location & help | AAA 2.4.8, 3.3.5 | Breadcrumb or `aria-current` on every surface; help reachable from every screen in the same place (header). |
 | Redundant entry, auth | AA 3.3.7, **AAA 3.3.9** | Forms never re-ask what the session knows; lumux ships no authentication UI that would need a cognitive test; lumux forms expose autocomplete tokens. |
@@ -197,7 +197,7 @@ Same component, same measurements, same behavior in every app. Deviations are na
 - Anatomy, top to bottom: label (required marker is text "required" in the label, not an asterisk alone), control, helper (optional, ≤90 chars), error (icon + text, `role=alert` on first appearance, `aria-describedby` wired, `aria-invalid`).
 - Label always above. No floating labels, no placeholder-as-label.
 - Validation timing: on submit; then on change for fields that have errored (RHF's default). No validation on first blur of an untouched field.
-- Library-agnostic: lumux ships `Field`, `Input`, `Textarea`, `Select` (native), `Checkbox`, `Switch`, `RadioGroup` (native inputs). RHF/zod stay in the app.
+- Library-agnostic: lumux ships `Field`, `Input`, `Textarea`, `Select` (Radix, themed popup), `NativeSelect`, `Checkbox`, `Switch`, `RadioGroup` (native inputs). RHF/zod stay in the app.
 - Inputs ≥16px on coarse pointers; control height 44px.
 - Autocomplete tokens on every field that maps to a known purpose (1.3.5); no re-entry of known values (3.3.7); no cognitive-test auth (3.3.9).
 
@@ -307,7 +307,7 @@ Stop and re-plan if any of these happens mid-rollout:
 | D5 | Body 16 mobile-first; one `data-density="dense"` container variant (14 body, 10 floor) | body 14 everywhere; user-selectable density | iOS input zoom; a selectable density was tried and retired |
 | D6 | **Target floor 44px everywhere, every pointer** (AAA 2.5.5) | 44 coarse / 32 fine; 24 fine | Maintainers' call under D23. Cost: dense consoles must re-measure their layouts |
 | D7 | Inter Variable + Geist Mono, both self-hosted | Geist Sans; system | CSP-safe, one file each, majority; Geist Mono for numeric telemetry |
-| D8 | Radix underneath dialogs/popovers/menus/tooltips | Base UI; hand-rolled | Less code to own |
+| D8 | Radix underneath dialogs/popovers/menus/tooltips, and `Select` (Cirrus-Inc/cuix#43) | Base UI; hand-rolled | Less code to own. `Select` moved off the native control because Safari draws its popup in the OS appearance, not the page theme |
 | D9 | Toast: errors sticky `role=alert`, success auto `role=status`, **lumux-owned `ToastProvider`, no dependency** (revised 2026-10-08; was a sonner wrapper) | sonner via a lumux wrapper | sonner has one `polite` live region, so errors cannot be `role=alert`, and the ×N merge, the cap of 4, "Dismiss all" and the reachable log had to be built on top of it anyway. The provider is ~150 lines |
 | D10 | **Radius control 4 / inset 2 / card 8; no pill badges or chips** (revised 2026-10-04; was 6 / 12) | 6 / 12; the source 12 | Maintainers' call: square and barely rounded. Cost: every app's chips and badges lose their pill shape |
 | D11 | Elevation flat/raised/overlay | a single shadow | Superset |

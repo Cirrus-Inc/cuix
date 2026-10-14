@@ -34,6 +34,10 @@ test('Select renders a labelled combobox trigger and NativeSelect stays a <selec
   assert.match(html, /aria-invalid="true"/);
   assert.match(html, /aria-describedby="[^"]*letter-error[^"]*"/);
   assert.match(html, /Alpha/);
+  // Controlled: the trigger carries the label of `value`, not of a stale default.
+  const controlled = renderToString(h(Select, { options, value: 'b', defaultValue: 'a', onValueChange: () => {} }));
+  assert.match(controlled, /Beta/);
+  assert.doesNotMatch(controlled, /Alpha/);
   const native = renderToString(h(NativeSelect, { children: h('option', null, 'M') }));
   assert.match(native, /<select/);
 });
