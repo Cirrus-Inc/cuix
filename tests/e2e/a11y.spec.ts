@@ -163,6 +163,17 @@ test('Field wires id, description, invalid state and required', async ({ page })
   await expect(page.getByRole('alert').filter({ hasText: 'Enter the company name.' })).toBeVisible();
 });
 
+test('Field label stays associated when the control has its own id', async ({ page }) => {
+  await open(page, 'day', 'default');
+  const phone = page.getByLabel('Phone');
+  await expect(phone).toHaveAttribute('id', 'phone-own-id');
+  await expect(page.locator('label', { hasText: 'Phone' })).toHaveAttribute('for', 'phone-own-id');
+  await page.locator('label', { hasText: 'Phone' }).click();
+  await expect(phone).toBeFocused();
+  const own = await new AxeBuilder({ page }).include('#phone-own-id').withRules(['label']).analyze();
+  expect(own.violations).toEqual([]);
+});
+
 test('switch toggles by click and keyboard; disabled switch does not', async ({ page }) => {
   await open(page, 'day', 'default');
   const sw = page.getByRole('switch', { name: 'Email notifications' });

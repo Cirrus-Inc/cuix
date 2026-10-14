@@ -128,7 +128,8 @@ This is `eslint-plugin-jsx-a11y` strict, plus a ban on `title` on interactive el
 - `Field` lays out, top to bottom: the label, the control, the hint, then the error.
 - `Field` wires the control it wraps: `id`, `aria-describedby` (error first, then hint),
   `aria-invalid` while `error` is set, and `required`. A field can't be half-connected.
-  An explicit prop on the control still wins.
+  An explicit prop on the control still wins, and the label follows a control's own `id`
+  (the hint and error ids stay derived from the `Field` id). Prefer `id` on `Field`.
 - "Required" is a word in the label (`requiredLabel` translates it), never an asterisk
   alone.
 - The error is an icon plus text, with `role="alert"`, so it is announced when it appears.

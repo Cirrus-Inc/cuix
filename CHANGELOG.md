@@ -4,6 +4,7 @@ Every tag, newest first. Entries before the lumux import reference PRs of the pr
 
 ## [Unreleased]
 
+- fix(react): `Field` labels the control by its own `id` when it has one, so `<Field label="Email"><Input id="email" /></Field>` keeps its accessible name (Cirrus-Inc/cuix#26)
 - Sync community files, `ARCHITECTURE.md` and the README License / Roadmap sections from `Cirrus-Inc/cuix`; `scripts/release.sh` can now cut a tag at the current `package.json` version.
 - Add MIT `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md` and this changelog; add package metadata (`license`, `repository`, `homepage`, `bugs`, `description`, `keywords`).
 - Remove internal analysis prompts and private product inventories from the repository and from `ARCHITECTURE.md`; the install no longer mentions private-repo access.
