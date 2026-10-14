@@ -12,7 +12,7 @@ Node >= 22.18 (see `engines` in `package.json`).
 
 ```sh
 npm ci
-npx playwright install chromium   # first time, for the e2e harness
+npx playwright install chromium webkit   # first time, for the e2e harness
 ```
 
 ## Gates
@@ -21,7 +21,7 @@ Run both before opening a PR; CI runs the same.
 
 ```sh
 npm run check   # typecheck, lint, contrast, the three gates, build, unit tests
-npm run e2e     # axe, 44px targets, focus, 320px / 200% zoom, in every theme
+npm run e2e     # axe, 44px targets, focus, 320px / 200% zoom, in every theme; overlays also on WebKit
 ```
 
 `npm run playground` serves the page the e2e harness drives.

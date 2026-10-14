@@ -39,7 +39,9 @@ for (const theme of ['day', 'night'] as const) {
       test('dialog: named, trapped, 44px, axe clean, closes on Escape, returns focus', async ({ page }) => {
         await open(page, theme);
         const opener = page.getByTestId('open-dialog');
-        await opener.click();
+        // WebKit does not focus a clicked button, so the opener is activated by keyboard.
+        await opener.focus();
+        await page.keyboard.press('Enter');
         const dialog = page.getByRole('dialog', { name: 'Edit profile' });
         await expect(dialog).toBeVisible();
         await expect(dialog).toHaveAccessibleDescription('Changes apply to every workspace.');
@@ -110,7 +112,8 @@ test('dialog: overlay click closes unless dismissOnOverlay is false', async ({ p
 test('dialog: one level of nesting stacks and Escape closes only the top', async ({ page }) => {
   await open(page);
   await page.getByTestId('open-dialog').click();
-  await page.getByRole('button', { name: 'Save' }).click();
+  await page.getByRole('button', { name: 'Save' }).focus();
+  await page.keyboard.press('Enter');
   const top = page.getByRole('dialog', { name: 'Confirm save' });
   await expect(top).toBeVisible();
   // The scrim carries the layer: z-modal-top for the second level.
