@@ -144,7 +144,7 @@ export function Overlays() {
           trigger={<IconButton data-testid="open-menu" icon={<MoreVertical aria-hidden="true" />} aria-label="More actions" />}
           items={[
             { label: 'Rename', icon: <Pencil aria-hidden="true" />, onSelect: () => setLastMenu('rename') },
-            { label: 'Duplicate', icon: <Copy aria-hidden="true" />, onSelect: () => setLastMenu('duplicate'), disabled: true, disabledReason: 'Plan limit reached' },
+            { id: 'duplicate item', label: 'Duplicate', icon: <Copy aria-hidden="true" />, onSelect: () => setLastMenu('duplicate'), disabled: true, disabledReason: 'Plan limit reached' },
             { type: 'separator' },
             { label: 'Delete', icon: <Trash2 aria-hidden="true" />, onSelect: () => setLastMenu('delete'), destructive: true },
           ]}

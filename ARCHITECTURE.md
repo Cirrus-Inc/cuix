@@ -279,7 +279,7 @@ lumux/
 
 **Versioning.** Semver via git tags; `dist/` committed on the tag commit; the changelog is `CHANGELOG.md`, updated by hand at release. Apps pin exact tags. lumux CI runs contrast + gates + 320px/200% checks on every PR.
 
-**Breaking change.** Major bump. Renamed/removed tokens ship as deprecated aliases for one minor before removal; the token build emits both. Component API breaks get a one-paragraph migration note in the changelog and, where mechanical, a codemod in `scripts/codemods/`. No app is force-upgraded.
+**Breaking change.** Major bump. A token author who renames or removes a token keeps the old name as an alias of the new one (`--lumux-old: var(--lumux-new)`) for one minor before deleting it; there is no alias mechanism in `scripts/build-tokens.ts` yet, so the alias is added by hand. Component API breaks get a one-paragraph migration note in the changelog and, where mechanical, a codemod in `scripts/codemods/`. No app is force-upgraded.
 
 **New app onboards.** Tailwind v4, `npm i github:danieloceno/lumux#vX.Y.Z`, import `tokens.css` + `theme.css`, mount `<ThemeProvider>`, run `install-gates.sh`, add `viewport-fit=cover`.
 
