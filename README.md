@@ -1,4 +1,4 @@
-<h1 align="center">lumux</h1>
+<h1 align="center">cuix</h1>
 
 <p align="center">
   <strong>Accessible themes and components, with contrast enforced at build time.</strong><br>
@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://danieloceno.github.io/lumux/"><strong>Live demo</strong></a> ·
+  <a href="https://cirrus-inc.github.io/cuix/"><strong>Live demo</strong></a> ·
   <a href="./docs/getting-started.md">Getting started</a> ·
   <a href="./docs/tokens.md">Tokens</a> ·
   <a href="./docs/components.md">Components</a> ·
@@ -14,8 +14,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/danieloceno/lumux/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/danieloceno/lumux/ci.yml?branch=main&style=flat-square&label=ci"></a>
-  <a href="https://danieloceno.github.io/lumux/"><img alt="Demo" src="https://img.shields.io/github/actions/workflow/status/danieloceno/lumux/demo.yml?branch=main&style=flat-square&label=demo"></a>
+  <a href="https://github.com/Cirrus-Inc/cuix/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Cirrus-Inc/cuix/ci.yml?branch=main&style=flat-square&label=ci"></a>
+  <a href="https://cirrus-inc.github.io/cuix/"><img alt="Demo" src="https://img.shields.io/github/actions/workflow/status/Cirrus-Inc/cuix/demo.yml?branch=main&style=flat-square&label=demo"></a>
   <a href="#status"><img alt="Status: pre-release" src="https://img.shields.io/badge/status-pre--release-orange?style=flat-square"></a>
   <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-555?style=flat-square"></a>
 </p>
@@ -40,7 +40,7 @@
 
 ## Table of contents
 
-- [Why lumux](#why-lumux)
+- [Why cuix](#why-cuix)
 - [Status](#status)
 - [Consumers](#consumers)
 - [Quick start](#quick-start)
@@ -63,20 +63,18 @@
 
 ---
 
-## Why lumux
+## Why cuix
 
-lumux is Cirrus's design system: themes, tokens and React components where accessibility is enforced by the build, not by eye. Eight WCAG 2.2 AAA themes, 44px touch targets, every color pair checked on each commit. HIVE's screens are built on it.
+cuix is Cirrus's design system: themes, tokens and React components where accessibility is enforced by the build, not by eye. Eight WCAG 2.2 AAA themes, 44px touch targets, every color pair checked on each commit. HIVE's screens are built on it.
 
-**NOTE:** Same code as Cirrus-Inc/cuix. It lives temporarily in a public MIT repo under Danny's GitHub because cuix is private and Danny is not an org owner yet. Once he is, cuix goes public and lumux is deleted.
+Accessibility is usually a review step. In cuix it is a property of the system. A colour pair that fails contrast breaks the build. A control smaller than 44px cannot be built. A dark theme is authored, not inverted.
 
-Accessibility is usually a review step. In lumux it is a property of the system. A colour pair that fails contrast breaks the build. A control smaller than 44px cannot be built. A dark theme is authored, not inverted.
-
-Every app that adopts lumux uses the same semantic tokens, mounts the same components and runs the same gates. Changing the palette means changing one file, and moving between apps means relearning nothing.
+Every app that adopts cuix uses the same semantic tokens, mounts the same components and runs the same gates. Changing the palette means changing one file, and moving between apps means relearning nothing.
 
 - **AAA tokens.** One semantic vocabulary; every legal text pair is held to 7:1 and verified in all themes.
 - **Eight themes.** Three families, each authored on its own, not inverted.
 - **Installable gates.** `install-gates.sh` puts the same UI checks, with a frozen baseline, into any consumer.
-- **Git-tag install.** `npm i github:danieloceno/lumux#vX.Y.Z`; no registry, and nothing upgrades until you change the tag.
+- **Git-tag install.** `npm i @cirrus/cuix@github:Cirrus-Inc/cuix#vX.Y.Z`; no registry, and nothing upgrades until you change the tag.
 
 ## Status
 
@@ -85,38 +83,40 @@ Every app that adopts lumux uses the same semantic tokens, mounts the same compo
 | Tokens & themes | Token source of truth, eight AAA themes, contrast gate, focus and motion primitives | ✅ Shipped · [`docs/tokens.md`](./docs/tokens.md) |
 | Components | React 19 set on Radix: actions, forms, overlays, content, toasts | ✅ Shipped · [`docs/components.md`](./docs/components.md) |
 | Gates | className, disabled-title and nested-scroller checks, installable into any consumer | ✅ Shipped · [`docs/gates.md`](./docs/gates.md) |
-| Adoption | HIVE, an internal Cirrus product, is the first consumer (lumux `v0.5.0`); no other product has migrated yet | ⏳ In progress |
+| Adoption | HIVE, an internal Cirrus product, is the first consumer (on `v0.5.0`, under the package's former name); no other product has migrated yet | ⏳ In progress |
 | `1.0.0` | API freeze | ⏳ Planned |
 
 Pre-release: expect breaking changes before `1.0.0`. Pin an exact tag.
 
 ## Consumers
 
-| Consumer | What it is | lumux | Constraint |
+| Consumer | What it is | cuix | Constraint |
 |---|---|---|---|
-| HIVE | Internal Cirrus business platform (React 19, Vite, Tailwind 4) | `v0.5.0` | Greenfield, so lumux from day one |
+| HIVE | Internal Cirrus business platform (React 19, Vite, Tailwind 4) | `v0.5.0` | Greenfield, so cuix from day one (adopted under the former name, repoints to `@cirrus/cuix`) |
 
 ## Quick start
 
 ```sh
-npm i github:danieloceno/lumux#v0.7.0
+npm i @cirrus/cuix@github:Cirrus-Inc/cuix#v0.8.0
 ```
+
+Or in `package.json`: `"@cirrus/cuix": "github:Cirrus-Inc/cuix#v0.8.0"`.
 
 ```css
 /* app.css */
 @import "tailwindcss";
-@import "lumux/tokens.css";
-@import "lumux/theme.css";   /* also @source's the component classes; no node_modules path needed */
+@import "@cirrus/cuix/tokens.css";
+@import "@cirrus/cuix/theme.css";   /* also @source's the component classes; no node_modules path needed */
 ```
 
-Inline the pre-paint script in `<head>`, before any CSS, so a stored dark theme never flashes light (a Vite plugin that injects the shipped file, and the CSP hash in `lumux/theme-init.sha256`, are in [`docs/getting-started.md`](./docs/getting-started.md)):
+Inline the pre-paint script in `<head>`, before any CSS, so a stored dark theme never flashes light (a Vite plugin that injects the shipped file, and the CSP hash in `@cirrus/cuix/theme-init.sha256`, are in [`docs/getting-started.md`](./docs/getting-started.md)):
 
 ```html
-<script>try{var t=localStorage.getItem("lumux-theme");if(["day","night","dawn","midnight","forest","ocean","hive-day","hive-night"].indexOf(t)>-1)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<script>try{var t=localStorage.getItem("cuix-theme");if(["day","night","dawn","midnight","forest","ocean","hive-day","hive-night"].indexOf(t)>-1)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 ```
 
 ```tsx
-import { AppShell, Button, ThemeProvider, ThemeSwitcher, THEME_NAMES } from "lumux/react";
+import { AppShell, Button, ThemeProvider, ThemeSwitcher, THEME_NAMES } from "@cirrus/cuix/react";
 
 export function App() {
   return (
@@ -129,13 +129,13 @@ export function App() {
 }
 ```
 
-No React? `import { applyTheme } from "lumux/theme"` handles theme selection and persistence without a framework. The full walkthrough is in [docs/getting-started.md](./docs/getting-started.md).
+No React? `import { applyTheme } from "@cirrus/cuix/theme"` handles theme selection and persistence without a framework. The full walkthrough is in [docs/getting-started.md](./docs/getting-started.md).
 
 ## How it fits together
 
 ```mermaid
 flowchart LR
-  subgraph lumux["lumux"]
+  subgraph cuix["cuix"]
     direction TB
     V["vocabulary.ts<br/>token names + legal fg/bg pairs"]
     T["themes.ts<br/>eight names + scheme"]
@@ -192,7 +192,7 @@ Eight themes in three families, all on one vocabulary, all at AAA.
 
 ```mermaid
 flowchart TD
-  A["First paint<br/>(inline theme-init.js)"] --> B{"localStorage<br/>lumux-theme?"}
+  A["First paint<br/>(inline theme-init.js)"] --> B{"localStorage<br/>cuix-theme?"}
   B -- yes --> C["apply stored theme"]
   B -- no --> G{"prefers-color-scheme"}
   G -- dark --> H["theme = night"]
@@ -200,18 +200,18 @@ flowchart TD
   C --> J["&lt;html data-theme=…&gt;"]
   H --> J
   I --> J
-  J --> K["ThemeProvider · switcher writes<br/>the value back to lumux-theme"]
+  J --> K["ThemeProvider · switcher writes<br/>the value back to cuix-theme"]
 ```
 
 - One `<html>` attribute selects the theme: `data-theme`.
-- The choice persists in `localStorage["lumux-theme"]`. Embeds never persist it.
+- The choice persists in `localStorage["cuix-theme"]`. Embeds never persist it.
 - The CSS always ships all eight themes. An app offers a subset through `<ThemeSwitcher themes={…}>`.
 
 ## Accessibility
 
 WCAG 2.2 **AAA wherever achievable, AA as the floor**. Each rule is enforced, not left to reviewers.
 
-| Criterion | lumux rule | Enforced by |
+| Criterion | cuix rule | Enforced by |
 |---|---|---|
 | 1.4.6 Contrast (Enhanced) | Every text pair 7:1 in all eight themes, with no large-text discount | `check-contrast.ts` in CI (exit 1 on failure), axe in the e2e harness |
 | 1.4.11 Non-text contrast | Control edges, focus rings and chart marks 3:1 on every surface | `check-contrast.ts` |
@@ -229,7 +229,7 @@ UI code cannot gate content-level criteria such as reading level (3.1.5). They l
 
 ## Components
 
-Imported from `lumux/react`. Each one documents the accessibility behaviour it guarantees in [docs/components.md](./docs/components.md).
+Imported from `@cirrus/cuix/react`. Each one documents the accessibility behaviour it guarantees in [docs/components.md](./docs/components.md).
 
 | Group | Components |
 |---|---|
@@ -240,11 +240,11 @@ Imported from `lumux/react`. Each one documents the accessibility behaviour it g
 | Content | `Card`, `Badge`, `EmptyState` |
 | Feedback | `ToastProvider`, `useToast`, `ToastLog`, `useToastLog` |
 
-The [live demo](https://danieloceno.github.io/lumux/) shows every component in every state, in all eight themes. The e2e suite runs against that same page.
+The [live demo](https://cirrus-inc.github.io/cuix/) shows every component in every state, in all eight themes. The e2e suite runs against that same page.
 
 ## Gates
 
-Three scripts that fail the build on UI defects that reviews miss. lumux runs them on itself, and `install-gates.sh` installs them into any consumer with a frozen baseline.
+Three scripts that fail the build on UI defects that reviews miss. cuix runs them on itself, and `install-gates.sh` installs them into any consumer with a frozen baseline.
 
 | Gate | Catches |
 |---|---|
@@ -253,7 +253,7 @@ Three scripts that fail the build on UI defects that reviews miss. lumux runs th
 | `check-nested-scrollers.sh` | An `overflow-*` with no written reason |
 
 ```sh
-bash node_modules/lumux/scripts/install-gates.sh --src src
+bash node_modules/@cirrus/cuix/scripts/install-gates.sh --src src
 ```
 
 Config, ratchets and blind spots are in [docs/gates.md](./docs/gates.md).
@@ -288,21 +288,21 @@ Config, ratchets and blind spots are in [docs/gates.md](./docs/gates.md).
 
 | Subpath | Contents |
 |---|---|
-| `lumux/tokens.css` | All eight themes, density, focus, motion, base rules |
-| `lumux/theme.css` | Tailwind v4 `@theme` mapping |
-| `lumux/tokens.embed.css` | 16-token `:host` subset for embeds, minified, no Tailwind |
-| `lumux/tokens.host.css` | Every token on `:host`, for UI inside shadow roots |
-| `lumux/theme-init.js` | Pre-paint script, to inline |
-| `lumux/theme-init.sha256` | CSP hash of `theme-init.js` |
-| `lumux/theme` | `applyTheme`, `readTheme`, `resolvedTheme`, `resolvedScheme`, `THEME_NAMES` |
-| `lumux/react` | Components, `ThemeProvider`, `ThemeSwitcher` |
-| `lumux/eslint` | `eslint-plugin-jsx-a11y` strict config |
+| `@cirrus/cuix/tokens.css` | All eight themes, density, focus, motion, base rules |
+| `@cirrus/cuix/theme.css` | Tailwind v4 `@theme` mapping |
+| `@cirrus/cuix/tokens.embed.css` | 16-token `:host` subset for embeds, minified, no Tailwind |
+| `@cirrus/cuix/tokens.host.css` | Every token on `:host`, for UI inside shadow roots |
+| `@cirrus/cuix/theme-init.js` | Pre-paint script, to inline |
+| `@cirrus/cuix/theme-init.sha256` | CSP hash of `theme-init.js` |
+| `@cirrus/cuix/theme` | `applyTheme`, `readTheme`, `resolvedTheme`, `resolvedScheme`, `THEME_NAMES` |
+| `@cirrus/cuix/react` | Components, `ThemeProvider`, `ThemeSwitcher` |
+| `@cirrus/cuix/eslint` | `eslint-plugin-jsx-a11y` strict config |
 | `scripts/install-gates.sh` | Installs the three gates and a frozen baseline into a consumer |
 
 ## Repo layout
 
 ```
-lumux/
+cuix/
 ├── src/
 │   ├── tokens/
 │   │   ├── vocabulary.ts     token names + legal fg/bg pairings
@@ -318,11 +318,11 @@ lumux/
 │   ├── check-*.{mjs,sh}      the three gates
 │   ├── install-gates.sh      copies the gates and a frozen baseline into a consumer
 │   └── release.sh            builds dist/, commits it, tags vX.Y.Z
-├── eslint/a11y.js            jsx-a11y strict config, exported as lumux/eslint
+├── eslint/a11y.js            jsx-a11y strict config, exported as @cirrus/cuix/eslint
 ├── playground/               the demo page, also driven by the e2e harness
 ├── tests/                    unit (node --test) · e2e (Playwright + axe)
 ├── docs/                     getting-started · tokens · components · gates · copy
-└── lumux-gates.json          the gates' config, with a frozen baseline beside it
+└── cuix-gates.json          the gates' config, with a frozen baseline beside it
 ```
 
 ## Development
@@ -338,7 +338,7 @@ CI runs both suites on every PR. Every push to `main` publishes the demo to GitH
 
 ## Versioning
 
-lumux is pre-release (`0.x`): breaking changes can land in a minor, and each one is called out in [`CHANGELOG.md`](./CHANGELOG.md). Breaking means token renames and removals and component API breaks. Semantic versioning on git tags, with `dist/` committed on the tag commit only. A removed token stays as a deprecated alias for one minor before deletion. The alias is hand-written by the author (`build-tokens.ts` has no alias mechanism yet). Pin an exact tag and upgrade on purpose; updates never arrive silently.
+cuix is pre-release (`0.x`): breaking changes can land in a minor, and each one is called out in [`CHANGELOG.md`](./CHANGELOG.md). Breaking means token renames and removals and component API breaks. Semantic versioning on git tags, with `dist/` committed on the tag commit only. A removed token stays as a deprecated alias for one minor before deletion. The alias is hand-written by the author (`build-tokens.ts` has no alias mechanism yet). Pin an exact tag and upgrade on purpose; updates never arrive silently.
 
 ## Release
 
@@ -348,7 +348,7 @@ Maintainers cut a tag from a clean, up-to-date `main`:
 npm run release -- X.Y.Z   # scripts/release.sh
 ```
 
-The script bumps the version and the install snippets in this README and `docs/getting-started.md`, runs `npm run check`, and commits `dist/` on a `release/` branch. It tags that commit `vX.Y.Z`, then untracks `dist/` in a second commit, so `main` never carries build output. It pushes the branch and the tag, opens the release PR and publishes a GitHub release. A minor also needs the manual screen-reader pass (VoiceOver + NVDA). `dist/` exists only on tag commits, which is what a `github:danieloceno/lumux#vX.Y.Z` install fetches. The script uses the maintainers' `git smart` tool, so outside contributors do not run it. The entry for the tag goes in [`CHANGELOG.md`](./CHANGELOG.md).
+The script bumps the version and the install snippets in this README and `docs/getting-started.md`, runs `npm run check`, and commits `dist/` on a `release/` branch. It tags that commit `vX.Y.Z`, then untracks `dist/` in a second commit, so `main` never carries build output. It pushes the branch and the tag, opens the release PR and publishes a GitHub release. A minor also needs the manual screen-reader pass (VoiceOver + NVDA). `dist/` exists only on tag commits, which is what a `github:Cirrus-Inc/cuix#vX.Y.Z` install fetches. The script uses the maintainers' `git smart` tool, so outside contributors do not run it. The entry for the tag goes in [`CHANGELOG.md`](./CHANGELOG.md).
 
 ## Contributing
 
@@ -358,7 +358,7 @@ See [`CONTRIBUTING.md`](./CONTRIBUTING.md). In short: the decisions in [`ARCHITE
 
 | Document | Purpose |
 |---|---|
-| [docs/getting-started.md](./docs/getting-started.md) | Adopting lumux: install, CSS, `<head>`, React root, lint, CI, shadow roots |
+| [docs/getting-started.md](./docs/getting-started.md) | Adopting cuix: install, CSS, `<head>`, React root, lint, CI, shadow roots |
 | [docs/tokens.md](./docs/tokens.md) | Token reference: the eight themes, every colour, type, spacing, motion, focus |
 | [docs/components.md](./docs/components.md) | Component contracts, props and the a11y behaviour each one guarantees |
 | [docs/gates.md](./docs/gates.md) | The three gates: what each catches, install, config, ratchets, blind spots |
@@ -370,16 +370,15 @@ See [`CONTRIBUTING.md`](./CONTRIBUTING.md). In short: the decisions in [`ARCHITE
 
 ## Roadmap
 
-HIVE adopts lumux first and feeds fixes back; other Cirrus products follow, each upgrading to Tailwind v4 before it adopts. Open work is tracked in the private cuix repo (`Cirrus-Inc/cuix`, the CHANGELOG's reference convention). Next up:
+HIVE adopts cuix first and feeds fixes back; other Cirrus products follow, each upgrading to Tailwind v4 before it adopts. Open work is tracked in this repo's [issues](https://github.com/Cirrus-Inc/cuix/issues). Next up:
 
-- `Cirrus-Inc/cuix#35`: make cuix public
-- `Cirrus-Inc/cuix#27`: a consumer smoke test that installs the packed tarball
-- `Cirrus-Inc/cuix#28`: rulesets protecting `main` and release tags
-- `Cirrus-Inc/cuix#40`: sticky toasts can obscure the focused element on phones (2.4.11 / 2.4.12)
-- `Cirrus-Inc/cuix#41`: TypeScript-aware pair derivation in the contrast gate
-- `Cirrus-Inc/cuix#42`: `release.sh` folds `[Unreleased]` into the new version section
+- `Cirrus-Inc/cuix#42`: make cuix public
+- `Cirrus-Inc/cuix#49`: rulesets protecting `main` and release tags
+- `Cirrus-Inc/cuix#38`: sticky toasts can obscure the focused element on phones (2.4.11 / 2.4.12)
+- `Cirrus-Inc/cuix#37`: TypeScript-aware pair derivation in the contrast gate
+- `Cirrus-Inc/cuix#36`: `release.sh` folds `[Unreleased]` into the new version section
 
-Then `1.0.0`, the API freeze. Bugs and requests from outside go in this repo's [issues](https://github.com/danieloceno/lumux/issues).
+Then `1.0.0`, the API freeze. Bugs and requests go in the same issues.
 
 Kill criteria are explicit and live in [`ARCHITECTURE.md §10`](./ARCHITECTURE.md#10-kill-criteria). The most likely to fire: a hue that cannot reach 7:1 in two authoring rounds moves a step darker (light theme) or lighter (dark theme), never relaxed.
 
@@ -389,4 +388,4 @@ MIT. See [`LICENSE`](./LICENSE).
 
 ---
 
-<p align="center"><sub>lumux · accessibility as a property of the system, not a review step</sub></p>
+<p align="center"><sub>cuix · accessibility as a property of the system, not a review step</sub></p>

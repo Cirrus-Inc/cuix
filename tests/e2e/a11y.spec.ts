@@ -98,7 +98,7 @@ test('skip link is first and moves focus to main', async ({ page }) => {
 
 test('document title names the route', async ({ page }) => {
   await open(page, 'day', 'default');
-  await expect(page).toHaveTitle('Playground · lumux');
+  await expect(page).toHaveTitle('Playground · cuix');
 });
 
 test('disabled button stays focusable, swallows clicks and announces its reason', async ({ page }) => {
@@ -130,7 +130,7 @@ test('reduced motion stops the spinner and collapses durations', async ({ page }
   await open(page, 'day', 'default');
   const spinner = page.locator('[aria-busy="true"] svg').first();
   await expect(spinner).toHaveCSS('animation-name', 'none');
-  const fast = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--lumux-motion-fast').trim());
+  const fast = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--cuix-motion-fast').trim());
   expect(fast).toBe('0.01ms');
 });
 
@@ -238,7 +238,7 @@ test('checkbox and radio draw their edges and marks with tokens, in forced color
   const token = (name: string) =>
     page.evaluate((n) => {
       const probe = document.createElement('i');
-      probe.style.color = `var(--lumux-${n})`;
+      probe.style.color = `var(--cuix-${n})`;
       document.body.append(probe);
       const c = getComputedStyle(probe).color;
       probe.remove();

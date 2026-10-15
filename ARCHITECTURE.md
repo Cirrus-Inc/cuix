@@ -1,6 +1,6 @@
-# lumux: Architecture, Standard and Decisions
+# cuix: Architecture, Standard and Decisions
 
-The standard lumux implements and the reasoning behind it. Section numbers are stable and referenced
+The standard cuix implements and the reasoning behind it. Section numbers are stable and referenced
 from source comments; sections that held private product inventories and per-app migration plans are
 not part of this public document, so the numbering has gaps (0-2, 7-9).
 
@@ -18,15 +18,15 @@ alternative, the decision log names the cost. Reopen one with a written case, no
 | Contrast, text | **AAA 1.4.6: 7:1** body, 4.5:1 large (≥24px, or ≥18.66px bold) | Every legal fg/bg pairing is enumerated in the token source; `scripts/check-contrast.ts` runs all eight themes and exits non-zero; every text pair is held to 7:1, with no large-text discount. No exception list. A theme that fails is re-authored (§10, criterion 1), never relaxed. The earlier AA-era core accent `#0079a8` is 4.88:1, so it moves to `#005778` (§4.1). |
 | Contrast, non-text | AA 1.4.11: 3:1 for UI boundaries, focus rings, icons | Same script, same run. |
 | Visible focus | **AAA 2.4.13**: ≥2px solid, 3:1 against adjacent colors, never obscured (**AA 2.4.11**) | One global `:focus-visible` rule in `tokens.css` (2px solid `--focus-ring`, 2px offset). Components never restyle it. Sticky headers and toasts reserve space so a focused element is never under them. `outline-none` without `focus-visible` in the same class string is a CI failure. |
-| Target sizes | **AAA 2.5.5: 44×44 CSS px, every pointer, no exception** | `--target-min: 44px`. Any `h-*`/`size-*`/`min-h-*` under 44 inside lumux components fails CI (the blocking sizing gate, now unconditional). Inline text links are exempt per the SC. |
+| Target sizes | **AAA 2.5.5: 44×44 CSS px, every pointer, no exception** | `--target-min: 44px`. Any `h-*`/`size-*`/`min-h-*` under 44 inside cuix components fails CI (the blocking sizing gate, now unconditional). Inline text links are exempt per the SC. |
 | Motion | AAA 2.3.3 | All `--motion-*` durations collapse to `0.01ms` under `prefers-reduced-motion` and under `[data-reduce-motion="true"]` (test hook). State never conveyed by animation alone. No parallax, no autoplay. |
 | Timing | AAA 2.2.3 / 2.2.4 | No time limits on any task. No auto-dismiss of anything the user must act on; errors are sticky. Status toasts may auto-dismiss (they are not required to act on) but are also logged to a reachable list. |
 | Keyboard | AAA 2.1.3: everything, no exceptions | Radix for dialog/popover/menu/tooltip/select; other inputs kept native (`NativeSelect` keeps the platform picker). Hover-only is banned (§5.5). Focus order tested per component. |
 | Dragging | AA 2.5.7 | Every drag has a click/keyboard alternative. |
 | Location & help | AAA 2.4.8, 3.3.5 | Breadcrumb or `aria-current` on every surface; help reachable from every screen in the same place (header). |
-| Redundant entry, auth | AA 3.3.7, **AAA 3.3.9** | Forms never re-ask what the session knows; lumux ships no authentication UI that would need a cognitive test; lumux forms expose autocomplete tokens. |
-| Skip links & landmarks | A 2.4.1 | `SkipLink` + `id="main"` are part of the lumux `AppShell`, not opt-in. |
-| Audit | — | `@axe-core/playwright` runs on every lumux component at 320px and 200% zoom in lumux CI; consumers run it on every route. Manual screen-reader pass (VoiceOver + NVDA) per component before a minor release. |
+| Redundant entry, auth | AA 3.3.7, **AAA 3.3.9** | Forms never re-ask what the session knows; cuix ships no authentication UI that would need a cognitive test; cuix forms expose autocomplete tokens. |
+| Skip links & landmarks | A 2.4.1 | `SkipLink` + `id="main"` are part of the cuix `AppShell`, not opt-in. |
+| Audit | — | `@axe-core/playwright` runs on every cuix component at 320px and 200% zoom in cuix CI; consumers run it on every route. Manual screen-reader pass (VoiceOver + NVDA) per component before a minor release. |
 | Maintainable by 1–2 devs | — | One package, one token source, generated outputs, seven scripts and one shared module in `scripts/`. No Storybook, no VRT SaaS, no Style Dictionary. |
 
 Not adopted, with reason: AAA 3.1.5 (lower-secondary reading level) is applied to copy rules (§5.6) as guidance, not gated. AAA 1.2.6 (sign language for prerecorded audio) is a content requirement, not a UI-system one; it is the product itself.
@@ -52,13 +52,13 @@ Not adopted, with reason: AAA 3.1.5 (lower-secondary reading level) is applied t
 
 Dropped from shadcn's vocabulary on purpose: `card`, `popover`, `primary`, `secondary`, `input`, `ring`. They are per-component names, and `primary`/`secondary` say nothing about meaning.
 
-**Extension layer.** An app may declare additional tokens in its own file, namespaced (for example `--app-status-responded`). Rules: same naming shape, same day/night authoring, must be added to that app's contrast check. lumux never learns them. This keeps domain colors out of the shared vocabulary.
+**Extension layer.** An app may declare additional tokens in its own file, namespaced (for example `--app-status-responded`). Rules: same naming shape, same day/night authoring, must be added to that app's contrast check. cuix never learns them. This keeps domain colors out of the shared vocabulary.
 
 **Content colors** are not tokens: user-chosen label swatches, chroma-key greens, brand marks. They stay hardcoded with a `/* content color */` marker so the hex gate can skip them.
 
-**Eight themes, three families (D19, revised 2026-10-08, extended 2026-10-14).** core day and night (the default pair, `system` resolves to it), the extended four (dawn, midnight, forest, ocean) and the hive pair (hive-day, hive-night, the HIVE mockup palette, Cirrus-Inc/cuix#44), each a single named theme with its own light/dark scheme. The 2026-10-04 revision had collapsed to the core pair alone; the maintainers reinstated the extended four on 2026-10-08. No `data-palette`: the theme name is the whole selection. Every theme passes the same AAA gate (504 pairs). The extended themes keep the source hues and move lightness only; `src/tokens/sets/extended.ts` lists each change. The hive themes keep the mockup values that pass and move each failing one to the nearest passing colour at the same hue; `docs/tokens.md` has the deviation table. The registry is `src/tokens/themes.ts`; the colours join in `src/tokens/sets/index.ts`.
+**Eight themes, three families (D19, revised 2026-10-08, extended 2026-10-14).** core day and night (the default pair, `system` resolves to it), the extended four (dawn, midnight, forest, ocean) and the hive pair (hive-day, hive-night, the HIVE mockup palette, Cirrus-Inc/cuix#34), each a single named theme with its own light/dark scheme. The 2026-10-04 revision had collapsed to the core pair alone; the maintainers reinstated the extended four on 2026-10-08. No `data-palette`: the theme name is the whole selection. Every theme passes the same AAA gate (504 pairs). The extended themes keep the source hues and move lightness only; `src/tokens/sets/extended.ts` lists each change. The hive themes keep the mockup values that pass and move each failing one to the nearest passing colour at the same hue; `docs/tokens.md` has the deviation table. The registry is `src/tokens/themes.ts`; the colours join in `src/tokens/sets/index.ts`.
 
-Origin: the CSS custom properties of an existing brand site, chosen by the maintainers. There is no brand guide and no Figma. The hues were first shipped at AA; lumux takes them to AAA. The source scale:
+Origin: the CSS custom properties of an existing brand site, chosen by the maintainers. There is no brand guide and no Figma. The hues were first shipped at AA; cuix takes them to AAA. The source scale:
 
 | Ramp | Values |
 |---|---|
@@ -83,12 +83,12 @@ Origin: the CSS custom properties of an existing brand site, chosen by the maint
 | `focus-ring` | `#005778` | `#00cde0` | |
 | `chart-1..5` | `#0079a8 #a04e00 #6b4de6 #127c0a #b0306a` | `#00a0b0 #cf7a2a #8878e0 #38a456 #cf6396` | Validated for lightness band, CVD separation (≥7.7 ΔE) and 3:1 |
 
-The open item from the AA → AAA pass is closed: lumux has no `control-fill` token. Inputs, hover and wells use `surface-raised`, which is ink-100 in day, and every text colour is fitted to it.
+The open item from the AA → AAA pass is closed: cuix has no `control-fill` token. Inputs, hover and wells use `surface-raised`, which is ink-100 in day, and every text colour is fitted to it.
 
 Phase 1 adjustments to this document:
-- **Prefix.** CSS custom properties are `--lumux-*`, so adopting lumux next to an app's existing `--background`/`--accent` is additive and collision-free. Tailwind utilities stay unprefixed (`bg-surface`).
+- **Prefix.** CSS custom properties are `--cuix-*`, so adopting cuix next to an app's existing `--background`/`--accent` is additive and collision-free. Tailwind utilities stay unprefixed (`bg-surface`).
 - **`foreground-subtle`.** Size buys no contrast discount (§4.2), so `foreground-subtle` cannot be a lighter grey that fails. It is the third step of a hierarchy that passes at every level.
-- **Theme runtime.** `applyTheme` / `readTheme` ship framework-free from `lumux/theme` in Phase 1. Phase 2's `<ThemeProvider>` in `/react` wraps them.
+- **Theme runtime.** `applyTheme` / `readTheme` ship framework-free from `@cirrus/cuix/theme` in Phase 1. Phase 2's `<ThemeProvider>` in `/react` wraps them.
 
 `#009fda` (3.0:1 on white) is a brand mark and decorative color only: never text, and never a focus ring on the canvas. The day theme reads more navy than the source brand. AAA requires that, so it is not a bug.
 
@@ -99,10 +99,10 @@ Phase 1 adjustments to this document:
 ```
 
 - `data-theme` absent = follow `prefers-color-scheme` (the OS decides).
-- lumux exports `applyTheme({ theme })`, `readTheme()` and a `<ThemeProvider>`; **lumux persists the value in `localStorage` under the key `lumux-theme`** (D4). An inline script that lumux ships reads it before first paint, so there is no flash. Embedded snippets never persist.
+- cuix exports `applyTheme({ theme })`, `readTheme()` and a `<ThemeProvider>`; **cuix persists the value in `localStorage` under the key `cuix-theme`** (D4). An inline script that cuix ships reads it before first paint, so there is no flash. Embedded snippets never persist.
 - The token source is one file per family (`src/tokens/sets/core.ts`, `extended.ts`) joined by `sets/index.ts`; a seventh theme is one entry in `themes.ts` plus one `ThemeColors` object. There is no `data-palette`: a theme name is the whole selection.
 
-**The extended four** keep their names, so `ThemeProvider`'s `legacy` option can migrate a pre-lumux `localStorage` key to `lumux-theme` once on first load.
+**The extended four** keep their names, so `ThemeProvider`'s `legacy` option can migrate a pre-cuix `localStorage` key to `cuix-theme` once on first load.
 
 ### 4.2 Typography
 
@@ -161,7 +161,7 @@ Delivered as `dist/tokens.embed.css`: a `:host` block with core day values and a
 
 `surface`, `surface-raised`, `foreground`, `foreground-muted`, `border`, `accent`, `accent-foreground`, `focus-ring`, `overlay-scrim`, `radius-control`, `radius-panel`, `radius-pill`, `font-sans`, `motion-base`, `motion-ease`, `target-min`.
 
-Core only, by budget: the snippet has no switcher and the extended themes would cost four more blocks for nothing (D19). A host-facing accent override may map onto `accent`. Estimated cost: 16 declarations × 2 modes ≈ 350 B gz. A consumer's build copies the file from `node_modules/lumux/dist/` into its stylesheet bundle; there is no runtime dependency.
+Core only, by budget: the snippet has no switcher and the extended themes would cost four more blocks for nothing (D19). A host-facing accent override may map onto `accent`. Estimated cost: 16 declarations × 2 modes ≈ 350 B gz. A consumer's build copies the file from `node_modules/@cirrus/cuix/dist/` into its stylesheet bundle; there is no runtime dependency.
 
 ### 4.7 Iconography
 
@@ -175,9 +175,9 @@ lucide-react 1.x, named imports, stroke 1.75, sizes 16 (inline, default) / 20 (c
 | B. Tailwind theme file only | no (shadow-DOM embeds) | versioned | low | rejected |
 | C. shadcn-style copy-in (registry) | yes | **none** — drift by design; four copies of every fix | low per change, high over time | rejected; this is what exists today |
 | D. Monorepo workspace | only if every consumer repo merges | instant | migrating every repo + CI | rejected; not a design-system problem |
-| **E. Git-tag install, `dist/` committed** (`npm i github:danieloceno/lumux#v0.3.0`) | yes | versioned by tag; lockfile pins the commit | zero registry setup; a `prepare`-free build step that commits `dist/` on release | **Decided (D2)** |
+| **E. Git-tag install, `dist/` committed** (`npm i @cirrus/cuix@github:Cirrus-Inc/cuix#v0.3.0`) | yes | versioned by tag; lockfile pins the commit | zero registry setup; a `prepare`-free build step that commits `dist/` on release | **Decided (D2)** |
 
-Package name `lumux`, subpath exports: `/tokens.css`, `/tokens.embed.css`, `/theme.css` (Tailwind v4 `@theme`), `/tokens.host.css` (tokens on `:host`), `/theme-init.js` (inline pre-paint script), `/theme-init.sha256` (its CSP hash), `/theme` (`applyTheme`, `readTheme`), `/react`, `/eslint` (jsx-a11y strict config). Components use Tailwind v4 utilities that resolve through `theme.css`; `theme.css` declares `@source "./react"` itself, so consuming apps add no `@source`. Components are React 19, peer-dep on Radix. A CSS-only consumer imports only CSS and never installs the React peers. pnpm and npm both support git-tag installs; the release script tags and commits `dist/` in the same commit so `git+https` installs need no build.
+Package name `cuix`, subpath exports: `/tokens.css`, `/tokens.embed.css`, `/theme.css` (Tailwind v4 `@theme`), `/tokens.host.css` (tokens on `:host`), `/theme-init.js` (inline pre-paint script), `/theme-init.sha256` (its CSP hash), `/theme` (`applyTheme`, `readTheme`), `/react`, `/eslint` (jsx-a11y strict config). Components use Tailwind v4 utilities that resolve through `theme.css`; `theme.css` declares `@source "./react"` itself, so consuming apps add no `@source`. Components are React 19, peer-dep on Radix. A CSS-only consumer imports only CSS and never installs the React peers. pnpm and npm both support git-tag installs; the release script tags and commits `dist/` in the same commit so `git+https` installs need no build.
 
 ---
 
@@ -197,7 +197,7 @@ Same component, same measurements, same behavior in every app. Deviations are na
 - Anatomy, top to bottom: label (required marker is text "required" in the label, not an asterisk alone), control, helper (optional, ≤90 chars), error (icon + text, `role=alert` on first appearance, `aria-describedby` wired, `aria-invalid`).
 - Label always above. No floating labels, no placeholder-as-label.
 - Validation timing: on submit; then on change for fields that have errored (RHF's default). No validation on first blur of an untouched field.
-- Library-agnostic: lumux ships `Field`, `Input`, `Textarea`, `Select` (Radix, themed popup), `NativeSelect`, `Checkbox`, `Switch`, `RadioGroup` (native inputs). RHF/zod stay in the app.
+- Library-agnostic: cuix ships `Field`, `Input`, `Textarea`, `Select` (Radix, themed popup), `NativeSelect`, `Checkbox`, `Switch`, `RadioGroup` (native inputs). RHF/zod stay in the app.
 - Inputs ≥16px on coarse pointers; control height 44px.
 - Autocomplete tokens on every field that maps to a known purpose (1.3.5); no re-entry of known values (3.3.7); no cognitive-test auth (3.3.9).
 
@@ -217,7 +217,7 @@ Same component, same measurements, same behavior in every app. Deviations are na
 ### 5.5 Interaction rules
 
 - Every pointer interaction has a keyboard path and a touch path. Hover reveals nothing that is not also reachable by focus or tap.
-- Tooltip (`Tooltip`, Radix): opens on hover, focus, and long-press; never the only carrier of information. `title` attributes are disallowed on interactive elements in lumux components.
+- Tooltip (`Tooltip`, Radix): opens on hover, focus, and long-press; never the only carrier of information. `title` attributes are disallowed on interactive elements in cuix components.
 - Drag has a non-drag equivalent (buttons or a menu).
 - Nothing auto-dismisses that the user must act on.
 
@@ -239,20 +239,20 @@ Same component, same measurements, same behavior in every app. Deviations are na
 
 Where explanation goes instead: a help panel fed from a markdown source, a disclosure ("Why?") that opens the help topic, a first-run pass, or a docs link. Never permanently under the control.
 
-Enforcement: the `prose` ratchet (muted/caption/hint text >90 chars) ships in lumux's scripts and is installed in every consumer with a frozen baseline.
+Enforcement: the `prose` ratchet (muted/caption/hint text >90 chars) ships in cuix's scripts and is installed in every consumer with a frozen baseline.
 
 ### 5.7 Mobile
 
-Full parity on phones is the default: every component works at 320px. Where a product deliberately limits what a phone offers (for example a dense monitoring console), that is a product decision recorded in the product, not a lumux variant. Embeds keep a bottom sheet and use `env(safe-area-inset-bottom)` so notched devices do not clip it.
+Full parity on phones is the default: every component works at 320px. Where a product deliberately limits what a phone offers (for example a dense monitoring console), that is a product decision recorded in the product, not a cuix variant. Embeds keep a bottom sheet and use `env(safe-area-inset-bottom)` so notched devices do not clip it.
 
-Verification: every lumux component has a Playwright check at 320px width and at 200% zoom (1280 viewport, CSS zoom 2) asserting no horizontal overflow, all targets ≥44px, and zero axe violations.
+Verification: every cuix component has a Playwright check at 320px width and at 200% zoom (1280 viewport, CSS zoom 2) asserting no horizontal overflow, all targets ≥44px, and zero axe violations.
 
 ---
 
 ## 6. Phase 2 — Central repo structure
 
 ```
-lumux/
+cuix/
   src/tokens/
     vocabulary.ts        token names + legal fg/bg pairings (the contrast script reads this)
     sets/core.ts         day + night values; a second set = a second file
@@ -263,20 +263,20 @@ lumux/
     check-contrast.ts    all sets × modes × pairings, exit 1 on any failure
     component-pairs.ts   derives the fg/bg pairs components render; check-contrast fails on any unlisted one
     check-ui-className.mjs, check-disabled-title.sh, check-nested-scrollers.sh   (lifted, parameterized)
-    install-gates.sh     copies the three gates + baseline into a consumer repo (lumux-gates.json holds the consumer's roots and exceptions; lumux runs the same gates on itself)
+    install-gates.sh     copies the three gates + baseline into a consumer repo (cuix-gates.json holds the consumer's roots and exceptions; cuix runs the same gates on itself)
     release.sh           builds dist/, commits it, tags vX.Y.Z
   dist/                  generated, committed on release only (git-tag install, D2)
   docs/tokens.md docs/copy.md docs/components.md
   ARCHITECTURE.md
 ```
 
-**Consumption.** `npm i github:danieloceno/lumux#vX.Y.Z`, then import `tokens.css` and `@import "lumux/theme.css"` (which carries the `@source`), and mount the components from `/react` with `<ThemeProvider>`. A CSS-only consumer copies or imports `tokens.embed.css` and installs no React peers.
+**Consumption.** `npm i @cirrus/cuix@github:Cirrus-Inc/cuix#vX.Y.Z`, then import `tokens.css` and `@import "@cirrus/cuix/theme.css"` (which carries the `@source`), and mount the components from `/react` with `<ThemeProvider>`. A CSS-only consumer copies or imports `tokens.embed.css` and installs no React peers.
 
-**Versioning.** Semver via git tags; `dist/` committed on the tag commit; the changelog is `CHANGELOG.md`, updated by hand at release. Apps pin exact tags. lumux CI runs contrast + gates + 320px/200% checks on every PR.
+**Versioning.** Semver via git tags; `dist/` committed on the tag commit; the changelog is `CHANGELOG.md`, updated by hand at release. Apps pin exact tags. cuix CI runs contrast + gates + 320px/200% checks on every PR.
 
-**Breaking change.** Major bump (a minor while lumux is `0.x`, called out in the changelog). A token author who renames or removes a token keeps the old name as an alias of the new one (`--lumux-old: var(--lumux-new)`) for one minor before deleting it; there is no alias mechanism in `scripts/build-tokens.ts` yet, so the alias is added by hand. Component API breaks get a one-paragraph migration note in the changelog and, where mechanical, a codemod in `scripts/codemods/`. No app is force-upgraded.
+**Breaking change.** Major bump (a minor while cuix is `0.x`, called out in the changelog). A token author who renames or removes a token keeps the old name as an alias of the new one (`--cuix-old: var(--cuix-new)`) for one minor before deleting it; there is no alias mechanism in `scripts/build-tokens.ts` yet, so the alias is added by hand. Component API breaks get a one-paragraph migration note in the changelog and, where mechanical, a codemod in `scripts/codemods/`. No app is force-upgraded.
 
-**New app onboards.** Tailwind v4, `npm i github:danieloceno/lumux#vX.Y.Z`, import `tokens.css` + `theme.css`, mount `<ThemeProvider>`, run `install-gates.sh`, add `viewport-fit=cover`.
+**New app onboards.** Tailwind v4, `npm i @cirrus/cuix@github:Cirrus-Inc/cuix#vX.Y.Z`, import `tokens.css` + `theme.css`, mount `<ThemeProvider>`, run `install-gates.sh`, add `viewport-fit=cover`.
 
 **Contribution rule.** A new token or component needs a real use in two consumer apps. One-off needs stay in the app's extension layer.
 
@@ -290,9 +290,9 @@ Stop and re-plan if any of these happens mid-rollout:
 2. A dense console cannot fit its control set with 44px controls without a second scroller → it needs an information-architecture pass before a token pass.
 3. A dense variant needs a token *value* (not scale) that differs from the shared set → the "one vocabulary" premise is false for consoles; that app keeps its own tokens and consumes components only.
 4. An embed's CSS budget cannot fit the subset even day-only → that embed leaves the token system and mirrors the palette by hand.
-5. Two apps must pin different lumux majors for more than one release → propagation model is broken; move to copy-in for components and keep only tokens shared.
-6. Any consumer forks a lumux component rather than adding a variant → the API is wrong or the "identical everywhere" rule is wrong for that component; decide which before a second fork.
-7. A lumux update breaks a production-critical consumer → that consumer upgrades on a release train, never ad hoc.
+5. Two apps must pin different cuix majors for more than one release → propagation model is broken; move to copy-in for components and keep only tokens shared.
+6. Any consumer forks a cuix component rather than adding a variant → the API is wrong or the "identical everywhere" rule is wrong for that component; decide which before a second fork.
+7. A cuix update breaks a production-critical consumer → that consumer upgrades on a release train, never ad hoc.
 
 ---
 
@@ -303,12 +303,12 @@ Stop and re-plan if any of these happens mid-rollout:
 | D1 | Split baseline: one product's token pipeline, another's components and gates | Third product as baseline; greenfield | Highest scores; greenfield discards measured decisions |
 | D2 | Delivery = git-tag install with `dist/` committed on the tag; subpath exports (CSS + TW4 theme + React) | GitHub Packages; copy-in; monorepo | Versioned propagation with zero registry setup; a handful of consumers does not justify a registry |
 | D3 | CSS custom properties are the contract; Tailwind is a consumer of them | Tailwind-first | Embeds have no Tailwind |
-| D4 | One `<html>` attribute, `data-theme` (`data-palette` dropped with D19's revision); **lumux persists it in localStorage** | lumux selects only, apps persist; server-side everywhere | Maintainers' call. Cost: an app that stored theme server-side retires that; theme no longer follows a user across machines |
+| D4 | One `<html>` attribute, `data-theme` (`data-palette` dropped with D19's revision); **cuix persists it in localStorage** | cuix selects only, apps persist; server-side everywhere | Maintainers' call. Cost: an app that stored theme server-side retires that; theme no longer follows a user across machines |
 | D5 | Body 16 mobile-first; one `data-density="dense"` container variant (14 body, 10 floor) | body 14 everywhere; user-selectable density | iOS input zoom; a selectable density was tried and retired |
 | D6 | **Target floor 44px everywhere, every pointer** (AAA 2.5.5) | 44 coarse / 32 fine; 24 fine | Maintainers' call under D23. Cost: dense consoles must re-measure their layouts |
 | D7 | Inter Variable + Geist Mono, both self-hosted | Geist Sans; system | CSP-safe, one file each, majority; Geist Mono for numeric telemetry |
-| D8 | Radix underneath dialogs/popovers/menus/tooltips, and `Select` (Cirrus-Inc/cuix#43) | Base UI; hand-rolled | Less code to own. `Select` moved off the native control because Safari draws its popup in the OS appearance, not the page theme |
-| D9 | Toast: errors sticky `role=alert`, success auto `role=status`, **lumux-owned `ToastProvider`, no dependency** (revised 2026-10-08; was a sonner wrapper) | sonner via a lumux wrapper | sonner has one `polite` live region, so errors cannot be `role=alert`, and the ×N merge, the cap of 4, "Dismiss all" and the reachable log had to be built on top of it anyway. The provider is ~150 lines |
+| D8 | Radix underneath dialogs/popovers/menus/tooltips, and `Select` (Cirrus-Inc/cuix#35) | Base UI; hand-rolled | Less code to own. `Select` moved off the native control because Safari draws its popup in the OS appearance, not the page theme |
+| D9 | Toast: errors sticky `role=alert`, success auto `role=status`, **cuix-owned `ToastProvider`, no dependency** (revised 2026-10-08; was a sonner wrapper) | sonner via a cuix wrapper | sonner has one `polite` live region, so errors cannot be `role=alert`, and the ×N merge, the cap of 4, "Dismiss all" and the reachable log had to be built on top of it anyway. The provider is ~150 lines |
 | D10 | **Radius control 4 / inset 2 / card 8; no pill badges or chips** (revised 2026-10-04; was 6 / 12) | 6 / 12; the source 12 | Maintainers' call: square and barely rounded. Cost: every app's chips and badges lose their pill shape |
 | D11 | Elevation flat/raised/overlay | a single shadow | Superset |
 | D12 | No bottom tab bar in the standard | add one | Tried and removed in a consumer, with reasons |
@@ -316,11 +316,11 @@ Stop and re-plan if any of these happens mid-rollout:
 | D14 | Carousel out of scope | spec now, build later | Not found in any app; no consumer |
 | D15 | Copy rules with explicit boundary; 90-char helper budget; prose ratchet in every app | none | The ratchet already worked in production; boundary prevents "remove text" misreadings |
 | D16 | Product-specific; not part of this public document | | |
-| D17 | Extension-layer tokens per app (namespaced, contrast-checked, never shared) | fold into lumux | Keeps the vocabulary small; domain colors survive |
+| D17 | Extension-layer tokens per app (namespaced, contrast-checked, never shared) | fold into cuix | Keeps the vocabulary small; domain colors survive |
 | D18 | Rollout: cheapest consumer first, riskiest last | baseline first | Proof on the cheapest app; acceptance on the riskiest |
 | D19 | **Eight named themes, three families: core day/night + extended dawn/midnight/forest/ocean + hive hive-day/hive-night**, all in every app's CSS, each app offering a subset (revised 2026-10-08, hive added 2026-10-14; 2026-10-04 had core alone; originally four sets × day/night) | core alone; four sets × day/night with `data-palette` | Maintainers' call: core is the brand and the `system` pair; the extended four are wanted as-is, at AAA. Named themes instead of set × mode because forest/ocean are not a day/night pair. Cost: 504 pairs to verify (automated), +1.3 KB gz in tokens.css, the embed subset still ships core only; midnight's violet is lavender at 7:1 |
 | D20 | No Storybook / VRT SaaS / token toolchain | add them | 1–2 maintainers |
-| D21 | **Tailwind v4 only**; consumers on v3 upgrade before adopting lumux | ship a v3 preset too | One output to maintain; the upgrade is due anyway. Cost: +1–3 days per app up front |
+| D21 | **Tailwind v4 only**; consumers on v3 upgrade before adopting cuix | ship a v3 preset too | One output to maintain; the upgrade is due anyway. Cost: +1–3 days per app up front |
 | D22 | Body 16 / dense variant, radius 4/8 (D10 revised), dialog footer cancel-left, helper text ≤90 chars, no bottom tab bar, cheapest-first rollout | as listed in D5/D10/D12/D15/D18 | Confirmed as recommended |
 | D23 | **WCAG 2.2 AAA wherever achievable, AA floor.** Text 7:1, targets 44, focus 2.4.13, no time limits, keyboard 2.1.3, axe in CI + manual SR pass | AA complete; AAA strict | Accessibility is the company's product. AAA-strict rejected because 3.1.5/1.2.6 are content criteria the UI system cannot gate |
 

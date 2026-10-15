@@ -27,7 +27,7 @@ if (typeof document !== 'undefined') {
 
 /**
  * Focus return for imperative opens.
- * Radix returns focus to a `Trigger`; most lumux dialogs open from a row click
+ * Radix returns focus to a `Trigger`; most cuix dialogs open from a row click
  * or a menu action, with no trigger near them. The opener is captured on the
  * closed→open transition, during render, which is the one moment that still
  * sees whatever had focus before the panel existed (an `autoFocus` child wins

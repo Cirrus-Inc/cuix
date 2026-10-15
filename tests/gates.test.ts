@@ -11,12 +11,12 @@ const root = new URL('..', import.meta.url).pathname;
 const gate = (name: string) => join(root, 'scripts', name);
 
 function consumer(files: Record<string, string>, config: Record<string, unknown> = {}) {
-  const dir = mkdtempSync(join(tmpdir(), 'lumux-gates-'));
+  const dir = mkdtempSync(join(tmpdir(), 'cuix-gates-'));
   for (const [path, body] of Object.entries(files)) {
     mkdirSync(join(dir, path, '..'), { recursive: true });
     writeFileSync(join(dir, path), body);
   }
-  writeFileSync(join(dir, 'lumux-gates.json'), JSON.stringify({ src: ['src'], ui: 'src/ui', ...config }));
+  writeFileSync(join(dir, 'cuix-gates.json'), JSON.stringify({ src: ['src'], ui: 'src/ui', ...config }));
   return dir;
 }
 
@@ -27,7 +27,7 @@ const run = (cmd: string, args: string[], cwd: string) => {
 const node = (cwd: string, ...args: string[]) => run('node', [gate('check-ui-className.mjs'), ...args], cwd);
 const bash = (script: string, cwd: string) => run('bash', [gate(script)], cwd);
 
-const CLEAN = `import { Button } from 'lumux/react';
+const CLEAN = `import { Button } from '@cirrus/cuix/react';
 export const A = () => <Button className="mt-4 w-full">Save</Button>;
 `;
 
@@ -42,7 +42,7 @@ test('className gate: clean consumer passes once a baseline exists', () => {
 
 test('className gate: appearance utility on a primitive fails, layout passes', () => {
   const dir = consumer({
-    'src/a.tsx': `import { Button, Card } from 'lumux/react';
+    'src/a.tsx': `import { Button, Card } from '@cirrus/cuix/react';
 export const A = () => (
   <>
     <Button variant="primary" className="bg-success mt-2">Go</Button>
@@ -61,7 +61,7 @@ export const A = () => (
 test('className gate: ratchets fail only when a count rises', () => {
   const dir = consumer({ 'src/a.tsx': `export const A = () => <p className="text-slate-500 z-[60]">x</p>;\n` });
   node(dir, '--update-baseline');
-  const frozen = JSON.parse(readFileSync(join(dir, 'lumux-gates.baseline.json'), 'utf8'));
+  const frozen = JSON.parse(readFileSync(join(dir, 'cuix-gates.baseline.json'), 'utf8'));
   assert.deepEqual(frozen.palette, { 'src/a.tsx': 1 });
   assert.deepEqual(frozen.arbitrary, { 'src/a.tsx': 1 });
   assert.equal(node(dir).code, 0, 'same counts pass');
@@ -85,7 +85,7 @@ test('className gate: outline-none without focus-visible counts, with it does no
 `,
   });
   node(dir, '--update-baseline');
-  const frozen = JSON.parse(readFileSync(join(dir, 'lumux-gates.baseline.json'), 'utf8'));
+  const frozen = JSON.parse(readFileSync(join(dir, 'cuix-gates.baseline.json'), 'utf8'));
   assert.deepEqual(frozen['outline-none'], { 'src/a.tsx': 1 });
   assert.deepEqual(frozen['raw-control'], { 'src/a.tsx': 2 });
 });
@@ -164,17 +164,17 @@ export const A = () => (
 test('raw-control: a ui path written as ./dir/ still exempts the primitives dir', () => {
   const dir = consumer({ 'src/ui/Chip.tsx': `export const C = () => <button className="min-h-target">x</button>;\n` }, { ui: './src/ui/' });
   node(dir, '--update-baseline');
-  const frozen = JSON.parse(readFileSync(join(dir, 'lumux-gates.baseline.json'), 'utf8'));
+  const frozen = JSON.parse(readFileSync(join(dir, 'cuix-gates.baseline.json'), 'utf8'));
   assert.deepEqual(frozen['raw-control'], {});
 });
 
 test('shell gates: a malformed config fails instead of scanning nothing', () => {
   const dir = consumer({ 'src/a.tsx': `<div className="overflow-hidden" />` });
-  writeFileSync(join(dir, 'lumux-gates.json'), '{bad');
+  writeFileSync(join(dir, 'cuix-gates.json'), '{bad');
   for (const g of ['check-disabled-title.sh', 'check-nested-scrollers.sh']) {
     const r = bash(g, dir);
     assert.equal(r.code, 1, `${g}: ${r.out}`);
-    assert.match(r.out, /could not read lumux-gates\.json/);
+    assert.match(r.out, /could not read cuix-gates\.json/);
   }
 });
 
@@ -230,30 +230,30 @@ test('nested-scrollers: overflow without scroll-ok fails, with it passes', () =>
 test('install-gates.sh: copies the gates, writes config, baseline and npm scripts, idempotently', () => {
   const dir = consumer({ 'src/a.tsx': CLEAN });
   writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'consumer', scripts: { test: 'x' } }));
-  // The fresh consumer has no lumux-gates.json; drop the one `consumer()` wrote.
-  writeFileSync(join(dir, 'lumux-gates.json'), '');
-  spawnSync('rm', [join(dir, 'lumux-gates.json')]);
+  // The fresh consumer has no cuix-gates.json; drop the one `consumer()` wrote.
+  writeFileSync(join(dir, 'cuix-gates.json'), '');
+  spawnSync('rm', [join(dir, 'cuix-gates.json')]);
 
   let r = run('bash', [gate('install-gates.sh'), '--src', 'src', '--ui', 'src/ui'], dir);
   assert.equal(r.code, 0, r.out);
   const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
   assert.equal(pkg.scripts['check:gates'], 'npm run check:ui && npm run check:disabled-title && npm run check:nested-scrollers');
   assert.equal(pkg.scripts.test, 'x');
-  const cfg = JSON.parse(readFileSync(join(dir, 'lumux-gates.json'), 'utf8'));
+  const cfg = JSON.parse(readFileSync(join(dir, 'cuix-gates.json'), 'utf8'));
   assert.deepEqual(cfg.src, ['src']);
   assert.equal(cfg.ui, 'src/ui');
   for (const g of ['check-ui-className.mjs', 'check-disabled-title.sh', 'check-nested-scrollers.sh']) {
     assert.equal(readFileSync(join(dir, 'scripts', g), 'utf8'), readFileSync(gate(g), 'utf8'));
   }
-  assert.match(r.out, /froze lumux-gates\.baseline\.json/);
+  assert.match(r.out, /froze cuix-gates\.baseline\.json/);
 
-  writeFileSync(join(dir, 'lumux-gates.json'), JSON.stringify({ ...cfg, src: ['app'] }));
+  writeFileSync(join(dir, 'cuix-gates.json'), JSON.stringify({ ...cfg, src: ['app'] }));
   r = run('bash', [gate('install-gates.sh')], dir);
   assert.equal(r.code, 0, r.out);
-  assert.match(r.out, /lumux-gates\.json kept/);
+  assert.match(r.out, /cuix-gates\.json kept/);
   assert.match(r.out, /baseline\.json kept/);
   assert.match(r.out, /npm scripts already present/);
-  assert.deepEqual(JSON.parse(readFileSync(join(dir, 'lumux-gates.json'), 'utf8')).src, ['app']);
+  assert.deepEqual(JSON.parse(readFileSync(join(dir, 'cuix-gates.json'), 'utf8')).src, ['app']);
 });
 
 test('install-gates.sh: a custom baseline path is kept on re-run, never re-frozen', () => {
@@ -270,7 +270,7 @@ test('install-gates.sh: a custom baseline path is kept on re-run, never re-froze
 const fresh = (files: Record<string, string> = { 'src/a.tsx': CLEAN }) => {
   const dir = consumer(files);
   writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'consumer' }));
-  spawnSync('rm', [join(dir, 'lumux-gates.json')]);
+  spawnSync('rm', [join(dir, 'cuix-gates.json')]);
   return dir;
 };
 
@@ -293,7 +293,7 @@ test('install-gates.sh: a flag followed by another flag is a missing value, not 
 
 test('install-gates.sh: a baseline that cannot be written surfaces the gate\'s own error', () => {
   const dir = fresh();
-  writeFileSync(join(dir, 'lumux-gates.json'), JSON.stringify({ src: ['src'], baseline: 'nodir/base.json' }));
+  writeFileSync(join(dir, 'cuix-gates.json'), JSON.stringify({ src: ['src'], baseline: 'nodir/base.json' }));
   const r = run('bash', [gate('install-gates.sh')], dir);
   assert.equal(r.code, 1);
   assert.match(r.out, /ENOENT/);
@@ -304,7 +304,7 @@ test('install-gates.sh: --src/--ui against an existing config print the ignored 
   const dir = fresh();
   assert.equal(run('bash', [gate('install-gates.sh'), '--ui', 'src/ui'], dir).code, 0);
   const r = run('bash', [gate('install-gates.sh'), '--ui', 'x'], dir);
-  assert.match(r.out, /lumux-gates\.json kept; --src\/--ui ignored, edit the file/);
+  assert.match(r.out, /cuix-gates\.json kept; --src\/--ui ignored, edit the file/);
   const plain = run('bash', [gate('install-gates.sh')], dir);
   assert.doesNotMatch(plain.out, /ignored/);
 });

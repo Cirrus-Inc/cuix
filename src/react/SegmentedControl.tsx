@@ -37,7 +37,7 @@ export function SegmentedControl<T extends string>({
         <label
           key={s.value}
           className={cx(
-            'inline-flex min-h-target min-w-target cursor-pointer items-center justify-center gap-2 rounded-inset px-3 text-body-sm font-medium transition-colors duration-fast ease-lumux',
+            'inline-flex min-h-target min-w-target cursor-pointer items-center justify-center gap-2 rounded-inset px-3 text-body-sm font-medium transition-colors duration-fast ease-cuix',
             // The input is visually hidden, so its focus ring is drawn here.
             'has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus-ring has-focus-visible:outline-solid',
             value === s.value ? 'forced-selected bg-accent text-accent-foreground' : 'text-foreground hover:bg-surface',

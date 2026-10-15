@@ -34,7 +34,7 @@ export type CardProps = {
   children: ReactNode;
 } & Omit<HTMLAttributes<HTMLElement>, 'title' | 'className' | 'children'>;
 
-// Card: surface, 1px border, radius-card, padding 16 (dense 12 via --lumux-card-padding).
+// Card: surface, 1px border, radius-card, padding 16 (dense 12 via --cuix-card-padding).
 export function Card({
   as: Tag = 'div',
   elevation = 'flat',

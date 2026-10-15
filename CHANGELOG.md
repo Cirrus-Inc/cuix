@@ -1,8 +1,10 @@
 # Changelog
 
-Every tag, newest first. Entries before the lumux import reference PRs of the private `Cirrus-Inc/cuix` repository; `v0.1.0` and `v0.2.0` were tagged there only and are not installable from lumux. Install a tag with `npm i github:danieloceno/lumux#vX.Y.Z`. Breaking changes are token renames and removals and component API breaks; removed tokens are kept as hand-written deprecated aliases for one minor first. GitHub Releases carry the same notes, generated from merged PR titles. Every PR adds its bullet under `[Unreleased]`; `scripts/release.sh` folds them into the new tag's section.
+Every tag, newest first. Issue and PR numbers in entries up to `v0.7.0` refer to the former private repository (now `Cirrus-Inc/cuix-legacy`) or to the repository before it moved; `v0.1.0` and `v0.2.0` were tagged there only and are not installable. Install a tag with `npm i @cirrus/cuix@github:Cirrus-Inc/cuix#vX.Y.Z`. Breaking changes are token renames and removals and component API breaks; removed tokens are kept as hand-written deprecated aliases for one minor first. GitHub Releases carry the same notes, generated from merged PR titles. Every PR adds its bullet under `[Unreleased]`; `scripts/release.sh` folds them into the new tag's section.
 
 ## [Unreleased]
+
+- **BREAKING** chore: the package `lumux` is now `@cirrus/cuix` and the repository moved to `Cirrus-Inc/cuix` (was `danieloceno/lumux`); no alias for the old name. Install with `"@cirrus/cuix": "github:Cirrus-Inc/cuix#vX.Y.Z"` and import from `@cirrus/cuix/react`, `@cirrus/cuix/theme`, `@cirrus/cuix/tokens.css`, `@cirrus/cuix/theme.css`, `@cirrus/cuix/eslint` (subpaths unchanged). Renamed: every CSS custom property `--lumux-*` to `--cuix-*` (including `--ease-lumux`, `--animate-lumux-spin` and the `lumux-spin` keyframes, now `--ease-cuix`, `--animate-cuix-spin`, `cuix-spin`); the theme storage key `lumux-theme` to `cuix-theme` (a stored choice resets once); `theme-init.js` and `theme-init.sha256` change with it, so apps that inline the script must copy the new bytes and CSP hash; the gates config `lumux-gates.json` to `cuix-gates.json` and `lumux-gates.baseline.json` to `cuix-gates.baseline.json` (rename both in a consumer, or re-run `install-gates.sh`); the env var `LUMUX_GATES` to `CUIX_GATES`; the ESLint export's conventional import name `lumuxA11y` to `cuixA11y`. Demo moved to https://cirrus-inc.github.io/cuix/
 
 ## [0.7.0] - 2026-10-14
 
@@ -75,8 +77,8 @@ Phase 1: core day/night tokens at AAA, generated `tokens.css` / `theme.css` / `t
 - docs(tokens): adopt core day/night as the only palette at AAA (Cirrus-Inc/cuix#2)
 - docs: README with Mermaid, badges and decision index (Cirrus-Inc/cuix#1)
 
-[Unreleased]: https://github.com/danieloceno/lumux/compare/v0.7.0...HEAD
-[0.7.0]: https://github.com/danieloceno/lumux/releases/tag/v0.7.0
-[0.5.0]: https://github.com/danieloceno/lumux/releases/tag/v0.5.0
-[0.4.0]: https://github.com/danieloceno/lumux/releases/tag/v0.4.0
-[0.3.0]: https://github.com/danieloceno/lumux/releases/tag/v0.3.0
+[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.7.0
+[0.5.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.5.0
+[0.4.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.4.0
+[0.3.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.3.0

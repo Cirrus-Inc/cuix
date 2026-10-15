@@ -7,8 +7,8 @@ test('theme change in one tab reaches a second tab without reload', async ({ con
     await p.goto('/');
     await p.locator('h1').waitFor();
   }
-  await b.evaluate(() => localStorage.setItem('lumux-theme', 'night'));
+  await b.evaluate(() => localStorage.setItem('cuix-theme', 'night'));
   await expect(a.locator('html')).toHaveAttribute('data-theme', 'night');
-  await b.evaluate(() => localStorage.removeItem('lumux-theme'));
+  await b.evaluate(() => localStorage.removeItem('cuix-theme'));
   await expect(a.locator('html')).not.toHaveAttribute('data-theme', /.*/);
 });

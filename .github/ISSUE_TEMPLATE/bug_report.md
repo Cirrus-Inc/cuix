@@ -1,10 +1,10 @@
 ---
 name: Bug report
-about: Something in lumux renders, behaves or builds wrong
+about: Something in cuix renders, behaves or builds wrong
 labels: bug
 ---
 
-**lumux tag**: v0.x.y
+**cuix tag**: v0.x.y
 
 **Theme and density**: e.g. `night`, dense
 
@@ -14,4 +14,4 @@ labels: bug
 
 **Minimal reproduction** (component, props, browser, viewport or zoom)
 
-Security issue? Do not file it here; see [SECURITY.md](https://github.com/danieloceno/lumux/blob/main/SECURITY.md).
+Security issue? Do not file it here; see [SECURITY.md](https://github.com/Cirrus-Inc/cuix/blob/main/SECURITY.md).

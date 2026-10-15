@@ -1,4 +1,4 @@
-# Contributing to lumux
+# Contributing to cuix
 
 ## Ground rules
 
@@ -39,7 +39,7 @@ npm run smoke:consumer   # packs, installs the tarball into tests/consumer: expo
 Consumers pin an exact tag, never a branch:
 
 ```sh
-npm i github:danieloceno/lumux#v0.3.0
+npm i @cirrus/cuix@github:Cirrus-Inc/cuix#v0.3.0
 ```
 
 Releases are cut by maintainers from a clean, up-to-date `main`:

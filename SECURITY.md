@@ -8,8 +8,8 @@ We aim to acknowledge a report within a few working days and will tell you what 
 
 ## Supported versions
 
-The latest minor release only. Fixes ship as a new tag; upgrade by bumping the tag in your install (`npm i github:danieloceno/lumux#vX.Y.Z`).
+The latest minor release only. Fixes ship as a new tag; upgrade by bumping the tag in your install (`npm i @cirrus/cuix@github:Cirrus-Inc/cuix#vX.Y.Z`).
 
 ## Scope
 
-lumux is a set of CSS tokens, a theme runtime and React components, plus scripts that consumers run in their own repositories. Reports about those are in scope. Vulnerabilities in dependencies belong to the upstream project; tell us if lumux pins a version that is affected.
+cuix is a set of CSS tokens, a theme runtime and React components, plus scripts that consumers run in their own repositories. Reports about those are in scope. Vulnerabilities in dependencies belong to the upstream project; tell us if cuix pins a version that is affected.

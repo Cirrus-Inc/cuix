@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# Installs lumux's three gates into a consumer repo.
+# Installs cuix's three gates into a consumer repo.
 #
-#   bash node_modules/lumux/scripts/install-gates.sh [--src <dir>]... [--ui <dir>]
+#   bash node_modules/@cirrus/cuix/scripts/install-gates.sh [--src <dir>]... [--ui <dir>]
 #
 # From the consumer's root, this script:
 #   1. copies check-ui-className.mjs, check-disabled-title.sh and
 #      check-nested-scrollers.sh into scripts/ (overwriting: they are vendored
-#      from the installed lumux tag, never edited in place)
-#   2. writes lumux-gates.json if there is none (kept otherwise: it holds the
+#      from the installed cuix tag, never edited in place)
+#   2. writes cuix-gates.json if there is none (kept otherwise: it holds the
 #      consumer's own roots and exceptions)
-#   3. freezes lumux-gates.baseline.json if there is none, so the ratchets
+#   3. freezes cuix-gates.baseline.json if there is none, so the ratchets
 #      measure against today and never let a count rise
 #   4. adds check:gates (and the three check:* it runs) to package.json
 #   5. runs the gates once and reports
 #
-# Idempotent: re-running after a lumux upgrade refreshes the three scripts and
+# Idempotent: re-running after a cuix upgrade refreshes the three scripts and
 # touches nothing else.
 set -euo pipefail
 
@@ -41,10 +41,10 @@ for gate in check-ui-className.mjs check-disabled-title.sh check-nested-scroller
   cp "$here/$gate" "scripts/$gate"
   chmod +x "scripts/$gate"
 done
-lumux_version="$(node -p "require('$here/../package.json').version")"
-echo "install-gates: copied three gates from lumux $lumux_version into scripts/"
+cuix_version="$(node -p "require('$here/../package.json').version")"
+echo "install-gates: copied three gates from cuix $cuix_version into scripts/"
 
-if [[ ! -f lumux-gates.json ]]; then
+if [[ ! -f cuix-gates.json ]]; then
   node - "$UI" "${SRC[@]}" <<'NODE'
 const [ui, ...src] = process.argv.slice(2);
 const config = {
@@ -55,19 +55,19 @@ const config = {
   allow: [],
   touchAllow: [],
   disabledTitleAllow: [],
-  baseline: 'lumux-gates.baseline.json',
+  baseline: 'cuix-gates.baseline.json',
 };
-require('fs').writeFileSync('lumux-gates.json', `${JSON.stringify(config, null, 2)}\n`);
+require('fs').writeFileSync('cuix-gates.json', `${JSON.stringify(config, null, 2)}\n`);
 NODE
-  echo "install-gates: wrote lumux-gates.json (src: ${SRC[*]}${UI:+, ui: $UI})"
+  echo "install-gates: wrote cuix-gates.json (src: ${SRC[*]}${UI:+, ui: $UI})"
 else
-  echo "install-gates: lumux-gates.json kept${FLAGS:+; --src/--ui ignored, edit the file}"
+  echo "install-gates: cuix-gates.json kept${FLAGS:+; --src/--ui ignored, edit the file}"
 fi
 
 # The config may name its own baseline path; checking the default name would
 # re-freeze (and so raise) a custom baseline on every re-run.
-baseline="$(node -p "JSON.parse(require('fs').readFileSync('lumux-gates.json','utf8')).baseline ?? 'lumux-gates.baseline.json'")" ||
-  die "could not read lumux-gates.json"
+baseline="$(node -p "JSON.parse(require('fs').readFileSync('cuix-gates.json','utf8')).baseline ?? 'cuix-gates.baseline.json'")" ||
+  die "could not read cuix-gates.json"
 if [[ ! -f "$baseline" ]]; then
   if ! freeze_out="$(node scripts/check-ui-className.mjs --update-baseline 2>&1)"; then
     echo "$freeze_out" >&2

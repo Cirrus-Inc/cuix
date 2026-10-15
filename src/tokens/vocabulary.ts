@@ -35,7 +35,7 @@ export type ThemeColors = Record<ColorToken, string>;
 export type CoreMode = 'day' | 'night';
 export type ColorSet = Record<CoreMode, ThemeColors>;
 
-// AAA 1.4.6 for every text pair: lumux has no large-text-only pairing, so 7:1
+// AAA 1.4.6 for every text pair: cuix has no large-text-only pairing, so 7:1
 // applies to all of them. AA 1.4.11 for boundaries, focus rings and chart marks.
 export const TEXT_MIN = 7;
 export const NON_TEXT_MIN = 3;

@@ -56,7 +56,7 @@ export function ThemeSwitcher({
             aria-pressed={pressed}
             onClick={() => setTheme(value)}
             className={cx(
-              'inline-flex min-h-target min-w-target items-center justify-center gap-2 rounded-inset px-3 text-body-sm font-medium transition-colors duration-fast ease-lumux',
+              'inline-flex min-h-target min-w-target items-center justify-center gap-2 rounded-inset px-3 text-body-sm font-medium transition-colors duration-fast ease-cuix',
               pressed ? 'forced-selected bg-accent text-accent-foreground' : 'text-foreground hover:bg-surface',
             )}
           >

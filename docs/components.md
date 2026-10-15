@@ -1,6 +1,6 @@
-# lumux components
+# cuix components
 
-`import { … } from "lumux/react"`. React 19. Peers: `react`, `react-dom`,
+`import { … } from "@cirrus/cuix/react"`. React 19. Peers: `react`, `react-dom`,
 `lucide-react`, `@radix-ui/react-slot`, `@radix-ui/react-dialog`, `@radix-ui/react-tooltip`,
 `@radix-ui/react-dropdown-menu`, `@radix-ui/react-popover`, `@radix-ui/react-select` (the barrel imports all of them).
 `theme.css` carries `@source "./react"`, so Tailwind sees the classes the components use with no
@@ -42,12 +42,12 @@ Without `TooltipProvider`, `Tooltip` throws on render (Radix needs it). Without 
 
 ## ThemeProvider · useTheme · ThemeSwitcher
 
-- `ThemeProvider` wraps `lumux/theme`. It keeps following the OS live while the
+- `ThemeProvider` wraps `@cirrus/cuix/theme`. It keeps following the OS live while the
   choice is `system`, and keeps `<meta name="theme-color">` in step.
-- `legacy` migrates a pre-lumux key once. If the old names are already lumux names,
+- `legacy` migrates a pre-cuix key once. If the old names are already cuix names,
   `{ key: "app-theme" }` is enough. A `map` translates another vocabulary:
   `{ key: "old-theme", map: { light: "day", dark: "night" } }`. The old key is removed; a
-  stored `lumux-theme` wins.
+  stored `cuix-theme` wins.
 - `useTheme()` returns `{ theme, resolved, scheme, setTheme }`. `resolved` is the theme on
   screen (the default pair when `theme` is `system`); `scheme` is `light` / `dark`.
 - `ThemeSwitcher` is a row of labelled toggles with `aria-pressed`, inside `role="group"`.
@@ -108,7 +108,7 @@ optional trailing icon → `span.sr-only` with the `disabledReason`.
 ## Spinner · IconProvider
 
 - `Spinner` is decorative (`aria-hidden`). Under reduced motion it stands still, because
-  `--lumux-spin` becomes `none`.
+  `--cuix-spin` becomes `none`.
 - `IconProvider` sets lucide defaults: 16px, stroke 1.75.
   - Sizes come from classes: `size-3.5` for dense rows, `size-4` by default, `size-5`
     for chrome, `size-8` for an empty-state glyph.
@@ -118,8 +118,8 @@ optional trailing icon → `span.sr-only` with the `disabledReason`.
 
 ```js
 // eslint.config.js
-import lumuxA11y from "lumux/eslint";
-export default [...lumuxA11y /*, your config */];
+import cuixA11y from "@cirrus/cuix/eslint";
+export default [...cuixA11y /*, your config */];
 ```
 
 This is `eslint-plugin-jsx-a11y` strict, plus a ban on `title` on interactive elements.
@@ -145,7 +145,7 @@ This is `eslint-plugin-jsx-a11y` strict, plus a ban on `title` on interactive el
   fields that have already errored. Never validate on the first blur of an untouched
   field.
 - `Input` takes an optional decorative `icon`. `Textarea` resizes vertically.
-- `Select` is a Radix Select, so the popup is drawn by lumux in every browser and follows the
+- `Select` is a Radix Select, so the popup is drawn by cuix in every browser and follows the
   theme (the native popup follows the OS in Safari). It takes `options`
   (`{ value, label, disabled? }`, `value` non-empty), `value` / `defaultValue` /
   `onValueChange`, `placeholder`, `name`, `disabled` and `required`; inside a `Field` it gets
@@ -327,7 +327,7 @@ plain `Button` or `LinkButton`.
 
 ## Toast
 
-lumux ships its own provider: no sonner.
+cuix ships its own provider: no sonner.
 
 ```tsx
 <ToastProvider>…</ToastProvider>
