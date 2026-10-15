@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { cx } from './cx.ts';
 import { CollapsedContext } from './Sidebar.tsx';
 
@@ -33,11 +33,15 @@ type AppShellProps = {
   /** The sidebar column's id, for SidebarToggle's aria-controls. */
   sidebarId?: string;
   skipLabel?: string;
+  /** A column fixed on the right from `lg` up, usually an `AppShellPane`. Pass it only while open: the app owns the state. Below `lg` nothing renders (use a non-modal `Sheet`). */
+  pane?: ReactNode;
+  /** Bottom tab bar below `lg`, usually `BottomTabs`. In flow and sticky at the bottom, so `main` needs no padding for it. */
+  tabs?: ReactNode;
   children: ReactNode;
   className?: string;
 };
 
-export function AppShell({ header, sidebar, collapsed = false, sidebarId = 'sidebar', skipLabel, children, className }: AppShellProps) {
+export function AppShell({ header, sidebar, collapsed = false, sidebarId = 'sidebar', skipLabel, pane, tabs, children, className }: AppShellProps) {
   // 2.4.11: a focused element scrolled into view must not land under the
   // sticky header.
   useEffect(() => {
@@ -49,8 +53,29 @@ export function AppShell({ header, sidebar, collapsed = false, sidebarId = 'side
     };
   }, [header]);
 
+  // 2.4.12: the sticky tab bar must not cover a focused element. Mirror its
+  // height into scroll-padding-bottom so the browser scrolls focus clear of it.
+  // Below lg only: from lg up the slot is display:none, so the height is 0.
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const hasTabs = Boolean(tabs);
+  useEffect(() => {
+    const slot = tabsRef.current;
+    if (!hasTabs || !slot) return;
+    const root = document.documentElement;
+    const apply = () => {
+      root.style.scrollPaddingBottom = `${slot.getBoundingClientRect().height}px`;
+    };
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(slot);
+    return () => {
+      observer.disconnect();
+      root.style.scrollPaddingBottom = '';
+    };
+  }, [hasTabs]);
+
   return (
-    <div className={cx('min-h-dvh bg-background font-sans text-body text-foreground', className)}>
+    <div className={cx('flex min-h-dvh flex-col bg-background font-sans text-body text-foreground', className)}>
       <SkipLink>{skipLabel}</SkipLink>
       {header && (
         <header className="safe-top sticky top-0 z-sticky flex min-h-header items-center gap-4 border-b border-border bg-surface px-4">
@@ -58,7 +83,8 @@ export function AppShell({ header, sidebar, collapsed = false, sidebarId = 'side
         </header>
       )}
       {sidebar && (
-        // Below lg the app reaches its nav through a Drawer (Phase 2c). From lg
+        // Below lg the app reaches its nav through a Drawer, or the tabs slot
+        // below (Phase 2c). From lg
         // up the column is fixed under the header and the content wrapper pads
         // for it, so the sidebar stays in view while the page scrolls.
         <div
@@ -73,11 +99,25 @@ export function AppShell({ header, sidebar, collapsed = false, sidebarId = 'side
           <CollapsedContext.Provider value={collapsed}>{sidebar}</CollapsedContext.Provider>
         </div>
       )}
-      <div className={cx(sidebar ? (collapsed ? 'lg:pl-rail' : 'lg:pl-sidebar') : null)}>
+      {pane && (
+        // From lg up, like the sidebar: fixed under the header, and the content
+        // wrapper reserves it. Below lg nothing renders; the app uses a
+        // non-modal Sheet there.
+        <div className={cx('fixed bottom-0 right-0 z-sidebar hidden w-100 flex-col lg:flex', header ? 'top-header' : 'top-0')}>{pane}</div>
+      )}
+      <div className={cx('flex-1', sidebar ? (collapsed ? 'lg:pl-rail' : 'lg:pl-sidebar') : null, pane ? 'lg:pr-100' : null)}>
         <main id="main" tabIndex={-1} className="min-w-0">
           {children}
         </main>
       </div>
+      {tabs && (
+        // In flow after the content (root is a flex column), sticky to the
+        // viewport bottom: the last line of content is never under the bar
+        // (1.4.10, 2.4.11) and short pages still seat it at the bottom.
+        <div ref={tabsRef} className="sticky bottom-0 z-sticky lg:hidden">
+          {tabs}
+        </div>
+      )}
     </div>
   );
 }

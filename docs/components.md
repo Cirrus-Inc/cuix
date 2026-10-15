@@ -67,9 +67,13 @@ Without `TooltipProvider`, `Tooltip` throws on render (Radix needs it). Without 
   1. a `SkipLink` (2.4.1);
   2. the `<header>` landmark (sticky, `min-h-header`, safe-area top);
   3. the sidebar column, from `lg` up;
-  4. `<main id="main" tabIndex={-1}>`.
+  4. the pane column (`pane`), from `lg` up;
+  5. `<main id="main" tabIndex={-1}>`;
+  6. the tabs slot (`tabs`), below `lg`, after `main`.
 - While a header exists, the shell sets `scroll-padding-top` so a focused element never
   scrolls under the header (2.4.11).
+- The root is a flex column (`flex min-h-dvh flex-col`; it was a block): the content wrapper is `flex-1`.
+  The header is already sticky and the sidebar and pane are fixed, so none of them moves.
 - Below `lg` the sidebar is not rendered. The app reaches its nav through a `Drawer`.
 - `useDocumentTitle("Contacts", "Acme")` sets `Contacts · Acme` (2.4.2).
 
@@ -136,6 +140,31 @@ Anatomy: `a.skip-link` (visible on focus) → `header` → `div#sidebar` (from `
 | Enter on an item | Follows the link |
 | Enter / Space on the toggle | Collapses or expands; focus stays on the toggle |
 | Focus on a rail item | Shows its tooltip; Escape closes it |
+
+### Inline pane and bottom tabs
+
+| Prop | Does |
+|---|---|
+| `AppShell pane` | A column fixed on the right from `lg` up (`w-100`, 400px, `z-sidebar`, under the header), usually an `AppShellPane`. The content wrapper reserves it (`lg:pr-100`). Pass it only while open: the app owns the state. Below `lg` nothing renders; use a non-modal `Sheet` there. |
+| `AppShell tabs` | The bar below `lg`, usually `BottomTabs`. Rendered in flow after `main`, `sticky bottom-0 z-sticky lg:hidden`. |
+| `AppShellPane` | `title`, `id` (default `"pane"`; the app's toggle `aria-controls` points at it), `onClose?` (renders the close button), `closeLabel` (default `"Hide panel"`). An `<aside>` named by its `h2`; the body is the pane's one scroller. |
+| `BottomTabs` | `label` (default `"Tabs"`): a `<nav>` with equal columns (`grid-flow-col auto-cols-fr`), `safe-bottom`. 3 to 5 tabs; nothing enforces it. |
+| `BottomTab` | `href`, `icon` (sized `size-5`, `aria-hidden`), `label` (always visible), `current?`, `asChild?`, plus anchor props. |
+
+- No pane token: `w-100` / `pr-100` are the default spacing scale. A token waits for a second consumer that needs another width.
+- The app returns focus to its opener when the pane closes (`AppShellPane` has no reference to it).
+- Because the bar is in flow, `main` needs no bottom padding and short pages still seat the bar at the viewport bottom.
+- 2.4.12 Focus Not Obscured: while `tabs` is set, `AppShell` mirrors the bar's height into `document.documentElement` `scroll-padding-bottom` (a `ResizeObserver`, effect only, cleared on unmount), the way it does for the header's `scroll-padding-top`. From `lg` up the slot is `display: none`, so the padding is 0.
+- Tabs are 44px targets (2.5.5); the current one reads by its top border and colour, not colour alone (1.4.1).
+- Keyboard: Tab reaches the pane's controls before `main`'s (the pane column precedes `main` in the DOM); the close button is a normal button, Enter or Space activates.
+
+```tsx
+<AppShell
+  header={…}
+  pane={open ? <AppShellPane title="Details" onClose={() => { setOpen(false); opener.current?.focus(); }}>{…}</AppShellPane> : undefined}
+  tabs={<BottomTabs><BottomTab href="/inbox" icon={<Inbox />} label="Inbox" current /></BottomTabs>}
+>
+```
 
 ## Button · IconButton · LinkButton
 

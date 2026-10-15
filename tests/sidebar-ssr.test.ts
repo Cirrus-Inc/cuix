@@ -82,3 +82,44 @@ test('useStoredBoolean returns its initial value on the server', async () => {
   const Probe = () => h('p', null, String(useStoredBoolean('k', true)[0]));
   assert.match(renderToString(h(Probe)), />true</);
 });
+
+const builtPane = '../dist/react/Pane.js';
+const builtTabs = '../dist/react/BottomTabs.js';
+
+test('AppShellPane is an aside labelled by its h2, with an optional close button', async () => {
+  const { AppShellPane } = await import(builtPane);
+  const html = renderToString(h(AppShellPane, { title: 'Details', onClose: () => {}, children: 'x' }));
+  assert.match(html, /<aside id="pane" aria-labelledby="pane-title"/);
+  assert.match(html, /<h2 id="pane-title"[^>]*>Details<\/h2>/);
+  assert.match(html, /aria-label="Hide panel"/);
+  const bare = renderToString(h(AppShellPane, { id: 'p2', title: 'T', children: 'x' }));
+  assert.match(bare, /<aside id="p2" aria-labelledby="p2-title"/);
+  assert.doesNotMatch(bare, /<button/);
+});
+
+test('BottomTabs is a named nav; BottomTab sets aria-current and shows its label', async () => {
+  const { BottomTabs, BottomTab } = await import(builtTabs);
+  const html = renderToString(
+    h(BottomTabs, { children: [
+      h(BottomTab, { key: 'a', href: '/a', icon: h('svg'), label: 'Inbox', current: true }),
+      h(BottomTab, { key: 'b', href: '/b', icon: h('svg'), label: 'Reports' }),
+    ] }),
+  );
+  assert.match(html, /<nav aria-label="Tabs"/);
+  assert.equal(html.match(/aria-current="page"/g)?.length, 1);
+  assert.match(html, /<a [^>]*aria-current="page"[^>]*>.*Inbox/);
+  assert.doesNotMatch(html, /sr-only/);
+  assert.match(renderToString(h(BottomTabs, { label: 'Sections', children: null })), /aria-label="Sections"/);
+});
+
+test('AppShell reserves the pane and renders the tabs slot; without them it is unchanged', async () => {
+  const { AppShell } = await import(builtShell);
+  const plain = renderToString(h(AppShell, { children: h('p', null, 'x') }));
+  assert.doesNotMatch(plain, /lg:pr-100/);
+  assert.doesNotMatch(plain, /w-100/);
+  assert.doesNotMatch(plain, /lg:hidden/);
+  const full = renderToString(h(AppShell, { header: 'h', pane: h('aside', null, 'p'), tabs: h('nav', null, 't'), children: h('p', null, 'x') }));
+  assert.match(full, /class="[^"]*\bw-100\b[^"]*\btop-header\b/);
+  assert.match(full, /lg:pr-100/);
+  assert.match(full, /sticky bottom-0 z-sticky lg:hidden/);
+});
