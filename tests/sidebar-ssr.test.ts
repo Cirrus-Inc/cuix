@@ -6,6 +6,7 @@ import { renderToString } from 'react-dom/server';
 // Imported at run time: dist/ does not exist when `tsc --noEmit` runs on a fresh checkout.
 const built = '../dist/react/Sidebar.js';
 const builtTooltip = '../dist/react/Tooltip.js';
+const builtShell = '../dist/react/AppShell.js';
 
 test('Sidebar renders a named nav with aria-current and visible labels', async () => {
   const { Sidebar, SidebarSection, SidebarItem } = await import(built);
@@ -43,7 +44,7 @@ test('collapsed Sidebar keeps labels and counts for assistive tech only', async 
 });
 
 test('AppShell passes collapsed to a Sidebar that does not set it', async () => {
-  const { AppShell } = await import('../dist/react/AppShell.js');
+  const { AppShell } = await import(builtShell);
   const { Sidebar, SidebarItem } = await import(built);
   const { TooltipProvider } = await import(builtTooltip);
   const html = renderToString(
