@@ -81,7 +81,7 @@ Without `TooltipProvider`, `Tooltip` throws on render (Radix needs it). Without 
 | `AppShell collapsed` | Controlled; cuix stores nothing. `false`: 240px (`w-sidebar`). `true`: 56px icon rail (`w-rail`). |
 | `AppShell sidebarId` | The column's `id`, default `"sidebar"`. `SidebarToggle`'s `aria-controls` points at it. |
 | `Sidebar label` | The `<nav>` name, default `"Main"`. |
-| `Sidebar collapsed` | Same value as `AppShell`'s: items read it from context. |
+| `Sidebar collapsed` | Optional. Inside `AppShell` it follows `AppShell collapsed`; set it only to use a `Sidebar` outside the shell. Items read it from context. |
 | `Sidebar footer` | Below the scroller, behind a top border: the `SidebarToggle`, an account menu. |
 | `SidebarSection label` | Optional. Always the group's accessible name; drawn only while expanded. Sections after the first get a divider. |
 | `SidebarItem` | `href`, `icon` (a lucide element; sized `size-5`, hidden from assistive tech), `label`, `count?`, `current?`, `asChild?`, plus anchor props. |
@@ -91,7 +91,9 @@ Without `TooltipProvider`, `Tooltip` throws on render (Radix needs it). Without 
 - From `lg` up the column is `fixed` under the header (`top-header`, `z-sidebar`) and the
   content wrapper pads for it (`lg:pl-sidebar` / `lg:pl-rail`), so the app does no padding
   bookkeeping. The sidebar stays in view while the page scrolls. Before this, the column was in
-  flow and scrolled away with the page.
+  flow and scrolled away with the page. Without a `header` the column starts at `top-0`.
+- The column itself does not scroll: your own `<nav>` passed as `sidebar` needs its own
+  scroller, or use `Sidebar`, which has one.
 - `Sidebar`'s `<nav>` is the sidebar's one scroller (`overflow-y-auto`); the footer stays put.
 - `current` sets `aria-current="page"`; a current item also reads as such by `border-foreground`
   and weight, not by colour alone (1.4.1).
@@ -114,7 +116,7 @@ const [collapsed, setCollapsed] = useStoredBoolean("app.sidebar.rail", false);
   collapsed={collapsed}
   header={…}
   sidebar={
-    <Sidebar collapsed={collapsed} footer={<SidebarToggle collapsed={collapsed} onCollapsedChange={setCollapsed} />}>
+    <Sidebar footer={<SidebarToggle collapsed={collapsed} onCollapsedChange={setCollapsed} />}>
       <SidebarSection>
         <SidebarItem href="/inbox" icon={<Inbox />} label="Inbox" count={3} current />
       </SidebarSection>

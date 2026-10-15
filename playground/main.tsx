@@ -149,7 +149,6 @@ function Playground() {
       collapsed={collapsed}
       sidebar={
         <Sidebar
-          collapsed={collapsed}
           footer={<SidebarToggle collapsed={collapsed} onCollapsedChange={setCollapsed} />}
         >
           <SidebarSection>

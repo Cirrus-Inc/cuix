@@ -2,6 +2,7 @@
 
 import { useEffect, type ReactNode } from 'react';
 import { cx } from './cx.ts';
+import { CollapsedContext } from './Sidebar.tsx';
 
 // 2.4.1: the first focusable element on every page. Hidden until focused.
 export function SkipLink({ href = '#main', children = 'Skip to content' }: { href?: string; children?: ReactNode }) {
@@ -63,12 +64,13 @@ export function AppShell({ header, sidebar, collapsed = false, sidebarId = 'side
         <div
           id={sidebarId}
           className={cx(
-            'fixed bottom-0 left-0 top-header z-sidebar hidden flex-col border-r border-border bg-surface-raised lg:flex',
+            'fixed bottom-0 left-0 z-sidebar hidden flex-col border-r border-border bg-surface-raised lg:flex',
+            header ? 'top-header' : 'top-0',
             // The rail's 56px less its border must still fit a 44px target (2.5.5): px-1, not p-2.
             collapsed ? 'w-rail px-1 py-2' : 'w-sidebar p-2',
           )}
         >
-          {sidebar}
+          <CollapsedContext.Provider value={collapsed}>{sidebar}</CollapsedContext.Provider>
         </div>
       )}
       <div className={cx(sidebar ? (collapsed ? 'lg:pl-rail' : 'lg:pl-sidebar') : null)}>

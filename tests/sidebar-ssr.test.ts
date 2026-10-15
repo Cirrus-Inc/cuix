@@ -42,6 +42,21 @@ test('collapsed Sidebar keeps labels and counts for assistive tech only', async 
   assert.match(html, /aria-controls="sidebar"/);
 });
 
+test('AppShell passes collapsed to a Sidebar that does not set it', async () => {
+  const { AppShell } = await import('../dist/react/AppShell.js');
+  const { Sidebar, SidebarItem } = await import(built);
+  const { TooltipProvider } = await import(builtTooltip);
+  const html = renderToString(
+    h(TooltipProvider, null, h(AppShell, {
+      collapsed: true,
+      sidebar: h(Sidebar, { children: h(SidebarItem, { href: '/a', icon: h('svg'), label: 'Inbox' }) }),
+      children: h('p', null, 'x'),
+    })),
+  );
+  assert.match(html, /<span class="sr-only">Inbox<\/span>/);
+  assert.match(html, /class="[^"]*\btop-0\b[^"]*w-rail/);
+});
+
 test('SidebarItem outside a Sidebar renders expanded; asChild renders the child', async () => {
   const { SidebarItem } = await import(built);
   const plain = renderToString(h(SidebarItem, { href: '/a', icon: h('svg'), label: 'Inbox' }));

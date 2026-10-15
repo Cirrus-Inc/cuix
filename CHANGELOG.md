@@ -4,7 +4,7 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
-- feat(react): `AppShell` collapses its sidebar to an icon rail. New `collapsed` and `sidebarId` props (controlled; the app stores the choice), `Sidebar`, `SidebarSection`, `SidebarItem` (router links through `asChild`; in rail mode the label is `sr-only` and a right-side `Tooltip` shows it), `SidebarToggle` and `useStoredBoolean` (`'1'` / `'0'` in `localStorage`, same as HIVE's `useStoredFlag`). Behaviour change: from `lg` up the sidebar column is now `fixed` under the header and the content wrapper pads for it (`lg:pl-sidebar` / `lg:pl-rail`), so it stays in view while the page scrolls instead of scrolling away; an app that padded for the column itself should drop that padding. Side pane and bottom tabs remain (Cirrus-Inc/cuix#33 item 1 only)
+- feat(react): `AppShell` collapses its sidebar to an icon rail. New `collapsed` and `sidebarId` props (controlled; the app stores the choice), `Sidebar`, `SidebarSection`, `SidebarItem` (router links through `asChild`; in rail mode the label is `sr-only` and a right-side `Tooltip` shows it), `SidebarToggle` and `useStoredBoolean` (`'1'` / `'0'` in `localStorage`, same as HIVE's `useStoredFlag`). Behaviour change: from `lg` up the sidebar column is now `fixed` under the header and the content wrapper pads for it (`lg:pl-sidebar` / `lg:pl-rail`), so it stays in view while the page scrolls instead of scrolling away; an app that padded for the column itself should drop that padding, and a custom `<nav>` passed as `sidebar` needs its own scroller (the column does not scroll; `Sidebar` has one). Side pane and bottom tabs remain (Cirrus-Inc/cuix#33 item 1 only)
 
 ## [0.8.0] - 2026-10-15
 

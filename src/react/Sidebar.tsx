@@ -18,13 +18,14 @@ import { IconButton } from './Button.tsx';
 import { cx } from './cx.ts';
 import { Tooltip } from './Tooltip.tsx';
 
-// Items read rail mode from here. No provider (an item inside a Drawer) means expanded.
-const CollapsedContext = createContext(false);
+// Items read rail mode from here. AppShell provides it around its sidebar
+// column; no provider (an item inside a Drawer) means expanded.
+export const CollapsedContext = createContext(false);
 
 export type SidebarProps = {
   /** The <nav> landmark's accessible name. */
   label?: string;
-  /** Icon rail: items show their icon only. Pass the same value to AppShell. */
+  /** Icon rail: items show their icon only. Defaults to AppShell's `collapsed`. */
   collapsed?: boolean;
   /** Below the scroller, behind a top border: an app's menus or the SidebarToggle. */
   footer?: ReactNode;
@@ -33,7 +34,9 @@ export type SidebarProps = {
 
 // Pass as AppShell's `sidebar`. The nav is the sidebar's one scroller; the
 // footer stays in view below it.
-export function Sidebar({ label = 'Main', collapsed = false, footer, children }: SidebarProps) {
+export function Sidebar({ label = 'Main', collapsed: own, footer, children }: SidebarProps) {
+  const shell = useContext(CollapsedContext);
+  const collapsed = own ?? shell;
   return (
     <CollapsedContext.Provider value={collapsed}>
       {/* scroll-ok: the sidebar's one scroller, for viewports shorter than the item list */}
