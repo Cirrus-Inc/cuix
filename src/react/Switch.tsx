@@ -40,7 +40,7 @@ export function Switch({ label, checked, onCheckedChange, hint, disabled = false
         <span
           aria-hidden="true"
           className={cx(
-            'inline-flex h-6 w-11 shrink-0 items-center rounded-pill border-2 p-0.5 transition-colors duration-fast ease-lumux',
+            'inline-flex h-6 w-11 shrink-0 items-center rounded-pill border-2 p-0.5 transition-colors duration-fast ease-cuix',
             checked ? 'justify-end border-accent bg-accent' : 'justify-start border-border-strong bg-surface',
             disabled && 'border-border-strong bg-surface-raised',
           )}

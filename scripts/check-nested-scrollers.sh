@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# lumux gate: every overflow utility is a decision somebody wrote down.
-# Parameterized by `lumux-gates.json` in the current directory (or `$LUMUX_GATES`).
+# cuix gate: every overflow utility is a decision somebody wrote down.
+# Parameterized by `cuix-gates.json` in the current directory (or `$CUIX_GATES`).
 #
 # The defect: a container inside a fixed-height shell gets its own
 # `overflow-y-auto`, and whatever does not fit is in the DOM, unreachable, with
@@ -20,7 +20,7 @@
 # Config key: `scrollRoots` (falls back to `src` + `ui`).
 set -euo pipefail
 
-CONFIG="${LUMUX_GATES:-lumux-gates.json}"
+CONFIG="${CUIX_GATES:-cuix-gates.json}"
 ROOTS=()
 if [[ -f "$CONFIG" ]]; then
   # Command substitution, not process substitution: a malformed config fails

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Cuts a lumux release (git-tag install, dist/ committed on the tag commit).
+# Cuts a cuix release (git-tag install, dist/ committed on the tag commit).
 #
 #   scripts/release.sh 0.1.0
 #
@@ -18,7 +18,7 @@
 # A minor (X.Y.0) also needs the manual screen-reader pass (VoiceOver + NVDA)
 # over the playground. The script asks; it cannot check.
 #
-# Consumers install the tag: npm i github:danieloceno/lumux#v0.1.0
+# Consumers install the tag: npm i @cirrus/cuix@github:Cirrus-Inc/cuix#v0.1.0
 set -euo pipefail
 
 die() { echo "release: $*" >&2; exit 1; }
@@ -46,7 +46,7 @@ fi
 
 # The install snippets pin the tag; they went stale at v0.3.0 when nothing did this.
 PINNED=(README.md docs/getting-started.md)
-perl -pi -e "s#(github:danieloceno/lumux\#)v\\d+\\.\\d+\\.\\d+#\${1}$tag#g" "${PINNED[@]}"
+perl -pi -e "s#(github:Cirrus-Inc/cuix\#)v\\d+\\.\\d+\\.\\d+#\${1}$tag#g" "${PINNED[@]}"
 
 # The build writes into dist/ without cleaning it; stale files would ship on the tag.
 rm -rf dist
@@ -73,5 +73,5 @@ git diff --quiet origin/main HEAD || gh pr create --base main --title "chore(rel
 # Release PRs are excluded by branch, not title: tooling PRs also use chore(release).
 notes="$(gh pr list --state merged --base main --limit 1000 --search "merged:>$(git log -1 --format=%cI "${prev:-$(git rev-list --max-parents=0 HEAD)}")" \
   --json number,title,headRefName -q '.[] | select(.headRefName | startswith("release/") | not) | "- \(.title) (#\(.number))"')"
-gh release create "$tag" --title "$tag" --verify-tag --notes "$(printf 'Install: `npm i github:danieloceno/lumux#%s`\n\n%s' "$tag" "${notes:-No merged PRs since ${prev:-the start}.}")"
+gh release create "$tag" --title "$tag" --verify-tag --notes "$(printf 'Install: `npm i @cirrus/cuix@github:Cirrus-Inc/cuix#%s`\n\n%s' "$tag" "${notes:-No merged PRs since ${prev:-the start}.}")"
 echo "released $tag ($(git rev-parse --short "$tag"))"

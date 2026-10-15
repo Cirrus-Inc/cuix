@@ -1,6 +1,6 @@
-// lumux's accessibility lint, for consumers:
-//   import lumuxA11y from 'lumux/eslint';
-//   export default [...lumuxA11y, ...yourConfig];
+// cuix's accessibility lint, for consumers:
+//   import cuixA11y from '@cirrus/cuix/eslint';
+//   export default [...cuixA11y, ...yourConfig];
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 
 export default [

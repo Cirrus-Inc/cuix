@@ -1,5 +1,5 @@
 # The demo: the playground, built and published to GitHub Pages on every push
-# to main. Public: https://danieloceno.github.io/lumux/
+# to main. Public: https://cirrus-inc.github.io/cuix/
 name: demo
 on:
   push:

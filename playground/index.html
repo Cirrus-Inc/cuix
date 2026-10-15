@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#ffffff" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>lumux playground</title>
+    <title>cuix playground</title>
     <script>
       // URL overrides first (Playwright), then the real pre-paint script.
       var q = new URLSearchParams(location.search);
       if (q.get('theme')) document.documentElement.setAttribute('data-theme', q.get('theme'));
-      else try{var t=localStorage.getItem("lumux-theme");if(["day","night","dawn","midnight","forest","ocean","hive-day","hive-night"].indexOf(t)>-1)document.documentElement.setAttribute("data-theme",t)}catch(e){}
+      else try{var t=localStorage.getItem("cuix-theme");if(["day","night","dawn","midnight","forest","ocean","hive-day","hive-night"].indexOf(t)>-1)document.documentElement.setAttribute("data-theme",t)}catch(e){}
     </script>
   </head>
   <body>

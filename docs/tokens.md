@@ -1,4 +1,4 @@
-# lumux tokens
+# cuix tokens
 
 What each token means, when to use it, and what never to do with it. The source is
 `src/tokens/`; `npm run build` generates `dist/`. Never edit `dist/`.
@@ -8,17 +8,17 @@ What each token means, when to use it, and what never to do with it. The source 
 ```css
 /* app.css */
 @import "tailwindcss";
-@import "lumux/tokens.css";
-@import "lumux/theme.css";
+@import "@cirrus/cuix/tokens.css";
+@import "@cirrus/cuix/theme.css";
 ```
 
 ```html
 <head>
-  <script>/* contents of lumux/theme-init.js, inline, before any CSS */</script>
+  <script>/* contents of @cirrus/cuix/theme-init.js, inline, before any CSS */</script>
 </head>
 ```
 
-- In CSS, every token is a custom property prefixed `--lumux-` (`var(--lumux-surface)`). The prefix keeps lumux from colliding with an app's existing `--background` / `--accent` during a migration.
+- In CSS, every token is a custom property prefixed `--cuix-` (`var(--cuix-surface)`). The prefix keeps cuix from colliding with an app's existing `--background` / `--accent` during a migration.
 - In Tailwind, utilities are unprefixed: `bg-surface`, `text-foreground-muted`, `border-border-strong`, `rounded-control`, `text-body`, `h-target`.
 - Opacity modifiers work (`bg-accent/10`), but a tinted fill is not a legal text background unless it is a `*-soft` token. Use `accent-soft`, never `accent/10`, behind text.
 
@@ -27,8 +27,8 @@ What each token means, when to use it, and what never to do with it. The source 
 | | |
 |---|---|
 | Attribute | `data-theme` on `<html>`, one of eight names (table below). Absent = follow the OS, live, through `prefers-color-scheme`, with the default pair (`day` / `night`). Any element can carry it to flip its subtree. |
-| Persistence | `localStorage["lumux-theme"]`, one of the eight names. No key = system. |
-| Runtime | `import { applyTheme, readTheme, resolvedTheme, resolvedScheme, THEME_NAMES } from "lumux/theme"`. `applyTheme({ theme: "ocean" })` sets the attribute, persists the choice and updates `<meta name="theme-color">`. `{ theme: "system" }` clears both. `persist: false` applies without storing it. `resolvedScheme()` answers `light` / `dark` for anything that is not a token. |
+| Persistence | `localStorage["cuix-theme"]`, one of the eight names. No key = system. |
+| Runtime | `import { applyTheme, readTheme, resolvedTheme, resolvedScheme, THEME_NAMES } from "@cirrus/cuix/theme"`. `applyTheme({ theme: "ocean" })` sets the attribute, persists the choice and updates `<meta name="theme-color">`. `{ theme: "system" }` clears both. `persist: false` applies without storing it. `resolvedScheme()` answers `light` / `dark` for anything that is not a token. |
 | Pre-paint | `theme-init.js` reads the key and sets the attribute before first paint. Without it, a stored dark theme flashes light on load. `theme-init.sha256` is its CSP `script-src` hash ([getting-started.md](./getting-started.md)). |
 | Pinning | An app that offers only some themes lists them in `<ThemeSwitcher themes={…}>`; an app that must stay in one (an embed) sets `data-theme` and doesn't mount a switcher. The token files always carry all eight. |
 | Embeds | `tokens.embed.css`: a `:host` block with 16 tokens that follows the host's `prefers-color-scheme` and never persists. |
@@ -53,7 +53,7 @@ The extended four keep their source palettes' hue and saturation in every value 
 
 ### hive deviations
 
-`hive-day` and `hive-night` come from the HIVE v6 mockup palette (`Cirrus-Inc/hive` `docs/mockup/css/hive.css` and `cirrus.css`; Cirrus-Inc/cuix#44). A mockup value that passes ships unchanged: paper `#f7f7f2`, white, hover `#edf1e8`, ink `#172f37`, ink-deep `#10272e`, line `#dce2dc` (decorative `border` only), selected `#edf4eb`, mint `#d7e8d5`, the form error pair `#fff2ee` / `#832a1d`, and on dark the footer text `#d7e1dc` / `#b9cbc4` and edge `#6f8480`. A value that fails moves to the nearest passing colour: same OKLCH hue, smallest OKLab ΔE. Same gate as every theme, no exception list. The source is `src/tokens/sets/hive.ts`.
+`hive-day` and `hive-night` come from the HIVE v6 mockup palette (`Cirrus-Inc/hive` `docs/mockup/css/hive.css` and `cirrus.css`; Cirrus-Inc/cuix#34). A mockup value that passes ships unchanged: paper `#f7f7f2`, white, hover `#edf1e8`, ink `#172f37`, ink-deep `#10272e`, line `#dce2dc` (decorative `border` only), selected `#edf4eb`, mint `#d7e8d5`, the form error pair `#fff2ee` / `#832a1d`, and on dark the footer text `#d7e1dc` / `#b9cbc4` and edge `#6f8480`. A value that fails moves to the nearest passing colour: same OKLCH hue, smallest OKLab ΔE. Same gate as every theme, no exception list. The source is `src/tokens/sets/hive.ts`.
 
 | Theme | Token | Mockup | Shipped | Pair | Before → after | Why |
 |---|---|---|---|---|---|---|
@@ -62,17 +62,17 @@ The extended four keep their source palettes' hue and saturation in every value 
 | hive-day | `border-strong` | line `#dce2dc` | `#888b88` | on paper / on `surface-raised` | 1.22 → 3.21 / 1.15 → 3.01 | A control edge is 3:1 (1.4.11). `#dce2dc` stays as the decorative `border`. |
 | hive-day | `danger` | rust `#a13624` | `#942b19` | white on danger / danger on `surface-raised` | 6.84 → 8.02 / 5.98 → 7.01 | Label on the fill and text on every surface are 7:1. ΔE 3.7. |
 | hive-day | `success` | checked-choice green `#445e46` | `#374f39` | on `surface-raised` / on mint (`success-soft`) | 6.25 → 7.84 / 5.58 → 7.01 | Text on every surface and on its tint is 7:1. |
-| hive-day | `warning` | none (lumux `day` `#813e00`) | `#803e02` | on `surface-raised` | 6.99 → 7.04 | The mockup has no warning; lumux `day`'s value is 6.99 on this floor. ΔE 0.2. |
+| hive-day | `warning` | none (cuix `day` `#813e00`) | `#803e02` | on `surface-raised` | 6.99 → 7.04 | The mockup has no warning; cuix `day`'s value is 6.99 on this floor. ΔE 0.2. |
 | hive-day | `chart-1` | coral-dark `#d7755c` | `#d26e55` | on `surface-raised` | 2.78 → 3.01 | A chart mark is 3:1. ΔE 1.9. |
 | hive-night | `accent` (and `focus-ring`, `info`) | coral `#f5a18b` | `#fcaf9a` | on `surface` (ink) / on `surface-raised` | 6.91 → 7.83 / 6.18 → 7.00 | Coral passes on ink-deep (7.66) but not on the two lighter surfaces. ΔE 3.7. |
 | hive-night | `accent-foreground` | ink `#172f37` on coral | ink-deep `#10272e` | on coral | 6.91 → 7.66 (8.68 on the shipped accent) | The mockup's ink on coral is 6.91. Darkening the label to ink-deep fixes it without moving coral. |
 | hive-night | `success` | map edge `#a9c2a5` | `#afc9ab` | on `surface-raised` | 6.53 → 7.02 | ΔE 2.1. |
-| hive-night | `warning` | none (lumux `night` `#f6a95a`) | `#fdb266` | on `surface-raised` | 6.41 → 7.00 | ΔE 2.6. |
+| hive-night | `warning` | none (cuix `night` `#f6a95a`) | `#fdb266` | on `surface-raised` | 6.41 → 7.00 | ΔE 2.6. |
 | hive-night | `danger` | rust `#a13624` | `#fbafa0` | on `surface-raised` | 1.83 → 7.00 | Rust is a light-theme colour. At 7:1 on ink it is salmon, ΔE 0.8 from the accent: no red at that lightness separates from coral. Status never travels by colour alone (1.4.1), so the word or icon tells them apart. |
 
-The mockup has no dark mode, so `hive-night` keeps ink-deep surfaces, paper text and a coral accent, and invents only what the vocabulary needs and the mockup does not have: `surface-raised` `#1f373f` (one more ink-deep → ink step), `accent-strong` `#ffc1b0` and `danger-strong` `#ffc1b4` (one step lighter), the `*-soft` tints (dark sage for `accent`/`info` as in `hive-day`, then green, amber and red; at or below the raised step so their `-on-soft` text stays 7:1, so they differ from the surfaces by hue, not lightness) and `chart-2` … `chart-5` (lumux `night`'s cyan, violet, green, magenta; its orange sits on coral). `hive-day`'s `chart-2` … `chart-5` are lumux `day`'s blue, violet, green, magenta for the same reason.
+The mockup has no dark mode, so `hive-night` keeps ink-deep surfaces, paper text and a coral accent, and invents only what the vocabulary needs and the mockup does not have: `surface-raised` `#1f373f` (one more ink-deep → ink step), `accent-strong` `#ffc1b0` and `danger-strong` `#ffc1b4` (one step lighter), the `*-soft` tints (dark sage for `accent`/`info` as in `hive-day`, then green, amber and red; at or below the raised step so their `-on-soft` text stays 7:1, so they differ from the surfaces by hue, not lightness) and `chart-2` … `chart-5` (cuix `night`'s cyan, violet, green, magenta; its orange sits on coral). `hive-day`'s `chart-2` … `chart-5` are cuix `day`'s blue, violet, green, magenta for the same reason.
 
-Out of scope: the map colours (`map-idle`, `map-filled`) are app-only and live in HIVE as `--app-*` with its own contrast check (Extension layer, below). Fonts: lumux ships no font files; the mockup's DM Sans and Manrope are not part of these themes.
+Out of scope: the map colours (`map-idle`, `map-filled`) are app-only and live in HIVE as `--app-*` with its own contrast check (Extension layer, below). Fonts: cuix ships no font files; the mockup's DM Sans and Manrope are not part of these themes.
 
 Every app gets the same eight in `tokens.css`; which ones it *offers* is the switcher's `themes` prop. Most apps offer the default pair; some offer all eight.
 
@@ -141,7 +141,7 @@ The `day` accent is `#005778`, not the source brand blue `#009fda`, which is 3.0
 
 ### Extension layer
 
-App-only colours (pipeline states, an `onair` indicator) live in the app's own file, namespaced (`--app-*`), authored for every theme the app offers, and added to that app's contrast check. lumux never learns them.
+App-only colours (pipeline states, an `onair` indicator) live in the app's own file, namespaced (`--app-*`), authored for every theme the app offers, and added to that app's contrast check. cuix never learns them.
 
 ## Type
 
@@ -162,7 +162,7 @@ App-only colours (pipeline states, an `onair` indicator) live in the app's own f
 - `text-data` is paired with `font-mono tabular-nums`. Use it for anything that ticks or measures.
 - Inputs are never below 16px on a coarse pointer: the base rule in `tokens.css` enforces it.
 - Fonts:
-  - `font-sans` is Inter Variable and `font-mono` is Geist Mono, both self-hosted by the app (`@fontsource-variable/inter`, `geist`). lumux ships the names, not the files.
+  - `font-sans` is Inter Variable and `font-mono` is Geist Mono, both self-hosted by the app (`@fontsource-variable/inter`, `geist`). cuix ships the names, not the files.
   - Preload the Latin Inter woff2.
   - An embed snippet uses the system stack and never ships a webfont.
 - Size never buys a contrast discount: every role uses the 7:1 text pairs.
@@ -198,7 +198,7 @@ App-only colours (pipeline states, an `onair` indicator) live in the app's own f
 | `rounded-inset` | 2px | A control inside a 2px-padded track (segmented control, ThemeSwitcher): 4px outer minus 2px padding |
 | `rounded-card` / `rounded-panel` | 8px | Cards; sheets and dialogs |
 | `rounded-pill` | 9999px | Switch tracks, progress bars, avatars. Nothing else. |
-| `--lumux-border-width` / `-emphasis` | 1px / 2px | 2px for emphasis only. A left-rail accent is a prop, never a second `border-*` class. |
+| `--cuix-border-width` / `-emphasis` | 1px / 2px | 2px for emphasis only. A left-rail accent is a prop, never a second `border-*` class. |
 | `shadow-flat` | none | The default. A bordered surface needs no shadow. |
 | `shadow-raised` | 1px soft | A card lifted off the canvas |
 | `shadow-overlay` | floating | Menus, popovers, dialogs |
@@ -211,7 +211,7 @@ App-only colours (pipeline states, an `onair` indicator) live in the app's own f
 | `duration-fast` | 120ms | Colour, opacity |
 | `duration-base` | 180ms | Small movement: popover, toast |
 | `duration-panel` | 240ms | Sheets, sidebars |
-| `ease-lumux` | `cubic-bezier(.2,.8,.2,1)` | Every transition |
+| `ease-cuix` | `cubic-bezier(.2,.8,.2,1)` | Every transition |
 
 - Under `prefers-reduced-motion: reduce`, and under `[data-reduce-motion="true"]` (the test hook), every duration becomes 0.01ms. A raw `duration-200` or a hard-coded `animation: … 0.3s` skips that, so it is a defect.
 - Never `transition: all`.
@@ -219,7 +219,7 @@ App-only colours (pipeline states, an `onair` indicator) live in the app's own f
 
 ## Focus
 
-One rule in `tokens.css`: `:focus-visible { outline: 2px solid var(--lumux-focus-ring); outline-offset: 2px }`, plus `outline-color: Highlight` under forced colors.
+One rule in `tokens.css`: `:focus-visible { outline: 2px solid var(--cuix-focus-ring); outline-offset: 2px }`, plus `outline-color: Highlight` under forced colors.
 
 - It is an outline, not a box-shadow ring, so it survives Windows High Contrast.
 - Components never restyle it.
@@ -242,4 +242,4 @@ One rule in `tokens.css`: `:focus-visible { outline: 2px solid var(--lumux-focus
 | `#009fda` as text or focus | `accent` / `focus-ring` |
 | A `leading-*` next to a `text-*` role | Nothing: the role carries its line height |
 | `rounded-pill` / `rounded-full` on a badge, chip or tag | `rounded-control` |
-| `rounded-md`, `rounded-xl` or any Tailwind default radius | A lumux radius role |
+| `rounded-md`, `rounded-xl` or any Tailwind default radius | A cuix radius role |

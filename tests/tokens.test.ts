@@ -12,7 +12,7 @@ const dist = (f: string) => readFileSync(new URL(`../dist/${f}`, import.meta.url
 
 // Every declaration of a theme, in order, as tokens.css and tokens.host.css print it.
 const themeBlock = (theme: (typeof THEME_NAMES)[number]) =>
-  [`color-scheme: ${THEMES[theme].scheme};`, ...COLOR_TOKENS.map((t) => `--lumux-${t}: ${THEMES[theme].colors[t]};`)];
+  [`color-scheme: ${THEMES[theme].scheme};`, ...COLOR_TOKENS.map((t) => `--cuix-${t}: ${THEMES[theme].colors[t]};`)];
 
 test('every theme fills every colour token with a hex value', () => {
   assert.equal(THEME_NAMES.length, 8);
@@ -34,22 +34,22 @@ test('tokens.css declares every colour token in every theme', () => {
     for (const decl of themeBlock(theme)) assert.ok(body.includes(decl), `${theme} ${decl}`);
   }
   const os = css.slice(css.indexOf('@media (prefers-color-scheme: dark)'));
-  assert.ok(os.includes(`--lumux-background: ${THEMES[SYSTEM_THEME.dark].colors.background};`), 'system dark is the night theme');
-  assert.ok(css.includes('--lumux-radius-control: 0.25rem;'), 'square controls');
-  assert.ok(css.includes('--lumux-radius-card: 0.5rem;'));
+  assert.ok(os.includes(`--cuix-background: ${THEMES[SYSTEM_THEME.dark].colors.background};`), 'system dark is the night theme');
+  assert.ok(css.includes('--cuix-radius-control: 0.25rem;'), 'square controls');
+  assert.ok(css.includes('--cuix-radius-card: 0.5rem;'));
   const dense = css.slice(css.indexOf('[data-density="dense"] {'));
   assert.doesNotMatch(dense.slice(0, dense.indexOf('}')), /radius/, 'dense never changes radius');
   assert.match(css, /prefers-reduced-motion: reduce/);
   assert.match(css, /\[data-reduce-motion="true"\]/);
-  assert.match(css, /outline: var\(--lumux-focus-width\) solid var\(--lumux-focus-ring\)/);
+  assert.match(css, /outline: var\(--cuix-focus-width\) solid var\(--cuix-focus-ring\)/);
 });
 
 test('tokens.embed.css carries exactly the 16-token subset', () => {
   const css = dist('tokens.embed.css');
   const host = css.slice(0, css.indexOf('}'));
-  const names = [...host.matchAll(/--lumux-([a-z-]+):/g)].map((m) => m[1]);
+  const names = [...host.matchAll(/--cuix-([a-z-]+):/g)].map((m) => m[1]);
   assert.equal(names.length, 16, names.join(', '));
-  assert.ok(css.includes('var(--lumux-embed-accent,'));
+  assert.ok(css.includes('var(--cuix-embed-accent,'));
 });
 
 test('tokens.host.css scopes everything to :host and carries no base rules', () => {
@@ -89,29 +89,29 @@ test('theme.css declares @source for the shipped components and a nested consume
     ['@tailwindcss/cli', '-i', 'tests/fixtures/nested/src/styles/app.css'],
     { cwd: new URL('..', import.meta.url), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
   );
-  assert.match(out, /\.bg-overlay-scrim \{[^}]*background-color: var\(--lumux-overlay-scrim\)/);
-  assert.match(out, /\.sm\\:max-w-dialog-md \{[^}]*max-width: var\(--lumux-dialog-md\)/);
+  assert.match(out, /\.bg-overlay-scrim \{[^}]*background-color: var\(--cuix-overlay-scrim\)/);
+  assert.match(out, /\.sm\\:max-w-dialog-md \{[^}]*max-width: var\(--cuix-dialog-md\)/);
 });
 
-test('Tailwind v4 generates the lumux utilities from theme.css', () => {
+test('Tailwind v4 generates the cuix utilities from theme.css', () => {
   const out = execFileSync(
     'npx',
     ['@tailwindcss/cli', '-i', 'tests/fixtures/app.css'],
     { cwd: new URL('..', import.meta.url), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
   );
   const expect: Record<string, string> = {
-    'bg-surface': 'background-color: var(--lumux-surface)',
-    'text-body': 'font-size: var(--lumux-text-body)',
-    'rounded-control': 'border-radius: var(--lumux-radius-control)',
-    'size-target': 'width: var(--lumux-target-min)',
-    'min-h-target': 'min-height: var(--lumux-target-min)',
-    'z-modal': 'z-index: var(--lumux-z-modal)',
-    'duration-base': 'transition-duration: var(--lumux-motion-base)',
-    'safe-top': 'padding-top: var(--lumux-safe-top)',
-    'fill-chart-3': 'fill: var(--lumux-chart-3)',
-    'max-w-dialog-md': 'max-width: var(--lumux-dialog-md)',
-    'max-w-sheet': 'max-width: var(--lumux-sheet-width)',
-    'min-w-menu': 'min-width: var(--lumux-menu-min-width)',
+    'bg-surface': 'background-color: var(--cuix-surface)',
+    'text-body': 'font-size: var(--cuix-text-body)',
+    'rounded-control': 'border-radius: var(--cuix-radius-control)',
+    'size-target': 'width: var(--cuix-target-min)',
+    'min-h-target': 'min-height: var(--cuix-target-min)',
+    'z-modal': 'z-index: var(--cuix-z-modal)',
+    'duration-base': 'transition-duration: var(--cuix-motion-base)',
+    'safe-top': 'padding-top: var(--cuix-safe-top)',
+    'fill-chart-3': 'fill: var(--cuix-chart-3)',
+    'max-w-dialog-md': 'max-width: var(--cuix-dialog-md)',
+    'max-w-sheet': 'max-width: var(--cuix-sheet-width)',
+    'min-w-menu': 'min-width: var(--cuix-menu-min-width)',
   };
   for (const [cls, decl] of Object.entries(expect)) {
     const rule = new RegExp(`\\.${cls} \\{[^}]*${decl.replace(/[()]/g, '\\$&')}`);

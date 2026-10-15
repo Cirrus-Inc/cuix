@@ -1,5 +1,5 @@
 {
-  "name": "lumux",
+  "name": "@cirrus/cuix",
   "version": "0.7.0",
   "description": "Accessible-by-default CSS themes and React components: six WCAG 2.2 AAA themes, 44px targets, one semantic vocabulary",
   "keywords": [
@@ -12,10 +12,10 @@
     "wcag"
   ],
   "license": "MIT",
-  "repository": "github:danieloceno/lumux",
-  "homepage": "https://github.com/danieloceno/lumux#readme",
+  "repository": "github:Cirrus-Inc/cuix",
+  "homepage": "https://github.com/Cirrus-Inc/cuix#readme",
   "bugs": {
-    "url": "https://github.com/danieloceno/lumux/issues"
+    "url": "https://github.com/Cirrus-Inc/cuix/issues"
   },
   "type": "module",
   "packageManager": "npm@11.18.0",

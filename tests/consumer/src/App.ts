@@ -1,4 +1,4 @@
-// Every component lumux/react exports, through the public export paths only.
+// Every component @cirrus/cuix/react exports, through the public export paths only.
 // No JSX, so ssr.ts runs under plain Node (type stripping) with no build step.
 import { createElement as h, type ReactNode } from 'react';
 import {
@@ -7,10 +7,10 @@ import {
   NativeSelect, SegmentedControl, Select, Sheet, SheetClose, SheetTrigger, SkipLink, Spinner, Switch, Textarea,
   ThemeProvider, ThemeSwitcher, ToastLog, ToastProvider, Tooltip, TooltipProvider,
   useDocumentTitle, useTheme, useToast, useToastLog,
-} from 'lumux/react';
-import { THEME_NAMES, type ThemeName } from 'lumux/theme';
+} from '@cirrus/cuix/react';
+import { THEME_NAMES, type ThemeName } from '@cirrus/cuix/theme';
 
-// ssr.ts fails when lumux/react exports a component this list misses; tsconfig's
+// ssr.ts fails when @cirrus/cuix/react exports a component this list misses; tsconfig's
 // noUnusedLocals fails when one is imported here but never rendered.
 export const RENDERED = [
   'AppShell', 'Badge', 'Button', 'Card', 'Checkbox', 'ConfirmInline', 'Dialog', 'DialogClose', 'DialogTrigger',
@@ -23,7 +23,7 @@ const noop = () => {};
 const first: ThemeName = THEME_NAMES[0];
 
 function Hooks(): ReactNode {
-  useDocumentTitle('Smoke', 'lumux');
+  useDocumentTitle('Smoke', 'cuix');
   const { resolved } = useTheme();
   useToast();
   useToastLog();
@@ -65,7 +65,7 @@ function Page(): ReactNode {
 }
 
 export function App(): ReactNode {
-  const shell = h(AppShell, { header: 'lumux', sidebar: h('nav', { 'aria-label': 'Main' }), children: h(Page) });
+  const shell = h(AppShell, { header: 'cuix', sidebar: h('nav', { 'aria-label': 'Main' }), children: h(Page) });
   const toasts = h(ToastProvider, { children: shell });
   return h(ThemeProvider, { children: h(IconProvider, { children: h(TooltipProvider, { children: toasts }) }) });
 }

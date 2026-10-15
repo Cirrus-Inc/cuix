@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * lumux gate: appearance-as-prop, drift ratchets, 44px targets, icon scale.
- * Parameterized by `lumux-gates.json` in the current directory (or `$LUMUX_GATES`).
+ * cuix gate: appearance-as-prop, drift ratchets, 44px targets, icon scale.
+ * Parameterized by `cuix-gates.json` in the current directory (or `$CUIX_GATES`).
  *
  * Part one — className (blocking). A primitive's own classes and a className
  * override have EQUAL specificity, so the winner is decided by stylesheet
@@ -26,31 +26,31 @@
  *   node scripts/check-ui-className.mjs                    exit 1 on any violation
  *   node scripts/check-ui-className.mjs --update-baseline  rewrite the baseline
  *
- * Config (`lumux-gates.json`), every key optional:
+ * Config (`cuix-gates.json`), every key optional:
  *   src          string[]  trees scanned for call sites and drift      ["src"]
  *   ui           string    the app's own primitives directory          (none)
  *   shared       string[]  .ts data files scanned for prose, one level ([])
  *   owns         object    extra primitives: { Chip: ["bg", "fg"] }    ({})
  *   allow        array     ratchet exceptions { rule, file, snippet, why }
  *   touchAllow   array     target exceptions { file, snippet, why }
- *   baseline     string    path of the frozen counts   "lumux-gates.baseline.json"
+ *   baseline     string    path of the frozen counts   "cuix-gates.baseline.json"
  */
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, normalize } from 'node:path';
 
-const CONFIG_PATH = process.env.LUMUX_GATES ?? 'lumux-gates.json';
+const CONFIG_PATH = process.env.CUIX_GATES ?? 'cuix-gates.json';
 const config = existsSync(CONFIG_PATH) ? JSON.parse(readFileSync(CONFIG_PATH, 'utf8')) : {};
 const SRC = config.src ?? ['src'];
 // Normalized so `./src/ui/` and `src/ui` both match the paths walk() yields.
 const UI_DIR = config.ui ? normalize(config.ui).replace(/\/+$/, '') : null;
 const SHARED = config.shared ?? [];
-const BASELINE_PATH = config.baseline ?? 'lumux-gates.baseline.json';
+const BASELINE_PATH = config.baseline ?? 'cuix-gates.baseline.json';
 const ALLOW = config.allow ?? [];
 const TOUCH_ALLOW = config.touchAllow ?? [];
 
 /* ─── Part one: appearance utilities in a primitive's className ─────────── */
 
-/** Which properties each lumux primitive sets for itself (src/react). */
+/** Which properties each cuix primitive sets for itself (src/react). */
 const CONTROL = ['bg', 'fg', 'edge', 'type', 'radius', 'height', 'pad'];
 const OWNS = {
   Button: CONTROL,
@@ -306,15 +306,15 @@ const DRIFT = [
     // `text-[13px]`, `z-[60]`, `w-[18px]`: a decision made once, in one file,
     // that no other file can find.
     rx: /(?<![\w-])[a-z]+(?:-[a-z]+)*-\[[^\]]+\]/g,
-    fix: 'use a scale step (z-overlay, text-body-sm, w-sheet…) or add a token in lumux if the value is genuinely new',
+    fix: 'use a scale step (z-overlay, text-body-sm, w-sheet…) or add a token in cuix if the value is genuinely new',
   },
   {
     key: 'motion',
     title: 'motion literal',
-    // `duration-200`, `ease-in-out`: lumux motion is `duration-fast|base|slow`
-    // and `ease-lumux`, so reduced motion can switch them off in one place.
+    // `duration-200`, `ease-in-out`: cuix motion is `duration-fast|base|slow`
+    // and `ease-cuix`, so reduced motion can switch them off in one place.
     rx: /(?<![\w-])(?:duration-\d+|ease-(?:in|out|in-out|linear))(?![\w-])/g,
-    fix: 'use duration-fast / duration-base / duration-slow and ease-lumux',
+    fix: 'use duration-fast / duration-base / duration-slow and ease-cuix',
   },
   {
     key: 'outline-none',
@@ -330,7 +330,7 @@ const DRIFT = [
     // measures against a number that is standing still.
     rx: /<(?:button|input|select|textarea)[\s/>]/g,
     skip: inUi,
-    fix: 'use Button / IconButton / Input / Select / Textarea from lumux/react',
+    fix: 'use Button / IconButton / Input / Select / Textarea from @cirrus/cuix/react',
   },
   {
     key: 'prose',
@@ -502,7 +502,7 @@ if (UI_DIR) {
     failed = true;
     console.error(`\nui/touch-target: ${undersized.length} control(s) below 44px in ${UI_DIR}\n`);
     for (const u of undersized) console.error(`  ${u.file}:${u.line}  "${u.snippet}"`);
-    console.error(`\n44px is WCAG 2.5.5 (AAA) and lumux's base size, every pointer, dense included.`);
+    console.error(`\n44px is WCAG 2.5.5 (AAA) and cuix's base size, every pointer, dense included.`);
     console.error(`Use min-h-target / size-target, or add a touchAllow entry with a why for a non-control.\n`);
   } else {
     console.log(

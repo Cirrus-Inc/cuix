@@ -1,13 +1,13 @@
-# lumux gates
+# cuix gates
 
 Three scripts that fail a build on the UI defects review does not catch. Written after
-real production regressions, tied to lumux tokens and parameterized, so every consumer runs the
+real production regressions, tied to cuix tokens and parameterized, so every consumer runs the
 same gates against the same rules.
-lumux runs them on itself (`npm run check:gates`, part of `npm run check`).
+cuix runs them on itself (`npm run check:gates`, part of `npm run check`).
 
 | Script | Catches | Mode |
 |---|---|---|
-| `check-ui-className.mjs` | An appearance utility (`bg-*`, `text-danger`, `rounded-*`, `p-*`…) in the `className` of a lumux primitive | blocking |
+| `check-ui-className.mjs` | An appearance utility (`bg-*`, `text-danger`, `rounded-*`, `p-*`…) in the `className` of a cuix primitive | blocking |
 | | Raw palette classes, arbitrary values (`z-[60]`), motion literals (`duration-200`), `outline-none` with no `focus-visible`, raw `<button>` / `<input>` outside the primitives, on-screen prose over 90 characters | ratchet: per file, never up |
 | | A height step under 44px (`h-9`, `size-8`, `h-[36px]`) in the app's own primitives directory | blocking |
 | | A lucide glyph off the 14 / 16 / 20 / 32 scale, or with its own `strokeWidth` | blocking |
@@ -17,29 +17,29 @@ lumux runs them on itself (`npm run check:gates`, part of `npm run check`).
 
 ## Install
 
-From the consumer's root, once. In a monorepo, first check that `ls node_modules/lumux` resolves
-there: `npm i -w <workspace> github:...#tag` can nest lumux under the workspace instead of hoisting
+From the consumer's root, once. In a monorepo, first check that `ls node_modules/@cirrus/cuix` resolves
+there: `npm i -w <workspace> github:...#tag` can nest cuix under the workspace instead of hoisting
 it (seen with npm 11.18.0), which breaks this path and `--src`. Install from the repo root.
 
 ```sh
-bash node_modules/lumux/scripts/install-gates.sh --src src --ui src/ui
+bash node_modules/@cirrus/cuix/scripts/install-gates.sh --src src --ui src/ui
 npm run check:gates
 ```
 
 - `--src` (repeatable) names the trees scanned for call sites and drift. Default `src`.
 - `--ui` names the app's own primitives directory, if it has one: scanned for undersized
-  controls, exempt from the raw-control ratchet. Omit it when every primitive comes from lumux.
+  controls, exempt from the raw-control ratchet. Omit it when every primitive comes from cuix.
 
-What it does: copies the three scripts into `scripts/`, writes `lumux-gates.json`, freezes
-`lumux-gates.baseline.json` from today's counts, adds `check:ui`, `check:disabled-title`,
+What it does: copies the three scripts into `scripts/`, writes `cuix-gates.json`, freezes
+`cuix-gates.baseline.json` from today's counts, adds `check:ui`, `check:disabled-title`,
 `check:nested-scrollers` and `check:gates` to `package.json`, then runs them. Commit all of it
 and add `npm run check:gates` to CI.
 
-Re-run after every lumux upgrade: the scripts are vendored from the installed tag and
+Re-run after every cuix upgrade: the scripts are vendored from the installed tag and
 refreshed; config and baseline are kept. Never edit a copied script. A rule that needs changing
-changes in lumux, for every app.
+changes in cuix, for every app.
 
-## `lumux-gates.json`
+## `cuix-gates.json`
 
 ```jsonc
 {
@@ -56,7 +56,7 @@ changes in lumux, for every app.
   ],
   "disabledTitleAllow": ["src/Swatch.tsx:41|title duplicates aria-label, names the colour"],
   "scrollRoots": ["src/console"], // optional: narrows the scroller gate; default src + ui
-  "baseline": "lumux-gates.baseline.json"
+  "baseline": "cuix-gates.baseline.json"
 }
 ```
 

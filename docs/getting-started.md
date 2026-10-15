@@ -1,6 +1,6 @@
 # Getting started
 
-How an app adopts lumux, start to finish. Ten minutes for a Vite or Next app that already
+How an app adopts cuix, start to finish. Ten minutes for a Vite or Next app that already
 runs Tailwind v4. The reference page is `playground/` in this repo: it does every step below.
 
 ## 0. Prerequisites
@@ -11,20 +11,20 @@ runs Tailwind v4. The reference page is `playground/` in this repo: it does ever
 ## 1. Install
 
 ```sh
-npm i github:danieloceno/lumux#v0.7.0
+npm i @cirrus/cuix@github:Cirrus-Inc/cuix#v0.8.0
 npm i react react-dom lucide-react @radix-ui/react-slot @radix-ui/react-dialog @radix-ui/react-tooltip @radix-ui/react-dropdown-menu @radix-ui/react-popover @radix-ui/react-select   # React peers
 npm i -D eslint-plugin-jsx-a11y                              # lint peer
 npm i @fontsource-variable/inter                             # the font; `geist` too if you use the `data` type role
 ```
 
-Pin a tag, never a branch. Upgrades are deliberate: bump the tag, re-run `install-gates.sh`, run your gates.
+In `package.json` that is `"@cirrus/cuix": "github:Cirrus-Inc/cuix#v0.8.0"`. Pin a tag, never a branch. Upgrades are deliberate: bump the tag, re-run `install-gates.sh`, run your gates.
 
 The pin is a GitHub dependency, so npm shells out to `git`. A Docker builder stage must install it
 first: `node:alpine` ships without it (`apk add --no-cache git`).
 
-**Monorepo.** `npm i -w <workspace> github:...#tag` can nest lumux under the workspace's
+**Monorepo.** `npm i -w <workspace> @cirrus/cuix@github:...#tag` can nest cuix under the workspace's
 `node_modules` instead of hoisting it (seen with npm 11.18.0). Every root-relative path then breaks:
-a hand-written `@source`, `install-gates.sh --src`, tests. Install from the repo root, or run `ls node_modules/lumux`
+a hand-written `@source`, `install-gates.sh --src`, tests. Install from the repo root, or run `ls node_modules/@cirrus/cuix`
 after the install and check it landed where those paths expect.
 
 ## 2. CSS
@@ -32,8 +32,8 @@ after the install and check it landed where those paths expect.
 ```css
 /* app.css */
 @import "tailwindcss";
-@import "lumux/tokens.css";   /* custom properties: eight themes, type, spacing, focus, motion */
-@import "lumux/theme.css";    /* Tailwind v4 @theme: bg-surface, text-body, rounded-control, min-h-target … */
+@import "@cirrus/cuix/tokens.css";   /* custom properties: eight themes, type, spacing, focus, motion */
+@import "@cirrus/cuix/theme.css";    /* Tailwind v4 @theme: bg-surface, text-body, rounded-control, min-h-target … */
 @import "@fontsource-variable/inter";
 ```
 
@@ -48,7 +48,7 @@ Only an app that vendors `dist/react` somewhere else adds its own `@source` for 
 <meta name="theme-color" content="#ffffff" />
 ```
 
-The pre-paint script `lumux/theme-init.js` must run inline, first in `<head>`, before any CSS. It
+The pre-paint script `@cirrus/cuix/theme-init.js` must run inline, first in `<head>`, before any CSS. It
 is what stops a stored dark theme from flashing light on load; `ThemeProvider` keeps `theme-color`
 in step after that. Never `maximum-scale` or `user-scalable=no`.
 
@@ -61,10 +61,10 @@ import { createRequire } from "node:module";
 import { defineConfig } from "vite";
 
 const themeInit = () => ({
-  name: "lumux-theme-init",
+  name: "cuix-theme-init",
   transformIndexHtml: () => [{
     tag: "script",
-    children: readFileSync(createRequire(import.meta.url).resolve("lumux/theme-init.js"), "utf8"),
+    children: readFileSync(createRequire(import.meta.url).resolve("@cirrus/cuix/theme-init.js"), "utf8"),
     injectTo: "head-prepend" as const,
   }],
 });
@@ -74,12 +74,12 @@ export default defineConfig({ plugins: [themeInit()] });
 
 `head-prepend` makes it the first child of `<head>` in `vite build` output.
 
-**Other stacks.** Paste the contents of `node_modules/lumux/dist/theme-init.js` into an inline
+**Other stacks.** Paste the contents of `node_modules/@cirrus/cuix/dist/theme-init.js` into an inline
 `<script>` at the top of `<head>`. The script hard-codes the theme list, so a theme added in a later
 tag is invisible to your copy until you re-paste it: re-paste on every upgrade.
 
-**CSP.** An inline script is blocked by a `script-src` without a hash or nonce. `lumux/theme-init.sha256`
-(`node_modules/lumux/dist/theme-init.sha256`) holds the ready-made token:
+**CSP.** An inline script is blocked by a `script-src` without a hash or nonce. `@cirrus/cuix/theme-init.sha256`
+(`node_modules/@cirrus/cuix/dist/theme-init.sha256`) holds the ready-made token:
 
 ```
 script-src 'self' 'sha256-…';   # the single line in theme-init.sha256, quoted, without its newline
@@ -98,7 +98,7 @@ no `trim()`, no formatter pass, or the hash differs and the CSP blocks the scrip
 ```tsx
 import {
   AppShell, IconProvider, ThemeProvider, ThemeSwitcher, THEME_NAMES, ToastProvider, TooltipProvider,
-} from "lumux/react";
+} from "@cirrus/cuix/react";
 
 createRoot(document.getElementById("root")!).render(
   <ThemeProvider legacy={{ key: "app-theme" }} /* optional: migrates an old key once */>
@@ -119,7 +119,7 @@ createRoot(document.getElementById("root")!).render(
 ```
 
 - `AppShell` gives you the skip link, the `<header>` / `<main id="main">` landmarks and safe
-  areas. Keep your own navigation inside it; lumux ships primitives, not shells.
+  areas. Keep your own navigation inside it; cuix ships primitives, not shells.
 - `ThemeSwitcher` without `themes` offers the default pair plus System. Pass `THEME_NAMES` for all eight.
   An app that pins one theme sets `data-theme` on `<html>` and mounts no switcher.
 - Each route calls `useDocumentTitle("Contacts", "Acme")`.
@@ -156,7 +156,7 @@ Use the utilities `theme.css` defines and nothing else for appearance:
 | Type | `text-display` … `text-body` … `text-label` | `text-sm` with its own `leading-*` |
 | Size of anything clickable | `min-h-target min-w-target` (44px) | `h-8`, `size-icon` |
 | Corners | `rounded-control`, `rounded-card`, `rounded-pill` (switch tracks, avatars only) | `rounded-md`, `rounded-full` on a chip |
-| Layers, motion | `z-modal`, `duration-base ease-lumux` | `z-[999]`, `duration-200` |
+| Layers, motion | `z-modal`, `duration-base ease-cuix` | `z-[999]`, `duration-200` |
 
 Status never travels by colour alone (icon or word with it). Helper text ≤90 characters.
 Full token reference: [tokens.md](./tokens.md). Component contracts: [components.md](./components.md).
@@ -164,32 +164,32 @@ Copy rules: [copy.md](./copy.md).
 
 App-only colours (pipeline states, an `onair` indicator) go in the app's own file as
 namespaced custom properties (`--app-*`), authored for every theme the app offers, with their own
-contrast test. lumux never learns them.
+contrast test. cuix never learns them.
 
 ## 6. Lint
 
 ```js
 // eslint.config.js
-import lumuxA11y from "lumux/eslint";
-export default [...lumuxA11y /*, your config */];
+import cuixA11y from "@cirrus/cuix/eslint";
+export default [...cuixA11y /*, your config */];
 ```
 
 ## 7. Gates
 
 ```sh
-bash node_modules/lumux/scripts/install-gates.sh --src src        # add --ui <dir> if you keep your own primitives
+bash node_modules/@cirrus/cuix/scripts/install-gates.sh --src src        # add --ui <dir> if you keep your own primitives
 npm run check:gates
 ```
 
-In a monorepo, check `ls node_modules/lumux` first: a nested install breaks the path (see section 1).
+In a monorepo, check `ls node_modules/@cirrus/cuix` first: a nested install breaks the path (see section 1).
 
 Copies the three gates into `scripts/`, freezes today's drift counts as the baseline and adds
-`check:gates` to `package.json`. Commit it and run it in CI. Re-run after each lumux upgrade.
+`check:gates` to `package.json`. Commit it and run it in CI. Re-run after each cuix upgrade.
 Details: [gates.md](./gates.md).
 
 ## 8. CI
 
-- Run your own axe / Playwright pass in every theme you offer. lumux guarantees its components in
+- Run your own axe / Playwright pass in every theme you offer. cuix guarantees its components in
   all eight; your layouts are yours.
 
 ## 9. Without React, or inside a shadow root
@@ -198,7 +198,7 @@ Details: [gates.md](./gates.md).
 |---|---|---|
 | Plain page, any framework | `tokens.css` + `theme.css` (if Tailwind) | `data-theme` on `<html>` as above |
 | UI inside a shadow root (e.g. an embedded studio) | `tokens.host.css` | Every token on `:host`, no base rules. `data-theme` on the shadow host; bring your own `:focus-visible` rule (copy the one in `tokens.md` → Focus) |
-| A lightweight embed snippet | `tokens.embed.css` | 16 tokens, default pair only, follows the host OS, never persists; `--lumux-embed-accent` is the one host override |
+| A lightweight embed snippet | `tokens.embed.css` | 16 tokens, default pair only, follows the host OS, never persists; `--cuix-embed-accent` is the one host override |
 
 ## 10. Upgrading
 

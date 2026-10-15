@@ -1,5 +1,5 @@
 // The extended four (dawn / midnight / ocean / forest), taken to AAA from
-// source palettes authored in HSL at AA or below. lumux keeps the hue and
+// source palettes authored in HSL at AA or below. cuix keeps the hue and
 // saturation of every value and moves lightness until the pair passes:
 // text 7:1 on every surface, labels 7:1 on their fill, marks 3:1.
 //

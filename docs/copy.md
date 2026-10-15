@@ -1,6 +1,6 @@
-# lumux UI copy rules
+# cuix UI copy rules
 
-The copy rules every lumux consumer follows.
+The copy rules every cuix consumer follows.
 
 
 **Boundary, stated first:** text that carries meaning stays. Field labels, error and validation messages, state announcements, live-region text, accessible names, and instructions a user needs to complete a task are never "extra text". Removing them breaks screen-reader and low-vision users. The rules below target redundant and decorative prose only.
@@ -19,5 +19,5 @@ The copy rules every lumux consumer follows.
 
 Where explanation goes instead: a help panel fed from a markdown source (e.g. a `USER_GUIDE.md` or `messages/help`), a disclosure ("Why?") that opens the help topic, a first-run pass, or a docs link. Never permanently under the control.
 
-Enforcement: the `prose` ratchet (muted/caption/hint text >90 chars) ships in lumux's scripts and is installed in every consumer with a frozen baseline.
+Enforcement: the `prose` ratchet (muted/caption/hint text >90 chars) ships in cuix's scripts and is installed in every consumer with a frozen baseline.
 

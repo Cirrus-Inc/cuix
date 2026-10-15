@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# lumux gate: a disabled control never carries its reason in a `title` alone.
-# Parameterized by `lumux-gates.json` in the current directory (or `$LUMUX_GATES`).
+# cuix gate: a disabled control never carries its reason in a `title` alone.
+# Parameterized by `cuix-gates.json` in the current directory (or `$CUIX_GATES`).
 #
 # The defect: a native `disabled` control whose only carrier of a refusal
 # reason is `title` is unreachable by keyboard and screen reader. A `title` is
@@ -23,7 +23,7 @@
 # commit.
 set -euo pipefail
 
-CONFIG="${LUMUX_GATES:-lumux-gates.json}"
+CONFIG="${CUIX_GATES:-cuix-gates.json}"
 ROOTS=()
 ALLOWED=()
 if [[ -f "$CONFIG" ]]; then
@@ -105,7 +105,7 @@ if [[ -n "$violations" ]]; then
   echo "FAIL: a disabled control carries a title with no aria-describedby."
   echo "A title is a pointer affordance and a disabled control is not in the"
   echo "tab order: neither reaches a keyboard or screen-reader user. Wire the"
-  echo "reason to a visible element via aria-describedby (lumux's Button does"
+  echo "reason to a visible element via aria-describedby (cuix's Button does"
   echo "this with disabledReason), or add \"file:line|why\" to"
   echo "disabledTitleAllow in $CONFIG if the title is not a withheld reason."
   echo

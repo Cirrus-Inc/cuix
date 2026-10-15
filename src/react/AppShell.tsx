@@ -38,7 +38,7 @@ export function AppShell({ header, sidebar, skipLabel, children, className }: Ap
   useEffect(() => {
     if (!header) return;
     const root = document.documentElement;
-    root.style.scrollPaddingTop = 'calc(var(--lumux-header-height) + var(--lumux-safe-top))';
+    root.style.scrollPaddingTop = 'calc(var(--cuix-header-height) + var(--cuix-safe-top))';
     return () => {
       root.style.scrollPaddingTop = '';
     };

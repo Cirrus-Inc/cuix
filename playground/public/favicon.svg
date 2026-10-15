@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- lumux mark: a half-filled contrast disc on the accent tile. Colours are the
+  <!-- cuix mark: a half-filled contrast disc on the accent tile. Colours are the
        day / night accent and accent-foreground pairs, so the mark itself is 7:1. -->
   <style>
     .tile { fill: #005778; }

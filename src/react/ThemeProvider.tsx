@@ -27,7 +27,7 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 /**
- * A pre-lumux theme key to migrate once. If the old names are already lumux names,
+ * A pre-cuix theme key to migrate once. If the old names are already cuix names,
  * no map is needed: `{ key: 'app-theme' }`. A `map` translates other
  * vocabularies, e.g. `{ light: 'day', dark: 'night' }`.
  */

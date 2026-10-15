@@ -1,8 +1,8 @@
 {
-  "name": "lumux-consumer-smoke",
+  "name": "cuix-consumer-smoke",
   "private": true,
   "type": "module",
-  "description": "A minimal app that installs the packed lumux tarball. Run through scripts/consumer-smoke.sh, never in place.",
+  "description": "A minimal app that installs the packed cuix tarball. Run through scripts/consumer-smoke.sh, never in place.",
   "dependencies": {
     "@radix-ui/react-dialog": "1.2.0",
     "@radix-ui/react-dropdown-menu": "2.1.25",

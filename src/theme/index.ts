@@ -8,7 +8,7 @@ export { SYSTEM_THEME, THEME_META, THEME_NAMES, isThemeName, schemeOf, type Sche
 
 export type ThemeChoice = ThemeName | 'system';
 
-export const THEME_STORAGE_KEY = 'lumux-theme';
+export const THEME_STORAGE_KEY = 'cuix-theme';
 
 function stored(): ThemeName | null {
   try {
@@ -59,7 +59,7 @@ export function applyTheme({ theme, persist = true }: { theme: ThemeChoice; pers
 export function syncThemeColor(choice: ThemeChoice = readTheme()): void {
   const dark = resolvedScheme(choice) === 'dark';
   const value = getComputedStyle(document.documentElement)
-    .getPropertyValue(dark ? '--lumux-background' : '--lumux-surface')
+    .getPropertyValue(dark ? '--cuix-background' : '--cuix-surface')
     .trim();
   if (!value) return;
   // Media-scoped tags would win over an unscoped one, so every tag gets the value.

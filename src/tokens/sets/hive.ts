@@ -35,7 +35,7 @@ export const hiveDay: ThemeColors = {
   'success-foreground': '#ffffff',
   'success-soft': '#d7e8d5', // mint
   'success-on-soft': '#374f39',
-  warning: '#803e02', // no mockup source: lumux day #813e00, 6.99 on hover, nudged
+  warning: '#803e02', // no mockup source: cuix day #813e00, 6.99 on hover, nudged
   'warning-foreground': '#ffffff',
   'warning-soft': '#fdf1e6',
   'warning-on-soft': '#803e02',
@@ -50,7 +50,7 @@ export const hiveDay: ThemeColors = {
   'info-on-soft': '#172f37',
   'focus-ring': '#172f37', // the mockup's 2px ink outline
   'overlay-scrim': '#10272e80',
-  // coral first, then lumux day's blue, violet, green, magenta (its orange sits on coral).
+  // coral first, then cuix day's blue, violet, green, magenta (its orange sits on coral).
   'chart-1': '#d26e55', // coral-dark #d7755c deepened to 3:1 on hover
   'chart-2': '#0079a8',
   'chart-3': '#6b4de6',
@@ -78,7 +78,7 @@ export const hiveNight: ThemeColors = {
   'success-foreground': '#10272e',
   'success-soft': '#183723',
   'success-on-soft': '#afc9ab',
-  warning: '#fdb266', // lumux night #f6a95a lifted to 7:1
+  warning: '#fdb266', // cuix night #f6a95a lifted to 7:1
   'warning-foreground': '#10272e',
   'warning-soft': '#3a2d18',
   'warning-on-soft': '#fdb266',

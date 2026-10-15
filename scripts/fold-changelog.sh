@@ -26,7 +26,7 @@ trap 'rm -f "$tmp"' EXIT
 awk -v v="$v" -v d="$date" '
   /^## \[Unreleased\]$/ { print; print ""; print "## [" v "] - " d; next }
   /^\[Unreleased\]: / { sub(/compare\/v[^.]+\.[^.]+\.[^.]+\.\.\./, "compare/v" v "..."); print
-    print "[" v "]: https://github.com/danieloceno/lumux/releases/tag/v" v; next }
+    print "[" v "]: https://github.com/Cirrus-Inc/cuix/releases/tag/v" v; next }
   { print }
 ' "$file" > "$tmp"
 cat "$tmp" > "$file"

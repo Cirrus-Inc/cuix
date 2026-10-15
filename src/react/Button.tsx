@@ -17,7 +17,7 @@ export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'dang
 export type ButtonSize = 'md' | 'lg';
 
 const BASE =
-  'relative inline-flex shrink-0 items-center justify-center gap-2 rounded-control font-medium whitespace-nowrap select-none transition-colors duration-fast ease-lumux';
+  'relative inline-flex shrink-0 items-center justify-center gap-2 rounded-control font-medium whitespace-nowrap select-none transition-colors duration-fast ease-cuix';
 
 // Each fg/bg pair below is a legal pair in vocabulary.ts. Disabled keeps a 7:1
 // pair instead of fading: inactive controls are exempt from 1.4.6, but the

@@ -94,7 +94,7 @@ export function useFieldProps(own: { id?: string; 'aria-describedby'?: string; r
 
 // 16px on every coarse pointer is enforced in tokens.css, dense included.
 export const CONTROL =
-  'w-full rounded-control border bg-surface text-body text-foreground placeholder:text-foreground-subtle transition-colors duration-fast ease-lumux ' +
+  'w-full rounded-control border bg-surface text-body text-foreground placeholder:text-foreground-subtle transition-colors duration-fast ease-cuix ' +
   'disabled:cursor-not-allowed disabled:bg-surface-raised disabled:text-foreground-subtle read-only:bg-surface-raised';
 
 export const EDGE = (invalid: boolean) => (invalid ? 'border-danger' : 'border-border-strong');

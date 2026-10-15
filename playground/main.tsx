@@ -137,12 +137,12 @@ function Forms() {
 }
 
 function Playground() {
-  useDocumentTitle('Playground', 'lumux');
+  useDocumentTitle('Playground', 'cuix');
   return (
     <AppShell
       header={
         <>
-          <span className="text-subheading">lumux</span>
+          <span className="text-subheading">cuix</span>
           <ThemeSwitcher themes={THEME_NAMES} className="ml-auto" />
         </>
       }

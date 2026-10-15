@@ -57,7 +57,7 @@ export function Dialog({
 }: DialogProps) {
   const depth = useContext(Depth);
   useEffect(() => {
-    if (depth > 1 && DEV) console.error('lumux Dialog: only one level of nesting is allowed (§5.4)');
+    if (depth > 1 && DEV) console.error('cuix Dialog: only one level of nesting is allowed (§5.4)');
   }, [depth]);
   const onCloseAutoFocus = useFocusReturn(open);
   const z = depth === 0 ? 'z-modal' : 'z-modal-top';
