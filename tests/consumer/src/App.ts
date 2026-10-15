@@ -4,9 +4,9 @@ import { createElement as h, type ReactNode } from 'react';
 import {
   AppShell, Badge, Button, Card, Checkbox, ConfirmInline, Dialog, DialogClose, DialogTrigger, Drawer,
   EmptyState, Field, IconButton, IconProvider, Input, LinkButton, Menu, Popover, RadioGroup,
-  NativeSelect, SegmentedControl, Select, Sheet, SheetClose, SheetTrigger, SkipLink, Spinner, Switch, Textarea,
+  NativeSelect, SegmentedControl, Select, Sheet, SheetClose, SheetTrigger, Sidebar, SidebarItem, SidebarSection, SidebarToggle, SkipLink, Spinner, Switch, Textarea,
   ThemeProvider, ThemeSwitcher, ToastLog, ToastProvider, Tooltip, TooltipProvider,
-  useDocumentTitle, useTheme, useToast, useToastLog,
+  useDocumentTitle, useStoredBoolean, useTheme, useToast, useToastLog,
 } from '@cirrus/cuix/react';
 import { THEME_NAMES, type ThemeName } from '@cirrus/cuix/theme';
 
@@ -15,7 +15,7 @@ import { THEME_NAMES, type ThemeName } from '@cirrus/cuix/theme';
 export const RENDERED = [
   'AppShell', 'Badge', 'Button', 'Card', 'Checkbox', 'ConfirmInline', 'Dialog', 'DialogClose', 'DialogTrigger',
   'Drawer', 'EmptyState', 'Field', 'IconButton', 'IconProvider', 'Input', 'LinkButton', 'Menu', 'Popover',
-  'NativeSelect', 'RadioGroup', 'SegmentedControl', 'Select', 'Sheet', 'SheetClose', 'SheetTrigger', 'SkipLink', 'Spinner',
+  'NativeSelect', 'RadioGroup', 'SegmentedControl', 'Select', 'Sheet', 'SheetClose', 'SheetTrigger', 'Sidebar', 'SidebarItem', 'SidebarSection', 'SidebarToggle', 'SkipLink', 'Spinner',
   'Switch', 'Textarea', 'ThemeProvider', 'ThemeSwitcher', 'ToastLog', 'ToastProvider', 'Tooltip', 'TooltipProvider',
 ];
 
@@ -26,6 +26,7 @@ function Hooks(): ReactNode {
   useDocumentTitle('Smoke', 'cuix');
   const { resolved } = useTheme();
   useToast();
+  useStoredBoolean('smoke', false);
   useToastLog();
   return h('p', null, resolved || first);
 }
@@ -65,7 +66,7 @@ function Page(): ReactNode {
 }
 
 export function App(): ReactNode {
-  const shell = h(AppShell, { header: 'cuix', sidebar: h('nav', { 'aria-label': 'Main' }), children: h(Page) });
+  const shell = h(AppShell, { header: 'cuix', collapsed: true, sidebar: h(Sidebar, { collapsed: true, footer: h(SidebarToggle, { collapsed: true, onCollapsedChange: noop }), children: h(SidebarSection, { label: 'Main', children: h(SidebarItem, { href: '#', icon: h(Spinner), label: 'Home', current: true }) }) }), children: h(Page) });
   const toasts = h(ToastProvider, { children: shell });
   return h(ThemeProvider, { children: h(IconProvider, { children: h(TooltipProvider, { children: toasts }) }) });
 }

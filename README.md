@@ -233,7 +233,7 @@ Imported from `@cirrus/cuix/react`. Each one documents the accessibility behavio
 
 | Group | Components |
 |---|---|
-| Shell & theme | `AppShell`, `SkipLink`, `useDocumentTitle`, `ThemeProvider`, `useTheme`, `ThemeSwitcher`, `IconProvider` |
+| Shell & theme | `AppShell`, `Sidebar`, `SidebarSection`, `SidebarItem`, `SidebarToggle`, `useStoredBoolean`, `SkipLink`, `useDocumentTitle`, `ThemeProvider`, `useTheme`, `ThemeSwitcher`, `IconProvider` |
 | Actions | `Button`, `IconButton`, `LinkButton`, `ConfirmInline`, `Spinner` |
 | Forms | `Field`, `Input`, `Select`, `Textarea`, `Checkbox`, `RadioGroup`, `Switch`, `SegmentedControl` |
 | Overlays | `Dialog`, `DialogTrigger`, `DialogClose`, `Sheet`, `SheetTrigger`, `SheetClose`, `Drawer`, `Menu`, `Popover`, `Tooltip`, `TooltipProvider` (wrap the app once) |

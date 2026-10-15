@@ -2,6 +2,7 @@
 
 import { useEffect, type ReactNode } from 'react';
 import { cx } from './cx.ts';
+import { CollapsedContext } from './Sidebar.tsx';
 
 // 2.4.1: the first focusable element on every page. Hidden until focused.
 export function SkipLink({ href = '#main', children = 'Skip to content' }: { href?: string; children?: ReactNode }) {
@@ -25,14 +26,18 @@ export function useDocumentTitle(title: string | undefined, app: string) {
 type AppShellProps = {
   /** Header contents; the shell supplies the <header> landmark. */
   header?: ReactNode;
-  /** Sidebar contents, usually a <nav> with aria-current on the active link. */
+  /** Sidebar contents: a `Sidebar`, or your own <nav> with aria-current on the active link. */
   sidebar?: ReactNode;
+  /** Icon rail instead of the full sidebar, from `lg` up. Controlled: the app stores it (see useStoredBoolean). */
+  collapsed?: boolean;
+  /** The sidebar column's id, for SidebarToggle's aria-controls. */
+  sidebarId?: string;
   skipLabel?: string;
   children: ReactNode;
   className?: string;
 };
 
-export function AppShell({ header, sidebar, skipLabel, children, className }: AppShellProps) {
+export function AppShell({ header, sidebar, collapsed = false, sidebarId = 'sidebar', skipLabel, children, className }: AppShellProps) {
   // 2.4.11: a focused element scrolled into view must not land under the
   // sticky header.
   useEffect(() => {
@@ -52,14 +57,24 @@ export function AppShell({ header, sidebar, skipLabel, children, className }: Ap
           {header}
         </header>
       )}
-      <div className="flex">
-        {sidebar && (
-          // Below lg the app reaches its nav through a Drawer (Phase 2c).
-          <div className="hidden w-sidebar shrink-0 border-r border-border bg-surface-raised lg:block">
-            {sidebar}
-          </div>
-        )}
-        <main id="main" tabIndex={-1} className="min-w-0 flex-1">
+      {sidebar && (
+        // Below lg the app reaches its nav through a Drawer (Phase 2c). From lg
+        // up the column is fixed under the header and the content wrapper pads
+        // for it, so the sidebar stays in view while the page scrolls.
+        <div
+          id={sidebarId}
+          className={cx(
+            'fixed bottom-0 left-0 z-sidebar hidden flex-col border-r border-border bg-surface-raised lg:flex',
+            header ? 'top-header' : 'top-0',
+            // The rail's 56px less its border must still fit a 44px target (2.5.5): px-1, not p-2.
+            collapsed ? 'w-rail px-1 py-2' : 'w-sidebar p-2',
+          )}
+        >
+          <CollapsedContext.Provider value={collapsed}>{sidebar}</CollapsedContext.Provider>
+        </div>
+      )}
+      <div className={cx(sidebar ? (collapsed ? 'lg:pl-rail' : 'lg:pl-sidebar') : null)}>
+        <main id="main" tabIndex={-1} className="min-w-0">
           {children}
         </main>
       </div>

@@ -50,6 +50,8 @@ for (const theme of THEMES) {
           const small = await page.$$eval(INTERACTIVE, (els) =>
             els
               .filter((el) => !el.closest('.sr-only') || el.closest('label'))
+              // Not rendered (the sidebar below lg): nothing to hit.
+              .filter((el) => el.getClientRects().length > 0)
               .map((el) => {
                 // A native checkbox, radio or hidden segment input is targeted
                 // through its label row, which is the clickable area.

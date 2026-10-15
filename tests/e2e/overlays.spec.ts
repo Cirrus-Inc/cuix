@@ -190,7 +190,8 @@ test('sheet: modal={false} from lg up keeps the page usable without closing', as
   await page.getByTestId('open-sheet-b').click();
   const sheet = page.getByRole('dialog', { name: 'Activity' });
   await expect(sheet).toBeVisible();
-  await page.locator('h1').click();
+  // The sidebar pads the content, so h1's centre can sit under the sheet: click its left edge.
+  await page.locator('h1').click({ position: { x: 4, y: 4 } });
   await page.getByTestId('open-sheet-a').focus();
   await expect(sheet).toBeVisible();
   await sheet.getByRole('button', { name: 'Close' }).click();
