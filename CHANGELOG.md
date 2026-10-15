@@ -4,6 +4,8 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-15
+
 - feat(react): `AppShell` gets `pane` and `tabs` props. `pane` (usually the new `AppShellPane`: an `<aside>` named by its `h2`, optional close button, one scroller) is a 400px column fixed on the right from `lg` up (`w-100`, no new token); the content wrapper pads for it (`lg:pr-100`). `tabs` (usually the new `BottomTabs` / `BottomTab`, 44px targets, `aria-current`) renders in flow after `main`, `sticky bottom-0 lg:hidden`. Behaviour change: the `AppShell` root is now a flex column instead of a block, with the content wrapper `flex-1`; and while `tabs` is set it sets `scroll-padding-bottom` to the bar's height so focus is never obscured (2.4.12). Completes Cirrus-Inc/cuix#33 items 2-3
 - test(e2e): the tabbable-element count in the focus-ring test counts only rendered elements (breakpoint-hidden items are not in the tab order); `?tabs=1` turns the playground's tab bar on for its own tests
 
@@ -86,7 +88,8 @@ Phase 1: core day/night tokens at AAA, generated `tokens.css` / `theme.css` / `t
 - docs(tokens): adopt core day/night as the only palette at AAA (Cirrus-Inc/cuix-legacy#2)
 - docs: README with Mermaid, badges and decision index (Cirrus-Inc/cuix-legacy#1)
 
-[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.10.0
 [0.9.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.9.0
 [0.8.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.8.0
 [0.7.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.7.0
