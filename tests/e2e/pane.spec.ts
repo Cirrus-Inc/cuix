@@ -89,6 +89,17 @@ test('from lg up the tabs are not rendered visibly', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.style.scrollPaddingBottom)).toBe('0px');
 });
 
+test('2.4.3: the pane follows main in the DOM, as on screen, so Tab reaches the page first', async ({ page }) => {
+  await open(page, 'day', 1280);
+  await page.getByRole('button', { name: 'Details panel' }).click();
+  const follows = await page.evaluate(() => {
+    const main = document.querySelector('main');
+    const pane = document.getElementById('pane');
+    return !!main && !!pane && (main.compareDocumentPosition(pane) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+  });
+  expect(follows).toBe(true);
+});
+
 test('320px / 200% zoom has no horizontal scroll with the tabs', async ({ page }) => {
   await open(page, 'day', 320, 256, true);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

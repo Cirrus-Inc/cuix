@@ -83,10 +83,9 @@ export function AppShell({ header, sidebar, collapsed = false, sidebarId = 'side
         </header>
       )}
       {sidebar && (
-        // Below lg the app reaches its nav through a Drawer, or the tabs slot
-        // below (Phase 2c). From lg
-        // up the column is fixed under the header and the content wrapper pads
-        // for it, so the sidebar stays in view while the page scrolls.
+        // Below lg the app reaches its nav through a Drawer or the tabs slot
+        // below (Phase 2c). From lg up the column is fixed under the header and
+        // the content wrapper pads for it, so it stays in view while the page scrolls.
         <div
           id={sidebarId}
           className={cx(
@@ -99,17 +98,18 @@ export function AppShell({ header, sidebar, collapsed = false, sidebarId = 'side
           <CollapsedContext.Provider value={collapsed}>{sidebar}</CollapsedContext.Provider>
         </div>
       )}
-      {pane && (
-        // From lg up, like the sidebar: fixed under the header, and the content
-        // wrapper reserves it. Below lg nothing renders; the app uses a
-        // non-modal Sheet there.
-        <div className={cx('fixed bottom-0 right-0 z-sidebar hidden w-100 flex-col lg:flex', header ? 'top-header' : 'top-0')}>{pane}</div>
-      )}
       <div className={cx('flex-1', sidebar ? (collapsed ? 'lg:pl-rail' : 'lg:pl-sidebar') : null, pane ? 'lg:pr-100' : null)}>
         <main id="main" tabIndex={-1} className="min-w-0">
           {children}
         </main>
       </div>
+      {pane && (
+        // From lg up, like the sidebar: fixed under the header, and the content
+        // wrapper reserves it. After main in the DOM, as it is on screen, so Tab
+        // reaches the page before the pane (2.4.3, 1.3.2). Below lg nothing
+        // renders; the app uses a non-modal Sheet there.
+        <div className={cx('fixed bottom-0 right-0 z-sidebar hidden w-100 flex-col lg:flex', header ? 'top-header' : 'top-0')}>{pane}</div>
+      )}
       {tabs && (
         // In flow after the content (root is a flex column), sticky to the
         // viewport bottom: the last line of content is never under the bar

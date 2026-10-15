@@ -67,8 +67,8 @@ Without `TooltipProvider`, `Tooltip` throws on render (Radix needs it). Without 
   1. a `SkipLink` (2.4.1);
   2. the `<header>` landmark (sticky, `min-h-header`, safe-area top);
   3. the sidebar column, from `lg` up;
-  4. the pane column (`pane`), from `lg` up;
-  5. `<main id="main" tabIndex={-1}>`;
+  4. `<main id="main" tabIndex={-1}>`;
+  5. the pane column (`pane`), from `lg` up, after `main` as it is on screen;
   6. the tabs slot (`tabs`), below `lg`, after `main`.
 - While a header exists, the shell sets `scroll-padding-top` so a focused element never
   scrolls under the header (2.4.11).
@@ -156,7 +156,7 @@ Anatomy: `a.skip-link` (visible on focus) → `header` → `div#sidebar` (from `
 - Because the bar is in flow, `main` needs no bottom padding and short pages still seat the bar at the viewport bottom.
 - 2.4.12 Focus Not Obscured: while `tabs` is set, `AppShell` mirrors the bar's height into `document.documentElement` `scroll-padding-bottom` (a `ResizeObserver`, effect only, cleared on unmount), the way it does for the header's `scroll-padding-top`. From `lg` up the slot is `display: none`, so the padding is 0.
 - Tabs are 44px targets (2.5.5); the current one reads by its top border and colour, not colour alone (1.4.1).
-- Keyboard: Tab reaches the pane's controls before `main`'s (the pane column precedes `main` in the DOM); the close button is a normal button, Enter or Space activates.
+- Keyboard: Tab reaches `main`'s controls before the pane's (the pane column follows `main` in the DOM, matching its place on screen; 2.4.3); the close button is a normal button, Enter or Space activates.
 
 ```tsx
 <AppShell
