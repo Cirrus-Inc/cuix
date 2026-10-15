@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -273,6 +273,16 @@ const fresh = (files: Record<string, string> = { 'src/a.tsx': CLEAN }) => {
   spawnSync('rm', [join(dir, 'cuix-gates.json')]);
   return dir;
 };
+
+test('install-gates.sh: a pre-rename lumux-gates.json stops the install instead of being replaced', () => {
+  const dir = fresh();
+  writeFileSync(join(dir, 'lumux-gates.json'), JSON.stringify({ src: ['app'] }));
+  const r = run('bash', [gate('install-gates.sh')], dir);
+  assert.equal(r.code, 1);
+  assert.match(r.out, /found lumux-gates\.json: rename it to cuix-gates\.json/);
+  assert.equal(existsSync(join(dir, 'cuix-gates.json')), false);
+  assert.equal(existsSync(join(dir, 'scripts')), false);
+});
 
 test('install-gates.sh: --src or --ui without a value is a usage error, not an unbound variable', () => {
   for (const flag of ['--src', '--ui']) {

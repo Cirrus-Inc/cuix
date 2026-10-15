@@ -36,6 +36,12 @@ while [[ $# -gt 0 ]]; do
 done
 [[ ${#SRC[@]} -gt 0 ]] || SRC=(src)
 
+# Before the rename the config was lumux-gates.json; writing a fresh default
+# beside it would silently drop the consumer's roots, exceptions and baseline.
+if [[ -f lumux-gates.json && ! -f cuix-gates.json ]]; then
+  die "found lumux-gates.json: rename it to cuix-gates.json (and lumux-gates.baseline.json to cuix-gates.baseline.json, with its \"baseline\" key), then re-run"
+fi
+
 mkdir -p scripts
 for gate in check-ui-className.mjs check-disabled-title.sh check-nested-scrollers.sh; do
   cp "$here/$gate" "scripts/$gate"
