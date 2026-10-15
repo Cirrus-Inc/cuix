@@ -10,6 +10,8 @@ export {
   type SidebarSectionProps,
   type SidebarToggleProps,
 } from './Sidebar.tsx';
+export { AppShellPane, type AppShellPaneProps } from './Pane.tsx';
+export { BottomTab, BottomTabs, type BottomTabProps, type BottomTabsProps } from './BottomTabs.tsx';
 export { Button, IconButton, LinkButton, type ButtonSize, type ButtonVariant } from './Button.tsx';
 export { IconProvider } from './IconProvider.tsx';
 export { Spinner } from './Spinner.tsx';

@@ -2,7 +2,7 @@
 // No JSX, so ssr.ts runs under plain Node (type stripping) with no build step.
 import { createElement as h, type ReactNode } from 'react';
 import {
-  AppShell, Badge, Button, Card, Checkbox, ConfirmInline, Dialog, DialogClose, DialogTrigger, Drawer,
+  AppShell, AppShellPane, Badge, BottomTab, BottomTabs, Button, Card, Checkbox, ConfirmInline, Dialog, DialogClose, DialogTrigger, Drawer,
   EmptyState, Field, IconButton, IconProvider, Input, LinkButton, Menu, Popover, RadioGroup,
   NativeSelect, SegmentedControl, Select, Sheet, SheetClose, SheetTrigger, Sidebar, SidebarItem, SidebarSection, SidebarToggle, SkipLink, Spinner, Switch, Textarea,
   ThemeProvider, ThemeSwitcher, ToastLog, ToastProvider, Tooltip, TooltipProvider,
@@ -13,7 +13,7 @@ import { THEME_NAMES, type ThemeName } from '@cirrus/cuix/theme';
 // ssr.ts fails when @cirrus/cuix/react exports a component this list misses; tsconfig's
 // noUnusedLocals fails when one is imported here but never rendered.
 export const RENDERED = [
-  'AppShell', 'Badge', 'Button', 'Card', 'Checkbox', 'ConfirmInline', 'Dialog', 'DialogClose', 'DialogTrigger',
+  'AppShell', 'AppShellPane', 'Badge', 'BottomTab', 'BottomTabs', 'Button', 'Card', 'Checkbox', 'ConfirmInline', 'Dialog', 'DialogClose', 'DialogTrigger',
   'Drawer', 'EmptyState', 'Field', 'IconButton', 'IconProvider', 'Input', 'LinkButton', 'Menu', 'Popover',
   'NativeSelect', 'RadioGroup', 'SegmentedControl', 'Select', 'Sheet', 'SheetClose', 'SheetTrigger', 'Sidebar', 'SidebarItem', 'SidebarSection', 'SidebarToggle', 'SkipLink', 'Spinner',
   'Switch', 'Textarea', 'ThemeProvider', 'ThemeSwitcher', 'ToastLog', 'ToastProvider', 'Tooltip', 'TooltipProvider',
@@ -66,7 +66,7 @@ function Page(): ReactNode {
 }
 
 export function App(): ReactNode {
-  const shell = h(AppShell, { header: 'cuix', collapsed: true, sidebar: h(Sidebar, { collapsed: true, footer: h(SidebarToggle, { collapsed: true, onCollapsedChange: noop }), children: h(SidebarSection, { label: 'Main', children: h(SidebarItem, { href: '#', icon: h(Spinner), label: 'Home', current: true }) }) }), children: h(Page) });
+  const shell = h(AppShell, { header: 'cuix', collapsed: true, pane: h(AppShellPane, { title: 'Details', onClose: noop, children: 'Notes' }), tabs: h(BottomTabs, { children: h(BottomTab, { href: '#', icon: h(Spinner), label: 'Tab', current: true }) }), sidebar: h(Sidebar, { collapsed: true, footer: h(SidebarToggle, { collapsed: true, onCollapsedChange: noop }), children: h(SidebarSection, { label: 'Main', children: h(SidebarItem, { href: '#', icon: h(Spinner), label: 'Home', current: true }) }) }), children: h(Page) });
   const toasts = h(ToastProvider, { children: shell });
   return h(ThemeProvider, { children: h(IconProvider, { children: h(TooltipProvider, { children: toasts }) }) });
 }

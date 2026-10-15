@@ -4,6 +4,9 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
+- feat(react): `AppShell` gets `pane` and `tabs` props. `pane` (usually the new `AppShellPane`: an `<aside>` named by its `h2`, optional close button, one scroller) is a 400px column fixed on the right from `lg` up (`w-100`, no new token); the content wrapper pads for it (`lg:pr-100`). `tabs` (usually the new `BottomTabs` / `BottomTab`, 44px targets, `aria-current`) renders in flow after `main`, `sticky bottom-0 lg:hidden`. Behaviour change: the `AppShell` root is now a flex column instead of a block, with the content wrapper `flex-1`; and while `tabs` is set it sets `scroll-padding-bottom` to the bar's height so focus is never obscured (2.4.12). Completes Cirrus-Inc/cuix#33 items 2-3
+- test(e2e): the tabbable-element count in the focus-ring test counts only rendered elements (breakpoint-hidden items are not in the tab order); `?tabs=1` turns the playground's tab bar on for its own tests
+
 ## [0.9.0] - 2026-10-15
 
 - feat(react): `AppShell` collapses its sidebar to an icon rail. New `collapsed` and `sidebarId` props (controlled; the app stores the choice), `Sidebar`, `SidebarSection`, `SidebarItem` (router links through `asChild`; in rail mode the label is `sr-only` and a right-side `Tooltip` shows it), `SidebarToggle` and `useStoredBoolean` (`'1'` / `'0'` in `localStorage`, same as HIVE's `useStoredFlag`). Behaviour change: from `lg` up the sidebar column is now `fixed` under the header and the content wrapper pads for it (`lg:pl-sidebar` / `lg:pl-rail`), so it stays in view while the page scrolls instead of scrolling away; an app that padded for the column itself should drop that padding, and a custom `<nav>` passed as `sidebar` needs its own scroller (the column does not scroll; `Sidebar` has one). Side pane and bottom tabs remain (Cirrus-Inc/cuix#33 item 1 only)

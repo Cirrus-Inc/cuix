@@ -1,8 +1,11 @@
-import { ArrowRight, BarChart3, ExternalLink, Inbox, LayoutGrid, List, Plus, Save, Search, Settings, Trash2, Users } from 'lucide-react';
-import { StrictMode, useState } from 'react';
+import { ArrowRight, BarChart3, ExternalLink, Inbox, LayoutGrid, List, PanelRight, Plus, Save, Search, Settings, Trash2, Users } from 'lucide-react';
+import { StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   AppShell,
+  AppShellPane,
+  BottomTab,
+  BottomTabs,
   Button,
   Checkbox,
   Field,
@@ -35,6 +38,8 @@ import './app.css';
 
 const VARIANTS: ButtonVariant[] = ['primary', 'secondary', 'ghost', 'danger', 'danger-outline', 'link'];
 const dense = new URLSearchParams(location.search).get('density') === 'dense';
+// The tab bar covers the bottom of the viewport, so the default audits run without it.
+const showTabs = new URLSearchParams(location.search).get('tabs') === '1';
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
@@ -144,9 +149,35 @@ function Forms() {
 function Playground() {
   useDocumentTitle('Playground', 'cuix');
   const [collapsed, setCollapsed] = useStoredBoolean('cuix.playground.sidebar', false);
+  // Demo-only state: an app owns this and passes `pane` only while open.
+  const [paneOpen, setPaneOpen] = useState(false);
+  const paneToggle = useRef<HTMLButtonElement>(null);
   return (
     <AppShell
       collapsed={collapsed}
+      pane={
+        paneOpen ? (
+          <AppShellPane
+            title="Details"
+            onClose={() => {
+              setPaneOpen(false);
+              paneToggle.current?.focus();
+            }}
+          >
+            <p>Selected record notes.</p>
+          </AppShellPane>
+        ) : undefined
+      }
+      tabs={
+        showTabs ? (
+        <BottomTabs>
+          <BottomTab href="#inbox" icon={<Inbox />} label="Inbox" current />
+          <BottomTab href="#contacts" icon={<Users />} label="Contacts" />
+          <BottomTab href="#reports" icon={<BarChart3 />} label="Reports" />
+          <BottomTab href="#settings" icon={<Settings />} label="Settings" />
+        </BottomTabs>
+        ) : undefined
+      }
       sidebar={
         <Sidebar
           footer={<SidebarToggle collapsed={collapsed} onCollapsedChange={setCollapsed} />}
@@ -165,6 +196,17 @@ function Playground() {
         <>
           <span className="text-subheading">cuix</span>
           <ThemeSwitcher themes={THEME_NAMES} className="ml-auto" />
+          {/* The pane exists from lg up only, so its toggle does too. */}
+          <div className="hidden lg:block">
+            <IconButton
+              ref={paneToggle}
+              icon={<PanelRight aria-hidden="true" />}
+              aria-label="Details panel"
+              aria-controls="pane"
+              aria-expanded={paneOpen}
+              onClick={() => setPaneOpen(!paneOpen)}
+            />
+          </div>
         </>
       }
     >

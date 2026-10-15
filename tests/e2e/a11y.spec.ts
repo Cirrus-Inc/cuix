@@ -17,8 +17,9 @@ const VIEWPORTS = [
 const INTERACTIVE = 'a[href], button, input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])';
 // Elements a Tab press stops on: one per radio group, none for disabled controls.
 const TABBABLE_COUNT = () =>
-  document.querySelectorAll('a[href], button, input:not([type="radio"]):not([disabled]), select:not([disabled]), textarea:not([disabled])').length +
-  new Set(Array.from(document.querySelectorAll<HTMLInputElement>('input[type="radio"]:not([disabled])'), (r) => r.name)).size;
+  // Rendered only: breakpoint-hidden items (display:none) are not in the tab order.
+  Array.from(document.querySelectorAll('a[href], button, input:not([type="radio"]):not([disabled]), select:not([disabled]), textarea:not([disabled])')).filter((el) => el.getClientRects().length > 0).length +
+  new Set(Array.from(document.querySelectorAll<HTMLInputElement>('input[type="radio"]:not([disabled])')).filter((r) => r.getClientRects().length > 0).map((r) => r.name)).size;
 
 async function open(page: Page, theme: string, density: string) {
   await page.goto(`/?theme=${theme}${density === 'dense' ? '&density=dense' : ''}`);
