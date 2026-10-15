@@ -1,4 +1,15 @@
 export { AppShell, SkipLink, useDocumentTitle } from './AppShell.tsx';
+export {
+  Sidebar,
+  SidebarItem,
+  SidebarSection,
+  SidebarToggle,
+  useStoredBoolean,
+  type SidebarItemProps,
+  type SidebarProps,
+  type SidebarSectionProps,
+  type SidebarToggleProps,
+} from './Sidebar.tsx';
 export { Button, IconButton, LinkButton, type ButtonSize, type ButtonVariant } from './Button.tsx';
 export { IconProvider } from './IconProvider.tsx';
 export { Spinner } from './Spinner.tsx';

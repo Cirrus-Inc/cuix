@@ -1,4 +1,4 @@
-import { ArrowRight, ExternalLink, LayoutGrid, List, Plus, Save, Search, Settings, Trash2 } from 'lucide-react';
+import { ArrowRight, BarChart3, ExternalLink, Inbox, LayoutGrid, List, Plus, Save, Search, Settings, Trash2, Users } from 'lucide-react';
 import { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
@@ -9,6 +9,10 @@ import {
   Input,
   RadioGroup,
   SegmentedControl,
+  Sidebar,
+  SidebarItem,
+  SidebarSection,
+  SidebarToggle,
   NativeSelect,
   Select,
   Switch,
@@ -22,6 +26,7 @@ import {
   ToastProvider,
   TooltipProvider,
   useDocumentTitle,
+  useStoredBoolean,
   type ButtonVariant,
 } from '../src/react/index.ts';
 import { Content } from './content.tsx';
@@ -138,8 +143,25 @@ function Forms() {
 
 function Playground() {
   useDocumentTitle('Playground', 'cuix');
+  const [collapsed, setCollapsed] = useStoredBoolean('cuix.playground.sidebar', false);
   return (
     <AppShell
+      collapsed={collapsed}
+      sidebar={
+        <Sidebar
+          collapsed={collapsed}
+          footer={<SidebarToggle collapsed={collapsed} onCollapsedChange={setCollapsed} />}
+        >
+          <SidebarSection>
+            <SidebarItem href="#inbox" icon={<Inbox />} label="Inbox" count={3} current />
+            <SidebarItem href="#contacts" icon={<Users />} label="Contacts" />
+            <SidebarItem href="#reports" icon={<BarChart3 />} label="Reports" />
+          </SidebarSection>
+          <SidebarSection label="Account">
+            <SidebarItem href="#settings" icon={<Settings />} label="Settings" />
+          </SidebarSection>
+        </Sidebar>
+      }
       header={
         <>
           <span className="text-subheading">cuix</span>
