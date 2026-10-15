@@ -4,6 +4,8 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-15
+
 - **BREAKING** chore: the package `lumux` is now `@cirrus/cuix` and the repository moved to `Cirrus-Inc/cuix` (was `danieloceno/lumux`); no alias for the old name. Install with `"@cirrus/cuix": "github:Cirrus-Inc/cuix#vX.Y.Z"` and import from `@cirrus/cuix/react`, `@cirrus/cuix/theme`, `@cirrus/cuix/tokens.css`, `@cirrus/cuix/theme.css`, `@cirrus/cuix/eslint` (subpaths unchanged). Renamed: every CSS custom property `--lumux-*` to `--cuix-*` (including `--ease-lumux`, `--animate-lumux-spin` and the `lumux-spin` keyframes, now `--ease-cuix`, `--animate-cuix-spin`, `cuix-spin`, so the Tailwind utilities `ease-lumux` and `animate-lumux-spin` in consumer markup become `ease-cuix` and `animate-cuix-spin`); the theme storage key `lumux-theme` to `cuix-theme` (a stored choice resets once unless the app mounts `<ThemeProvider legacy={{ key: "lumux-theme" }}>` for a release); `theme-init.js` and `theme-init.sha256` change with it, so apps that inline the script must copy the new bytes and CSP hash; the gates config `lumux-gates.json` to `cuix-gates.json` and `lumux-gates.baseline.json` to `cuix-gates.baseline.json` (rename both in a consumer and the config's `baseline` key, then re-run `install-gates.sh` from its new path `node_modules/@cirrus/cuix/scripts/`; it stops while only `lumux-gates.json` exists); the env var `LUMUX_GATES` to `CUIX_GATES`; the ESLint export's conventional import name `lumuxA11y` to `cuixA11y`. Demo moved to https://cirrus-inc.github.io/cuix/
 
 ## [0.7.0] - 2026-10-14
@@ -77,7 +79,8 @@ Phase 1: core day/night tokens at AAA, generated `tokens.css` / `theme.css` / `t
 - docs(tokens): adopt core day/night as the only palette at AAA (Cirrus-Inc/cuix-legacy#2)
 - docs: README with Mermaid, badges and decision index (Cirrus-Inc/cuix-legacy#1)
 
-[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.8.0
 [0.7.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.7.0
 [0.5.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.5.0
 [0.4.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.4.0
