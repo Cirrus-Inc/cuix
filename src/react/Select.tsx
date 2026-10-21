@@ -71,17 +71,35 @@ export function Select({
     // Radix gives no props to the hidden <select required>, and `invalid` does not bubble: the
     // browser would anchor its bubble to that 1px element. Capture it on the form instead, keep the
     // native submit block, and move focus and the message to the trigger.
+    // `invalid` also fires on a silent form.checkValidity(): act only on a user submit attempt.
+    let submitting = false;
+    const onIntent = (e: Event) => {
+      const el = e.target instanceof Element ? e.target.closest('button, input') : null;
+      const submitter = el instanceof HTMLButtonElement || el instanceof HTMLInputElement ? el : null;
+      const isSubmit = e.type === 'click' ? submitter?.type === 'submit' || submitter?.type === 'image' : (e as KeyboardEvent).key === 'Enter' && submitter instanceof HTMLInputElement;
+      if (!isSubmit || submitter?.form !== form) return;
+      submitting = true;
+      setTimeout(() => (submitting = false));
+    };
     const onInvalid = (e: Event) => {
       const bubble = trigger.current?.nextElementSibling;
-      if (e.target !== bubble || !(bubble instanceof HTMLSelectElement)) return;
+      if (!submitting || e.target !== bubble || !(bubble instanceof HTMLSelectElement)) return;
       e.preventDefault();
       setNative(bubble.validationMessage);
-      // Like the browser, only the first invalid control takes focus.
-      const first = Array.from(form.elements).find((el) => 'validity' in el && !(el as HTMLInputElement).validity.valid);
-      if (first === bubble) trigger.current?.focus();
+      // Like the browser, only the first invalid control takes focus. The browser then focuses the
+      // first invalid control it still handles itself, so take focus back after it.
+      const first = Array.from(form.elements).find((el) => (el as HTMLInputElement).willValidate && !(el as HTMLInputElement).validity.valid);
+      if (first === bubble) setTimeout(() => trigger.current?.focus());
     };
+    const doc = form.ownerDocument;
+    doc.addEventListener('click', onIntent, true);
+    doc.addEventListener('keydown', onIntent, true);
     form.addEventListener('invalid', onInvalid, true);
-    return () => form.removeEventListener('invalid', onInvalid, true);
+    return () => {
+      doc.removeEventListener('click', onIntent, true);
+      doc.removeEventListener('keydown', onIntent, true);
+      form.removeEventListener('invalid', onInvalid, true);
+    };
   }, []);
   // A <label> forwards a click to its control, and Radix opens on any click it did not see a
   // pointerdown for. Native labels only focus; do the same.
@@ -96,7 +114,8 @@ export function Select({
     return () => document.removeEventListener('click', onClick, true);
   }, []);
   const { required: isRequired, ...triggerProps } = props as { required?: boolean } & Record<string, unknown>;
-  const showNative = native && !invalid;
+  // A value set from outside (controlled `value`) clears it too, not only a pick.
+  const showNative = native && !invalid && !selected;
   if (showNative) {
     triggerProps['aria-describedby'] = cx(errorId(ownId), triggerProps['aria-describedby'] as string | undefined);
     triggerProps['aria-invalid'] = true;

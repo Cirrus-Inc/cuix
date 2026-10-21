@@ -245,7 +245,8 @@ This is `eslint-plugin-jsx-a11y` strict, plus a ban on `title` on interactive el
   anchor the browser's bubble to a 1px element, so `Select` cancels that bubble (`invalid` captured on the form),
   focuses the trigger when it is the first invalid control, and shows the browser's message under it as a
   `role="alert"` linked by `aria-describedby`, with `aria-invalid` and the `danger` edge. Choosing a value clears it.
-  A `Field` `error` takes precedence over that message. Needs the `Select` to be inside the `<form>` it submits (no `form` attribute).
+  A `Field` `error` takes precedence over that message. Only a user submit (submit button, Enter in a field) does this; a silent `form.checkValidity()` stays silent,
+  and `reportValidity()` / `requestSubmit()` keep the browser's own bubble. Needs the `Select` to be inside the `<form>` it submits (no `form` attribute).
 - `NativeSelect` is the previous `Select`: a native `<select>` with `<option>` children, for
   forms that want the platform picker on phones. Its popup follows the page's `color-scheme`
   (set on `:root` and per theme in `tokens.css`) in Chrome; Safari and mobile pickers follow

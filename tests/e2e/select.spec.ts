@@ -145,3 +145,24 @@ test('Select: empty required submit is blocked, focuses the trigger and shows th
   await form.getByRole('button', { name: 'Save plan' }).click();
   expect(await sent()).toBe(true);
 });
+
+test('Select: required message waits for a submit attempt and keeps focus on the first invalid control', async ({ page }) => {
+  await open(page);
+  const form = page.getByTestId('required-select-form');
+  const plan = form.getByRole('combobox', { name: /Plan/ });
+  // A silent checkValidity() (e.g. to enable a button while typing) neither steals focus nor shows the message.
+  await page.getByLabel('Notes').focus();
+  await form.evaluate((f: HTMLFormElement) => f.checkValidity());
+  await expect(page.getByLabel('Notes')).toBeFocused();
+  await expect(form.getByRole('alert')).toHaveCount(0);
+  // A later invalid control the browser handles itself does not keep focus: the Select comes first.
+  await form.evaluate((f) => {
+    const later = document.createElement('input');
+    later.required = true;
+    later.setAttribute('aria-label', 'Later');
+    f.insertBefore(later, f.querySelector('button[type="submit"]'));
+  });
+  await form.getByRole('button', { name: 'Save plan' }).click();
+  await expect(plan).toBeFocused();
+  await expect(form.getByRole('alert')).toBeVisible();
+});

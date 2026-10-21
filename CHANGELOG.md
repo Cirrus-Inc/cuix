@@ -4,7 +4,7 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
-- fix(react): a `required` `Select` in a `<form>` shows the validation message on the trigger. Radix's hidden `<select required>` anchored the browser bubble to a 1px element; `Select` now captures `invalid` on the form, cancels that bubble, focuses the trigger (first invalid control only) and renders the browser's message under it (`role="alert"`, `aria-describedby`, `aria-invalid`). Empty submit is still blocked natively; a `Field` `error` takes precedence. Closes Cirrus-Inc/cuix#71
+- fix(react): a `required` `Select` in a `<form>` shows the validation message on the trigger. Radix's hidden `<select required>` anchored the browser bubble to a 1px element; `Select` now captures `invalid` on the form, cancels that bubble, focuses the trigger (first invalid control only) and renders the browser's message under it (`role="alert"`, `aria-describedby`, `aria-invalid`). Only on a user submit (a silent `checkValidity()` neither focuses nor shows it). Empty submit is still blocked natively; a `Field` `error` takes precedence. Closes Cirrus-Inc/cuix#71
 
 ## [0.10.0] - 2026-10-15
 
