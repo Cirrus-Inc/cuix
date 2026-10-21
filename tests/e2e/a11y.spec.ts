@@ -18,7 +18,7 @@ const INTERACTIVE = 'a[href], button, input, select, textarea, [role="button"], 
 // Elements a Tab press stops on: one per radio group, none for disabled controls.
 const TABBABLE_COUNT = () =>
   // Rendered only: breakpoint-hidden items (display:none) are not in the tab order.
-  Array.from(document.querySelectorAll('a[href], button, input:not([type="radio"]):not([disabled]), select:not([disabled]), textarea:not([disabled])')).filter((el) => el.getClientRects().length > 0).length +
+  Array.from(document.querySelectorAll('a[href], button, input:not([type="radio"]):not([disabled]), select:not([disabled]):not([aria-hidden="true"]), textarea:not([disabled])')).filter((el) => el.getClientRects().length > 0).length +
   new Set(Array.from(document.querySelectorAll<HTMLInputElement>('input[type="radio"]:not([disabled])')).filter((r) => r.getClientRects().length > 0).map((r) => r.name)).size;
 
 async function open(page: Page, theme: string, density: string) {
@@ -51,6 +51,8 @@ for (const theme of THEMES) {
           const small = await page.$$eval(INTERACTIVE, (els) =>
             els
               .filter((el) => !el.closest('.sr-only') || el.closest('label'))
+              // Radix's form-carrier <select> (a Select inside a <form>) is aria-hidden: not a target.
+              .filter((el) => !el.matches('select[aria-hidden="true"]'))
               // Not rendered (the sidebar below lg): nothing to hit.
               .filter((el) => el.getClientRects().length > 0)
               .map((el) => {

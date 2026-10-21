@@ -2,9 +2,10 @@
 
 import * as S from '@radix-ui/react-select';
 import { Check, ChevronDown } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { CONTROL, EDGE, useFieldProps } from './Field.tsx';
 import { cx } from './cx.ts';
+import { errorId, FieldMessages } from './FieldMessages.tsx';
 
 export type SelectOption = {
   /** Non-empty: Radix reserves the empty string for "no selection". */
@@ -61,6 +62,45 @@ export function Select({
   const selected = value ?? inner;
   const trigger = useRef<HTMLButtonElement>(null);
   const fromLabel = useRef(false);
+  const ownId = useId();
+  // The browser's own message for an empty required Select, shown under the trigger (3.3.1).
+  const [native, setNative] = useState<string>();
+  useEffect(() => {
+    const form = trigger.current?.form;
+    if (!form) return;
+    // Radix gives no props to the hidden <select required>, and `invalid` does not bubble: the
+    // browser would anchor its bubble to that 1px element. Capture it on the form instead, keep the
+    // native submit block, and move focus and the message to the trigger.
+    // `invalid` also fires on a silent form.checkValidity(): act only on a user submit attempt.
+    let submitting = false;
+    const onIntent = (e: Event) => {
+      const el = e.target instanceof Element ? e.target.closest('button, input') : null;
+      const submitter = el instanceof HTMLButtonElement || el instanceof HTMLInputElement ? el : null;
+      const isSubmit = e.type === 'click' ? submitter?.type === 'submit' || submitter?.type === 'image' : (e as KeyboardEvent).key === 'Enter' && submitter instanceof HTMLInputElement;
+      if (!isSubmit || submitter?.form !== form) return;
+      submitting = true;
+      setTimeout(() => (submitting = false));
+    };
+    const onInvalid = (e: Event) => {
+      const bubble = trigger.current?.nextElementSibling;
+      if (!submitting || e.target !== bubble || !(bubble instanceof HTMLSelectElement)) return;
+      e.preventDefault();
+      setNative(bubble.validationMessage);
+      // Like the browser, only the first invalid control takes focus. The browser then focuses the
+      // first invalid control it still handles itself, so take focus back after it.
+      const first = Array.from(form.elements).find((el) => (el as HTMLInputElement).willValidate && !(el as HTMLInputElement).validity.valid);
+      if (first === bubble) setTimeout(() => trigger.current?.focus());
+    };
+    const doc = form.ownerDocument;
+    doc.addEventListener('click', onIntent, true);
+    doc.addEventListener('keydown', onIntent, true);
+    form.addEventListener('invalid', onInvalid, true);
+    return () => {
+      doc.removeEventListener('click', onIntent, true);
+      doc.removeEventListener('keydown', onIntent, true);
+      form.removeEventListener('invalid', onInvalid, true);
+    };
+  }, []);
   // A <label> forwards a click to its control, and Radix opens on any click it did not see a
   // pointerdown for. Native labels only focus; do the same.
   useEffect(() => {
@@ -74,11 +114,19 @@ export function Select({
     return () => document.removeEventListener('click', onClick, true);
   }, []);
   const { required: isRequired, ...triggerProps } = props as { required?: boolean } & Record<string, unknown>;
+  // A value set from outside (controlled `value`) clears it too, not only a pick.
+  const showNative = native && !invalid && !selected;
+  if (showNative) {
+    triggerProps['aria-describedby'] = cx(errorId(ownId), triggerProps['aria-describedby'] as string | undefined);
+    triggerProps['aria-invalid'] = true;
+  }
   return (
+    <>
     <S.Root
       value={value}
       defaultValue={defaultValue}
       onValueChange={(v) => {
+        setNative(undefined);
         setInner(v);
         onValueChange?.(v);
       }}
@@ -98,7 +146,7 @@ export function Select({
         {...triggerProps}
         className={cx(
           CONTROL,
-          EDGE(invalid),
+          EDGE(invalid || !!showNative),
           'flex min-h-target items-center justify-between gap-2 px-3 text-left data-placeholder:text-foreground-subtle',
           className,
         )}
@@ -130,5 +178,7 @@ export function Select({
         </S.Content>
       </S.Portal>
     </S.Root>
+    {showNative && <FieldMessages id={ownId} error={native} />}
+    </>
   );
 }

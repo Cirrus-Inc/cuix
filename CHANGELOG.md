@@ -4,6 +4,8 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
+- fix(react): a `required` `Select` in a `<form>` shows the validation message on the trigger. Radix's hidden `<select required>` anchored the browser bubble to a 1px element; `Select` now captures `invalid` on the form, cancels that bubble, focuses the trigger (first invalid control only) and renders the browser's message under it (`role="alert"`, `aria-describedby`, `aria-invalid`). Only on a user submit (a silent `checkValidity()` neither focuses nor shows it). Empty submit is still blocked natively; a `Field` `error` takes precedence. Closes Cirrus-Inc/cuix#71
+
 ## [0.10.0] - 2026-10-15
 
 - feat(react): `AppShell` gets `pane` and `tabs` props. `pane` (usually the new `AppShellPane`: an `<aside>` named by its `h2`, optional close button, one scroller) is a 400px column fixed on the right from `lg` up (`w-100`, no new token); the content wrapper pads for it (`lg:pr-100`). `tabs` (usually the new `BottomTabs` / `BottomTab`, 44px targets, `aria-current`) renders in flow after `main`, `sticky bottom-0 lg:hidden`. Behaviour change: the `AppShell` root is now a flex column instead of a block, with the content wrapper `flex-1`; and while `tabs` is set it sets `scroll-padding-bottom` to the bar's height so focus is never obscured (2.4.12). Completes Cirrus-Inc/cuix#33 items 2-3

@@ -126,3 +126,43 @@ test('Select in forced colors: selected item is Highlight, keyboard position kee
   });
   expect(ring).toEqual({ style: 'solid', width: '2px' });
 });
+
+test('Select: empty required submit is blocked, focuses the trigger and shows the message there', async ({ page }) => {
+  await open(page);
+  const form = page.getByTestId('required-select-form');
+  const sent = () => page.evaluate(() => (window as unknown as { __sent?: boolean }).__sent === true);
+  await form.evaluate((f) => f.addEventListener('submit', () => ((window as unknown as { __sent?: boolean }).__sent = true)));
+  const plan = form.getByRole('combobox', { name: /Plan/ });
+  await form.getByRole('button', { name: 'Save plan' }).click();
+  await expect(plan).toBeFocused();
+  await expect(plan).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('alert')).toBeVisible();
+  await expect(plan).toHaveAccessibleDescription(await form.getByRole('alert').innerText());
+  expect(await sent()).toBe(false);
+  await plan.click();
+  await page.getByRole('option', { name: 'Team' }).click();
+  await expect(form.getByRole('alert')).toHaveCount(0);
+  await form.getByRole('button', { name: 'Save plan' }).click();
+  expect(await sent()).toBe(true);
+});
+
+test('Select: required message waits for a submit attempt and keeps focus on the first invalid control', async ({ page }) => {
+  await open(page);
+  const form = page.getByTestId('required-select-form');
+  const plan = form.getByRole('combobox', { name: /Plan/ });
+  // A silent checkValidity() (e.g. to enable a button while typing) neither steals focus nor shows the message.
+  await page.getByLabel('Notes').focus();
+  await form.evaluate((f: HTMLFormElement) => f.checkValidity());
+  await expect(page.getByLabel('Notes')).toBeFocused();
+  await expect(form.getByRole('alert')).toHaveCount(0);
+  // A later invalid control the browser handles itself does not keep focus: the Select comes first.
+  await form.evaluate((f) => {
+    const later = document.createElement('input');
+    later.required = true;
+    later.setAttribute('aria-label', 'Later');
+    f.insertBefore(later, f.querySelector('button[type="submit"]'));
+  });
+  await form.getByRole('button', { name: 'Save plan' }).click();
+  await expect(plan).toBeFocused();
+  await expect(form.getByRole('alert')).toBeVisible();
+});

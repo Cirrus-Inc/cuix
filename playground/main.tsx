@@ -109,6 +109,20 @@ function Forms() {
         <Field label="Disabled field">
           <Input disabled defaultValue="Locked" />
         </Field>
+        <form className="md:col-span-2" onSubmit={(e) => e.preventDefault()} data-testid="required-select-form">
+          <Field label="Plan" required>
+            <Select
+              required
+              name="plan"
+              placeholder="Choose a plan"
+              options={[
+                { value: 'free', label: 'Free' },
+                { value: 'team', label: 'Team' },
+              ]}
+            />
+          </Field>
+          <Button type="submit" className="mt-2">Save plan</Button>
+        </form>
         <div className="flex flex-col gap-2">
           <Checkbox label="Send me product updates" hint="About once a month." defaultChecked />
           <Checkbox label="Accept the terms" error="You need to accept the terms." />

@@ -112,7 +112,7 @@ test('2.4.12: Tab never lands a focused element under the tab bar', async ({ pag
   const padding = await page.evaluate(() => document.documentElement.style.scrollPaddingBottom);
   expect(parseFloat(padding)).toBeGreaterThan(0);
   const count = await page.evaluate(
-    () => Array.from(document.querySelectorAll('main a[href], main button, main input, main select, main textarea')).filter((el) => el.getClientRects().length > 0).length,
+    () => Array.from(document.querySelectorAll('main a[href], main button, main input, main select:not([aria-hidden="true"]), main textarea')).filter((el) => el.getClientRects().length > 0).length,
   );
   expect(count).toBeGreaterThan(10);
   // Walk the whole tab order; every stop inside main must clear the bar.
