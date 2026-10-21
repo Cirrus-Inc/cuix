@@ -4,6 +4,8 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-10-21
+
 - fix(react): a `required` `Select` in a `<form>` shows the validation message on the trigger. Radix's hidden `<select required>` anchored the browser bubble to a 1px element; `Select` now captures `invalid` on the form, cancels that bubble, focuses the trigger (first invalid control only) and renders the browser's message under it (`role="alert"`, `aria-describedby`, `aria-invalid`). Only on a user submit (a silent `checkValidity()` neither focuses nor shows it). Empty submit is still blocked natively; a `Field` `error` takes precedence. Closes Cirrus-Inc/cuix#71
 
 ## [0.10.0] - 2026-10-15
@@ -90,7 +92,8 @@ Phase 1: core day/night tokens at AAA, generated `tokens.css` / `theme.css` / `t
 - docs(tokens): adopt core day/night as the only palette at AAA (Cirrus-Inc/cuix-legacy#2)
 - docs: README with Mermaid, badges and decision index (Cirrus-Inc/cuix-legacy#1)
 
-[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.10.1...HEAD
+[0.10.1]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.10.1
 [0.10.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.10.0
 [0.9.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.9.0
 [0.8.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.8.0
