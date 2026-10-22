@@ -29,7 +29,13 @@ targets="$(node -e '
   const walk = (v) => typeof v === "string" ? [v] : Object.values(v).flatMap(walk);
   console.log(walk(require("./package.json").exports).join("\n"));')"
 while read -r t; do
-  grep -qxF "package/${t#./}" <<<"$listing" || die "exports target $t is not in the tarball"
+  if [[ $t == *"*"* ]]; then
+    # A pattern target (./map/geo/*): at least one file must match it.
+    re="^package/$(sed 's/[.]/[.]/g; s/[*]/[^\/]+/' <<<"${t#./}")\$"
+    grep -qE "$re" <<<"$listing" || die "exports pattern $t matches nothing in the tarball"
+  else
+    grep -qxF "package/${t#./}" <<<"$listing" || die "exports target $t is not in the tarball"
+  fi
 done <<<"$targets"
 
 cp -R tests/consumer "$work/app"
@@ -48,6 +54,32 @@ for sel in '.bg-overlay-scrim' '.sm\:max-w-dialog-md' '.min-h-target'; do
   grep -qF "$sel" dist/assets/*.css || die "built CSS lacks $sel (theme.css @source missed dist/react?)"
 done
 
+# The county files are lazy: one chunk per state, none in the entry chunk.
+ls dist/assets | grep -q '^US-FL-.*[.]js$' || die "no lazy US-FL chunk in the build (county files bundled eagerly?)"
+
 step "SSR renderToString"
 node src/ssr.ts
+
+step "map-only install: no Radix, no lucide, no maplibre-gl"
+mkdir "$work/maponly"
+cd "$work/maponly"
+echo '{ "name": "cuix-map-only", "private": true, "type": "module" }' >package.json
+npm i -s --no-audit --no-fund react@19.3.0 react-dom@19.3.0 "$tgz"
+for p in @radix-ui lucide-react maplibre-gl eslint-plugin-jsx-a11y; do
+  [[ ! -e node_modules/$p ]] || die "a map-only install pulled in $p"
+done
+cat >smoke.mjs <<'JS'
+import { createElement as h } from 'react';
+import { renderToString } from 'react-dom/server';
+import { UsMap, LayersPanel } from '@cirrus/cuix/map';
+import { StreetMap } from '@cirrus/cuix/map/street';
+import { COUNTIES } from '@cirrus/cuix/map/geo/US-TX';
+const html = renderToString(h('div', null,
+  h(UsMap, { level: { kind: 'us' }, label: 'States', states: [], onSelect() {} }),
+  h(LayersPanel, { layers: [{ id: 'a', label: 'A' }], value: {}, onChange() {} }),
+  h(StreetMap, { label: 'District' })));
+if (!html.includes('aria-label="District"') || COUNTIES.length < 200) throw new Error('map-only render failed');
+console.log(`consumer-smoke: map-only SSR ${html.length} bytes, ${COUNTIES.length} TX counties`);
+JS
+node smoke.mjs
 step "ok"

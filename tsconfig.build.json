@@ -8,6 +8,7 @@
   },
   "include": [
     "src/theme",
-    "src/react"
+    "src/react",
+    "src/map"
   ]
 }
