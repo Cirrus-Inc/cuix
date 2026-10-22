@@ -49,6 +49,7 @@ export default defineConfig({ optimizeDeps: { exclude: ['maplibre-gl'] } });
 - **Points** are drawn at the state level, at one size on screen whatever the zoom. `shape` (circle, square, triangle, diamond, cross) carries the category and its default colour (`chart-1`…`chart-4`, `foreground-muted`) repeats it; `color` overrides. A point with `count > 1` is a number badge. `groupPoints(items, { cell })` projects `{ id, name, lat, lng }` items and merges those in one grid cell (default 0.1 units, i.e. the same spot; `8 / k` clusters by screen density).
 - **Tooltip.** Built in: shown on hover and focus, hoverable, Esc hides it; its content is the point's `detail` after the name, or `renderTooltip(point)`. To use the app's own tooltip, `wrapPoint={(p, marker) => <Tooltip content={…}>{marker}</Tooltip>}`; the built-in one is then off.
 - **Focus** is a non-scaling overlay ring (surface band under a `focus-ring` line), not an outline: an outline inside the zoomed group would scale with the camera.
+- **Target size.** Counties and points are drawn at their geographic size, so many are under cuix's 44px floor (a point is 10px, a badge 22px, at a 975px-wide map). The map relies on the 2.5.5 *equivalent* exception: the app must offer every county and point as a 44px control elsewhere on the page (the list beside the map in HIVE and LuxReach). A map without that list does not meet 2.5.5.
 - **Camera.** `level` fits the state, `focus` (a county FIPS) fits that county with its neighbours. `onBack` makes a single click outside any control step back a level (mouse only; the keyboard uses the app's breadcrumb and Esc). `prefers-reduced-motion` turns the transition off.
 
 ## LayersPanel
@@ -81,13 +82,13 @@ One `role="switch"` per layer; the row is the 44px target and its text (label, h
 />
 ```
 
-`maplibre-gl` is imported inside an effect, so `@cirrus/cuix/map` never loads it and SSR renders an empty, named region. Camera: `bounds`, else `center` + `zoom`, else the pins' extent. `styleUrl` defaults to OpenFreeMap Liberty (keyless); point it at self-hosted tiles when needed. The attribution control is always on (the tiles' licence requires it). Pins are 24px buttons (2.5.8) named by `label`, in label order; `renderPopup` renders into a MapLibre popup through a portal, so it keeps the app's context.
+`maplibre-gl` is imported inside an effect, so `@cirrus/cuix/map` never loads it and SSR renders an empty, named region. Camera: `bounds`, else `center` + `zoom`, else the pins' extent. `styleUrl` defaults to OpenFreeMap Liberty (keyless); point it at self-hosted tiles when needed. The attribution control is always on (the tiles' licence requires it). Pins are 44px buttons (`--cuix-target-min`, 2.5.5) around a 16px marker, named by `label`, in label order (kept when pins are added later); `renderPopup` renders into a MapLibre popup through a portal, so it keeps the app's context.
 
 ## Colours
 
 Every colour is a CSS custom property: `--cuix-map-<token>`, then the cuix token (`--cuix-surface`, `--cuix-accent`…), then the core day value. In a cuix app the map follows the theme with no setup. Elsewhere, set the `--cuix-map-*` properties on an ancestor or pass `colors={{ accent: 'var(--app-accent)', surface: '#fff' }}`. Tokens used: `surface`, `border`, `border-strong`, `foreground`, `foreground-muted`, `accent`, `accent-soft`, `focus-ring`, `danger`, `chart-1`…`chart-4`. US-level labels size with `--cuix-map-label-size`.
 
-The styles are one `<style>` element React 19 hoists to `<head>` once. Under a CSP without `'unsafe-inline'` in `style-src`, allow its hash or a nonce.
+The styles are one `<style>` element React 19 hoists to `<head>` once. Under a CSP without `'unsafe-inline'` in `style-src`, allow the SHA-256 of that element's text (it changes with each release). A nonce cannot be passed yet. Server-rendered markup also carries `style` attributes (camera, colours, tooltip position), which such a CSP blocks too; rendered on the client they are set through the CSSOM and pass.
 
 ## Not included
 

@@ -162,11 +162,14 @@ export function StreetMap({
       markers.current.delete(id);
       elements.current.delete(id);
     }
-    // Added in label order, so the tab order follows it.
+    // Re-appended in label order on every change, so the tab order follows it when pins are added later too.
     for (const p of sortedPins) {
       const existing = markers.current.get(p.id);
-      if (existing) existing.setLngLat([p.lng, p.lat]);
-      else markers.current.set(p.id, new lib.Marker({ element: elementFor(p.id) }).setLngLat([p.lng, p.lat]).addTo(map));
+      if (existing) {
+        existing.setLngLat([p.lng, p.lat]);
+        const el = existing.getElement();
+        el.parentElement?.appendChild(el);
+      } else markers.current.set(p.id, new lib.Marker({ element: elementFor(p.id) }).setLngLat([p.lng, p.lat]).addTo(map));
     }
   }, [map, lib, sortedPins]);
 

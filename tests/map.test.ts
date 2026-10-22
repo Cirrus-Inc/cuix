@@ -125,10 +125,14 @@ test('StreetMap server-renders a named region without loading maplibre-gl', asyn
 
 test('the map subpath imports neither the theme, the React components, Radix nor maplibre-gl', () => {
   const dir = new URL('../dist/map/', import.meta.url);
-  const files = readdirSync(dir).filter((f) => f.endsWith('.js'));
+  // Recursive: street/ and geo/ are part of the subpath too.
+  const files = readdirSync(dir, { recursive: true, encoding: 'utf8' }).filter((f) => f.endsWith('.js'));
+  assert.ok(files.includes('street/StreetMap.js') && files.includes('geo/counties/US-FL.js'), 'walks the whole subpath');
   for (const f of files) {
     const src = readFileSync(new URL(f, dir), 'utf8');
-    assert.doesNotMatch(src, /from ['"](\.\.\/react|\.\.\/theme|@cirrus\/cuix|@radix-ui|lucide-react|maplibre-gl)/, f);
+    assert.doesNotMatch(src, /(from |import\()['"]((\.\.\/)+(react|theme)\b|@cirrus\/cuix|@radix-ui|lucide-react)/, f);
+    if (f.startsWith('street/')) continue;
+    assert.doesNotMatch(src, /(from |import\()['"]maplibre-gl/, `${f} loads maplibre-gl`);
     assert.doesNotMatch(src, /(from |import\()['"][^'"]*street/, `${f} reaches the street subpath`);
   }
   const street = readFileSync(new URL('street/StreetMap.js', dir), 'utf8');

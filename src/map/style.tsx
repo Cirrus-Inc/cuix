@@ -104,7 +104,7 @@ const CSS = `
 .cuix-layer-hint{color:${c('foregroundMuted')};font-size:${FONT_CAPTION}}
 .cuix-street{position:relative}
 .cuix-street>.cuix-street-canvas{position:absolute;inset:0}
-.cuix-street-pin{display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:50%;background:none;cursor:pointer}
+.cuix-street-pin{display:grid;place-items:center;width:var(--cuix-target-min, 44px);height:var(--cuix-target-min, 44px);padding:0;border:0;border-radius:50%;background:none;cursor:pointer}
 .cuix-street-pin>svg{width:16px;height:16px;overflow:visible}
 .cuix-map-focus:focus-visible{outline:2px solid ${c('focusRing')};outline-offset:2px}
 @media (prefers-reduced-motion: reduce){.cuix-map-camera,.cuix-layer-thumb{transition:none}}
