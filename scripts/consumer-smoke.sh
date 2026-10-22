@@ -64,7 +64,7 @@ step "map-only install: no Radix, no lucide, no maplibre-gl"
 mkdir "$work/maponly"
 cd "$work/maponly"
 echo '{ "name": "cuix-map-only", "private": true, "type": "module" }' >package.json
-npm i -s --no-audit --no-fund react@19.3.0 react-dom@19.3.0 "$tgz"
+npm i -s --no-audit --no-fund react@19.3.1 react-dom@19.3.1 "$tgz"
 for p in @radix-ui lucide-react maplibre-gl eslint-plugin-jsx-a11y; do
   [[ ! -e node_modules/$p ]] || die "a map-only install pulled in $p"
 done
