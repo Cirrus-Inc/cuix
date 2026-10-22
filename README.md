@@ -83,6 +83,7 @@ Every app that adopts cuix uses the same semantic tokens, mounts the same compon
 | Tokens & themes | Token source of truth, eight AAA themes, contrast gate, focus and motion primitives | ✅ Shipped · [`docs/tokens.md`](./docs/tokens.md) |
 | Components | React 19 set on Radix: actions, forms, overlays, content, toasts | ✅ Shipped · [`docs/components.md`](./docs/components.md) |
 | Gates | className, disabled-title and nested-scroller checks, installable into any consumer | ✅ Shipped · [`docs/gates.md`](./docs/gates.md) |
+| Map | US → state → county SVG map, per-state geometry, Layers panel, MapLibre street level; theme-free | ⏳ Next release · [`docs/map.md`](./docs/map.md) |
 | Adoption | HIVE, an internal Cirrus product, is the first consumer (on `v0.5.0`, under the package's former name); no other product has migrated yet | ⏳ In progress |
 | `1.0.0` | API freeze | ⏳ Planned |
 
@@ -296,6 +297,9 @@ Config, ratchets and blind spots are in [docs/gates.md](./docs/gates.md).
 | `@cirrus/cuix/theme-init.sha256` | CSP hash of `theme-init.js` |
 | `@cirrus/cuix/theme` | `applyTheme`, `readTheme`, `resolvedTheme`, `resolvedScheme`, `THEME_NAMES` |
 | `@cirrus/cuix/react` | Components, `ThemeProvider`, `ThemeSwitcher` |
+| `@cirrus/cuix/map` | `UsMap`, `LayersPanel`, `albersUsa`, camera maths, `groupPoints`; no theme, no Radix |
+| `@cirrus/cuix/map/geo/<US-XX>` | One state's county shapes (51 files), plus `/map/geo/usStates` and `/map/geo/usStateIndex` |
+| `@cirrus/cuix/map/street` | `StreetMap` on `maplibre-gl` (optional peer) |
 | `@cirrus/cuix/eslint` | `eslint-plugin-jsx-a11y` strict config |
 | `scripts/install-gates.sh` | Installs the three gates and a frozen baseline into a consumer |
 

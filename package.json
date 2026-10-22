@@ -37,6 +37,26 @@
       "types": "./dist/react/index.d.ts",
       "default": "./dist/react/index.js"
     },
+    "./map": {
+      "types": "./dist/map/index.d.ts",
+      "default": "./dist/map/index.js"
+    },
+    "./map/street": {
+      "types": "./dist/map/street/index.d.ts",
+      "default": "./dist/map/street/index.js"
+    },
+    "./map/geo/usStates": {
+      "types": "./dist/map/geo/usStates.d.ts",
+      "default": "./dist/map/geo/usStates.js"
+    },
+    "./map/geo/usStateIndex": {
+      "types": "./dist/map/geo/usStateIndex.d.ts",
+      "default": "./dist/map/geo/usStateIndex.js"
+    },
+    "./map/geo/*": {
+      "types": "./dist/map/geo/counties/*.d.ts",
+      "default": "./dist/map/geo/counties/*.js"
+    },
     "./eslint": "./eslint/a11y.js"
   },
   "sideEffects": [
@@ -87,6 +107,7 @@
     "eslint": "9.39.5",
     "eslint-plugin-jsx-a11y": "6.10.2",
     "lucide-react": "1.55.0",
+    "maplibre-gl": "6.13.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "tailwindcss": "4.3.3",
@@ -95,16 +116,17 @@
     "vite": "7.3.7"
   },
   "peerDependencies": {
+    "@radix-ui/react-dialog": "^1",
+    "@radix-ui/react-dropdown-menu": "^2",
+    "@radix-ui/react-popover": "^1",
+    "@radix-ui/react-select": "^2",
     "@radix-ui/react-slot": "^1",
+    "@radix-ui/react-tooltip": "^1",
     "eslint-plugin-jsx-a11y": "^6",
     "lucide-react": "^1",
     "react": "^19",
     "react-dom": "^19",
-    "@radix-ui/react-dialog": "^1",
-    "@radix-ui/react-tooltip": "^1",
-    "@radix-ui/react-dropdown-menu": "^2",
-    "@radix-ui/react-popover": "^1",
-    "@radix-ui/react-select": "^2"
+    "maplibre-gl": "^6"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -135,6 +157,9 @@
       "optional": true
     },
     "@radix-ui/react-select": {
+      "optional": true
+    },
+    "maplibre-gl": {
       "optional": true
     }
   }
