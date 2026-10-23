@@ -156,3 +156,70 @@ export function clusterName(count: number, summary: ClusterSummary, layers: read
 export function tipFor<P extends { label: string }>(pin: P, tooltip?: (pin: P) => ReactNode): ReactNode {
   return tooltip ? tooltip(pin) : pin.label;
 }
+
+/** A cluster bubble in view, read from a cluster feature. */
+export interface ClusterHit {
+  id: number;
+  lat: number;
+  lng: number;
+  count: number;
+  text: string;
+  props: Record<string, unknown>;
+}
+
+/** A feature as `querySourceFeatures` returns it. */
+export interface SourceFeature {
+  geometry: { type: string; coordinates?: unknown };
+  properties: unknown;
+}
+
+/**
+ * The pins and bubbles in view among a clustered source's features: features repeat across tiles and
+ * tiles reach past the viewport, so they are deduped and kept only when `inView`. Bubbles north to south.
+ */
+export function clusterHits(features: Iterable<SourceFeature>, inView: (lngLat: [number, number]) => boolean): { pins: Set<string>; clusters: ClusterHit[] } {
+  const pins = new Set<string>();
+  const clusters = new Map<number, ClusterHit>();
+  for (const f of features) {
+    if (f.geometry.type !== 'Point') continue;
+    const [lng, lat] = f.geometry.coordinates as [number, number];
+    if (!inView([lng, lat])) continue;
+    const p = (f.properties ?? {}) as Record<string, unknown>;
+    if (p.cluster === true && typeof p.cluster_id === 'number') {
+      if (clusters.has(p.cluster_id)) continue;
+      const count = Number(p.point_count);
+      clusters.set(p.cluster_id, { id: p.cluster_id, lng, lat, count, text: String(p.point_count_abbreviated ?? count), props: p });
+    } else if (typeof p.id === 'string') pins.add(p.id);
+  }
+  return { pins, clusters: [...clusters.values()].sort((a, b) => b.lat - a.lat || a.lng - b.lng) };
+}
+
+type ClusterEvent = 'moveend' | 'sourcedata' | 'idle';
+
+/** What `watchClusters` needs from a MapLibre map. */
+export interface ClusterSource {
+  on(type: ClusterEvent, fn: (e: { sourceId?: string }) => void): unknown;
+  off(type: ClusterEvent, fn: (e: { sourceId?: string }) => void): unknown;
+  isSourceLoaded(id: string): boolean;
+}
+
+/**
+ * Calls `refresh` when the camera stops, when `source`'s data loads, and on `idle`. The `idle` pass is
+ * the one that settles the bubbles: while a zoom's tiles load, MapLibre keeps the loaded parent tiles
+ * as cover and `querySourceFeatures` returns their bubbles next to the children's. The last tile's
+ * `sourcedata` still sees the parents; they are dropped on the next frame, which fires no `sourcedata`,
+ * and `idle` comes once every tile is loaded and rendered (Cirrus-Inc/cuix#85). Returns the unsubscribe.
+ */
+export function watchClusters(map: ClusterSource, source: string, refresh: () => void): () => void {
+  const onData = (e: { sourceId?: string }) => {
+    if (e.sourceId === source && map.isSourceLoaded(source)) refresh();
+  };
+  map.on('moveend', refresh);
+  map.on('sourcedata', onData);
+  map.on('idle', refresh);
+  return () => {
+    map.off('moveend', refresh);
+    map.off('sourcedata', onData);
+    map.off('idle', refresh);
+  };
+}

@@ -4,6 +4,8 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
+- fix(street): a `StreetMap` cluster bubble from the previous zoom no longer stays on screen next to the bubbles and pins it split into. While a zoom's tiles load, MapLibre keeps the loaded parent tiles as cover and returns their clusters too; the last tile's `sourcedata` was the final refresh and still saw them. The bubbles are now also refreshed on `idle`, once every tile is loaded and rendered. Closes Cirrus-Inc/cuix#85
+
 ## [0.13.0] - 2026-10-23
 
 - feat(map): `StreetMap`'s `cluster.layers?: string[]` names the layers that cluster; a pin of any other layer is never in a bubble and is always its own marker while in view, stacked above every bubble and clustered pin (by layer rank among unclustered pins). Bubble colour, counts, name and `StreetCluster.layers` cover the clustered layers only. Additive: omitted, every layer clusters as before. Closes Cirrus-Inc/cuix#83
