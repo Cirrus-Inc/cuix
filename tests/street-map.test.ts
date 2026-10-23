@@ -106,8 +106,11 @@ test('the tooltip defaults to the pin label', () => {
   assert.equal(tipFor(pin, (p) => `${p.label} (customer)`), 'Ribault High, Duval (customer)');
 });
 
+// Imported from dist at run time: dist/ does not exist when `tsc --noEmit` runs on a fresh checkout.
+const builtStreet = '../dist/map/street/index.js';
+
 test('StreetMap server-renders with the new props and still loads no maplibre-gl', async () => {
-  const { StreetMap } = await import('../dist/map/street/index.js');
+  const { StreetMap } = await import(builtStreet);
   const html = renderToString(
     h(StreetMap, {
       label: 'Duval County',

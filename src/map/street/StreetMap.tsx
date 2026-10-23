@@ -278,16 +278,18 @@ export function StreetMap({
   // After the camera effect, so a first fit in flight is waited for and the first view is the fitted one.
   const moveEnd = useRef(onMoveEnd);
   moveEnd.current = onMoveEnd;
+  const watching = Boolean(onMoveEnd);
   useEffect(() => {
-    if (!map) return;
+    if (!map || !watching) return;
     return watchView(map, (view) => moveEnd.current?.(view));
-  }, [map]);
+  }, [map, watching]);
 
-  const ranks = useMemo(() => layerRanks(layers), [layers]);
+  const layersKey = layers.map((l) => l.id).join('\n');
+  // Keyed on the ids, not the array: an inline `layers` must not re-send every pin to the worker on each render.
+  const ranks = useMemo(() => layerRanks(layers), [layersKey]);
   const layerOf = useMemo(() => new Map(layers.map((l) => [l.id, l])), [layers]);
   const layersRef = useRef(layers);
   layersRef.current = layers;
-  const layersKey = layers.map((l) => l.id).join('\n');
 
   // Clustering: a GeoJSON source clusters in MapLibre's worker; an invisible layer keeps its tiles loaded,
   // and only the bubbles and pins in view become DOM markers, so thousands of pins cost a few hundred elements.
@@ -418,11 +420,17 @@ export function StreetMap({
     if (!el || !tipSpot) return;
     const enter = () => clearTimeout(tipTimer.current);
     const leave = () => setTip(null);
+    // Dismissible without moving the pointer or focus (1.4.13): Esc also hides a tooltip shown by hover.
+    const esc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') hideTip();
+    };
     el.addEventListener('mouseenter', enter);
     el.addEventListener('mouseleave', leave);
+    document.addEventListener('keydown', esc);
     return () => {
       el.removeEventListener('mouseenter', enter);
       el.removeEventListener('mouseleave', leave);
+      document.removeEventListener('keydown', esc);
     };
   }, [tipSpot?.key]);
 
