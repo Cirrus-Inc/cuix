@@ -4,6 +4,8 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-10-23
+
 - feat(map): `StreetMap`'s `cluster.layers?: string[]` names the layers that cluster; a pin of any other layer is never in a bubble and is always its own marker while in view, stacked above every bubble and clustered pin (by layer rank among unclustered pins). Bubble colour, counts, name and `StreetCluster.layers` cover the clustered layers only. Additive: omitted, every layer clusters as before. Closes Cirrus-Inc/cuix#83
 
 ## [0.12.0] - 2026-10-23
@@ -104,7 +106,8 @@ Phase 1: core day/night tokens at AAA, generated `tokens.css` / `theme.css` / `t
 - docs(tokens): adopt core day/night as the only palette at AAA (Cirrus-Inc/cuix-legacy#2)
 - docs: README with Mermaid, badges and decision index (Cirrus-Inc/cuix-legacy#1)
 
-[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.13.0
 [0.12.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.12.0
 [0.11.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.11.0
 [0.10.1]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.10.1
