@@ -1,6 +1,6 @@
 {
   "name": "@cirrus/cuix",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Accessible-by-default CSS themes and React components: six WCAG 2.2 AAA themes, 44px targets, one semantic vocabulary",
   "keywords": [
     "design-system",
