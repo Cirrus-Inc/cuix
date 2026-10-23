@@ -4,6 +4,8 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
+- feat(map): `StreetMap`'s `cluster.layers?: string[]` names the layers that cluster; a pin of any other layer is never in a bubble and is always its own marker while in view, stacked above every bubble and clustered pin (by layer rank among unclustered pins). Bubble colour, counts, name and `StreetCluster.layers` cover the clustered layers only. Additive: omitted, every layer clusters as before. Closes Cirrus-Inc/cuix#83
+
 ## [0.12.0] - 2026-10-23
 
 - **Behaviour change** feat(map): `StreetMap`'s `layers` order is now its stacking order, last layer on top (it used to set only shapes and colours). A consumer that lists its most important layer first, as a legend does (`['customer', 'school']`), now gets that layer drawn under the others and mixed cluster bubbles in the other layer's colour: pass `[...layers].reverse()` to the map and keep the legend order. HIVE and LuxReach should check their order on the bump.
