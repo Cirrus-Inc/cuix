@@ -6,7 +6,7 @@ import type * as MapLibre from 'maplibre-gl';
 import { Marker, MarkerSwatch } from '../Marker.tsx';
 import { MapStyle, colorVars, mapColor, shapeColor, type MapColors } from '../style.tsx';
 import type { MapLayer, MarkerShape } from '../types.ts';
-import { clusterName, clusterProperties, clusterSummary, layerRanks, pinZ, tipFor, watchView, type StreetView } from './view.ts';
+import { cameraKey, clusterName, clusterProperties, clusterSummary, layerRanks, pinZ, tipFor, watchView, type StreetView } from './view.ts';
 
 // The district level: a street map on MapLibre GL and vector tiles. maplibre-gl
 // is an optional peer, imported inside an effect, so `@cirrus/cuix/map` never
@@ -48,11 +48,11 @@ export interface StreetCluster {
 
 export interface StreetClusterOptions {
   /** Radius of a cluster in px. Default 50. */
-  radius?: number;
+  radius?: number | undefined;
   /** The highest zoom that clusters; above it every pin is drawn. Default 14. */
-  maxZoom?: number;
+  maxZoom?: number | undefined;
   /** A bubble's accessible name. Default "12 pins: Customers 3, Schools 9", from the layer labels, top layer first. */
-  label?: (cluster: StreetCluster) => string;
+  label?: ((cluster: StreetCluster) => string) | undefined;
 }
 
 export interface StreetMapProps {
@@ -72,13 +72,13 @@ export interface StreetMapProps {
   /** Content of the popup opened on a pin; no popup without it. */
   renderPopup?: (pin: StreetPin) => ReactNode;
   /** Shown on hover and keyboard focus, without opening the popup. Default: the pin's `label`. */
-  tooltip?: (pin: StreetPin) => ReactNode;
+  tooltip?: ((pin: StreetPin) => ReactNode) | undefined;
   /** Groups nearby pins into counted bubbles; only the bubbles and pins in view are in the DOM. Off by default. */
-  cluster?: StreetClusterOptions;
+  cluster?: StreetClusterOptions | undefined;
   /** Replaces a bubble's default action, which zooms in until it splits. */
-  onSelectCluster?: (cluster: StreetCluster) => void;
+  onSelectCluster?: ((cluster: StreetCluster) => void) | undefined;
   /** The settled view, 200 ms after the camera stops, and once after mount with the initial view. */
-  onMoveEnd?: (view: StreetView) => void;
+  onMoveEnd?: ((view: StreetView) => void) | undefined;
   /** Where maplibre-gl comes from. Default `import('maplibre-gl')`. */
   loadMapLibre?: () => Promise<typeof MapLibre>;
   colors?: Partial<MapColors>;
@@ -248,7 +248,7 @@ export function StreetMap({
     }
   }, [map, styleUrl]);
 
-  // Camera: bounds, else centre, else the pins' extent.
+  // Camera: bounds, else centre, else the extent of the first pins.
   const pinBox = useMemo((): LngLatBounds | null => {
     if (pins.length === 0) return null;
     let w = Infinity;
@@ -267,13 +267,16 @@ export function StreetMap({
     ];
   }, [pins]);
   const target = bounds ?? (center ? null : pinBox);
-  const cameraKey = JSON.stringify(target ?? [center?.lng, center?.lat, zoom]);
+  // Fits the pins' extent once, on the first non-empty set: a refetch from `onMoveEnd` must not refit.
+  const camera = useRef<string | null>(null);
+  camera.current = cameraKey(camera.current, bounds, center, zoom, pins.length > 0);
+  const camKey = camera.current;
   useEffect(() => {
     if (!map) return;
     const animate = !reducedMotion();
     if (target) map.fitBounds(target, { padding: 48, maxZoom: 15, animate });
     else if (center) map.easeTo({ center: [center.lng, center.lat], zoom, animate });
-  }, [map, cameraKey]);
+  }, [map, camKey]);
 
   // After the camera effect, so a first fit in flight is waited for and the first view is the fitted one.
   const moveEnd = useRef(onMoveEnd);
@@ -373,7 +376,6 @@ export function StreetMap({
 
   // Everything drawn as a DOM marker, in tab order: pins by label, then bubbles north to south.
   const sortedPins = useMemo(() => [...pins].sort((a, b) => a.label.localeCompare(b.label) || a.id.localeCompare(b.id)), [pins]);
-  const clusterLabel = cluster?.label;
   const spots = useMemo((): Spot[] => {
     const pinSpot = (p: StreetPin): Spot => ({ kind: 'pin', key: `p:${p.id}`, lng: p.lng, lat: p.lat, z: pinZ(ranks.get(p.layer)), pin: p, layer: layerOf.get(p.layer) });
     if (!clusterOn) return sortedPins.map(pinSpot);
@@ -389,13 +391,13 @@ export function StreetMap({
         lat: hit.lat,
         z: layers.length + 1,
         cluster: c,
-        name: clusterLabel?.(c) ?? clusterName(hit.count, summary, layers),
+        name: clusterName(hit.count, summary, layers),
         text: hit.text,
         layer: summary.layer,
       });
     }
     return out;
-  }, [clusterOn, shown, sortedPins, ranks, layerOf, layers, clusterLabel]);
+  }, [clusterOn, shown, sortedPins, ranks, layerOf, layers]);
   const spotOf = useMemo(() => new Map(spots.map((s) => [s.key, s])), [spots]);
 
   // The tooltip: on hover or keyboard focus, kept while the pointer moves onto it (1.4.13), Esc hides it.
@@ -547,16 +549,18 @@ export function StreetMap({
       <MapStyle />
       <div ref={container} className="cuix-street-canvas" />
       {map &&
-        spots.map((s) =>
-          createPortal(
+        spots.map((s) => {
+          // `cluster.label` is called here, not in the spots memo, so an inline function costs no marker pass.
+          const name = s.kind === 'pin' ? s.pin.label : (cluster?.label?.(s.cluster) ?? s.name);
+          return createPortal(
             <SpotButton
               spotKey={s.key}
-              name={s.kind === 'pin' ? s.pin.label : s.name}
+              name={name}
               expanded={s.kind === 'pin' && renderPopup ? open === s.pin.id : undefined}
               shape={s.layer ? (s.layer.shape ?? 'circle') : undefined}
               color={s.kind === 'pin' ? s.layer?.color : s.layer ? shapeColor(s.layer.shape ?? 'circle', s.layer.color) : mapColor('foregroundMuted')}
               count={s.kind === 'cluster' ? s.text : undefined}
-              tip={tip === s.key ? (s.kind === 'pin' ? tipFor(s.pin, tooltip) : s.name) : null}
+              tip={tip === s.key ? (s.kind === 'pin' ? tipFor(s.pin, tooltip) : name) : null}
               describe={s.kind === 'pin' && Boolean(tooltip)}
               tipId={tipId}
               tipBox={tipBox}
@@ -564,8 +568,8 @@ export function StreetMap({
             />,
             elementFor(s.key),
             s.key,
-          ),
-        )}
+          );
+        })}
       {popupEl && openPin && renderPopup && createPortal(renderPopup(openPin), popupEl)}
       {failed && (
         <p role="alert" className="cuix-map-error">
