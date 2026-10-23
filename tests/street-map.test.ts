@@ -2,7 +2,23 @@ import { test, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement as h } from 'react';
 import { renderToString } from 'react-dom/server';
-import { cameraKey, clusterName, clusterProperties, clusterSummary, layerRanks, pinZ, tipFor, watchView, wrapBBox, type ViewSource } from '../src/map/street/view.ts';
+import {
+  bubbleZ,
+  cameraKey,
+  clusterName,
+  clusterProperties,
+  clusterSummary,
+  clusteredSet,
+  layerRanks,
+  pinZ,
+  splitPins,
+  tipFor,
+  tipZ,
+  unclusteredPinZ,
+  watchView,
+  wrapBBox,
+  type ViewSource,
+} from '../src/map/street/view.ts';
 
 // A map that only moves when told to: `movestart`/`moveend` listeners and a settable view.
 function fakeMap(moving = false) {
@@ -152,6 +168,70 @@ test('a cluster takes the top-most layer present among its members', () => {
   assert.equal(clusterSummary(LAYERS, { top: -1 }).layer, undefined, 'no known layer: the neutral colour');
 });
 
+const THREE = [...LAYERS, { id: 'interpreter', label: 'Interpreters' }];
+const PINS = [
+  { id: 's1', lat: 30.3, lng: -81.6, layer: 'school', label: 'S1' },
+  { id: 'i1', lat: 30.3, lng: -81.6, layer: 'interpreter', label: 'I1' },
+  { id: 'c1', lat: 30.31, lng: -81.61, layer: 'customer', label: 'C1' },
+];
+
+test('cluster.layers: a pin of an excluded layer never enters the clustered source', () => {
+  const only = clusteredSet(['school', 'customer']);
+  const { clustered, free } = splitPins(PINS, only);
+  assert.deepEqual(
+    clustered.map((p) => p.id),
+    ['s1', 'c1'],
+  );
+  assert.deepEqual(
+    free.map((p) => p.id),
+    ['i1'],
+  );
+  assert.deepEqual(splitPins(PINS, clusteredSet([])).clustered, [], 'an empty list clusters nothing');
+});
+
+test('cluster.layers: bubble swatch and counts come from the clustered layers only', () => {
+  const only = clusteredSet(['school', 'customer']);
+  const props = clusterProperties(THREE, only);
+  assert.ok('n0' in props && 'n1' in props);
+  assert.ok(!('n2' in props), 'no count for the interpreter layer');
+  // Even if MapLibre handed back an interpreter rank, the bubble would not take it.
+  const s = clusterSummary(THREE, { top: 2, n0: 4, n1: 1, n2: 3 }, only);
+  assert.equal(s.layer, undefined);
+  assert.deepEqual(s.layers, [
+    ['customer', 1],
+    ['school', 4],
+  ]);
+  const real = clusterSummary(THREE, { top: 1, n0: 4, n1: 1 }, only);
+  assert.equal(real.layer?.id, 'customer');
+  assert.equal(clusterName(5, real, THREE), '5 pins: Customers 1, Schools 4');
+});
+
+test('cluster.layers omitted: every layer clusters, as before', () => {
+  assert.equal(clusteredSet(undefined), null);
+  const { clustered, free } = splitPins(PINS, null);
+  assert.equal(clustered.length, 3);
+  assert.equal(free.length, 0);
+  assert.deepEqual(clusterProperties(THREE), clusterProperties(THREE, null));
+  assert.deepEqual(Object.keys(clusterProperties(THREE)).sort(), ['n0', 'n1', 'n2', 'top']);
+  const s = clusterSummary(THREE, { top: 2, n0: 4, n2: 3 });
+  assert.equal(s.layer?.id, 'interpreter');
+  assert.deepEqual(s.layers, [
+    ['interpreter', 3],
+    ['school', 4],
+  ]);
+});
+
+test('z order: unclustered pins sit above every bubble and clustered pin, by layer rank; the tooltip above all', () => {
+  const n = THREE.length;
+  const ranks = layerRanks(THREE);
+  const topClustered = Math.max(...THREE.map((l) => pinZ(ranks.get(l.id))));
+  assert.ok(bubbleZ(n) > topClustered);
+  assert.ok(unclusteredPinZ(ranks.get('school'), n) > bubbleZ(n), 'even the lowest layer, when unclustered, is above the bubbles');
+  assert.ok(unclusteredPinZ(ranks.get('interpreter'), n) > unclusteredPinZ(ranks.get('school'), n));
+  assert.ok(unclusteredPinZ(ranks.get('unknown'), n) > bubbleZ(n));
+  assert.ok(tipZ(n) > unclusteredPinZ(ranks.get('interpreter'), n));
+});
+
 test('the tooltip defaults to the pin label', () => {
   const pin = { id: '1', lat: 30.3, lng: -81.6, layer: 'school', label: 'Ribault High, Duval' };
   assert.equal(tipFor(pin), 'Ribault High, Duval');
@@ -168,7 +248,7 @@ test('StreetMap server-renders with the new props and still loads no maplibre-gl
       label: 'Duval County',
       layers: LAYERS,
       pins: [{ id: '1', lat: 30.3, lng: -81.6, layer: 'customer', label: 'A school' }],
-      cluster: { radius: 40, maxZoom: 13 },
+      cluster: { radius: 40, maxZoom: 13, layers: ['school'] },
       tooltip: (p: { label: string }) => p.label,
       onMoveEnd: () => {},
       onSelectCluster: () => {},

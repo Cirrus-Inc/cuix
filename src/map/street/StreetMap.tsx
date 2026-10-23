@@ -6,7 +6,7 @@ import type * as MapLibre from 'maplibre-gl';
 import { Marker, MarkerSwatch } from '../Marker.tsx';
 import { MapStyle, colorVars, mapColor, shapeColor, type MapColors } from '../style.tsx';
 import type { MapLayer, MarkerShape } from '../types.ts';
-import { cameraKey, clusterName, clusterProperties, clusterSummary, layerRanks, pinZ, tipFor, watchView, type StreetView } from './view.ts';
+import { bubbleZ, cameraKey, clusterName, clusterProperties, clusterSummary, clusteredSet, layerRanks, pinZ, splitPins, tipFor, tipZ, unclusteredPinZ, watchView, type StreetView } from './view.ts';
 
 // The district level: a street map on MapLibre GL and vector tiles. maplibre-gl
 // is an optional peer, imported inside an effect, so `@cirrus/cuix/map` never
@@ -40,9 +40,9 @@ export interface StreetCluster {
   lat: number;
   lng: number;
   count: number;
-  /** The top-most layer (last in `layers`) present among the members: the bubble takes its colour and shape. */
+  /** The top-most layer (last in `layers`) present among the members: the bubble takes its colour and shape. Only layers that cluster count. */
   layer?: string;
-  /** Members per layer id. */
+  /** Members per layer id; only layers that cluster (see `StreetClusterOptions.layers`). */
   layers: Record<string, number>;
 }
 
@@ -53,6 +53,12 @@ export interface StreetClusterOptions {
   maxZoom?: number | undefined;
   /** A bubble's accessible name. Default "12 pins: Customers 3, Schools 9", from the layer labels, top layer first. */
   label?: ((cluster: StreetCluster) => string) | undefined;
+  /**
+   * The layer ids that cluster. A pin of any other layer is never in a bubble: it is always its own
+   * marker while in view, drawn above every bubble and clustered pin, by layer rank among such pins.
+   * Default: every layer clusters.
+   */
+  layers?: string[] | undefined;
 }
 
 export interface StreetMapProps {
@@ -300,18 +306,27 @@ export function StreetMap({
   const clusterOn = Boolean(cluster);
   const radius = cluster?.radius ?? 50;
   const maxZoom = cluster?.maxZoom ?? 14;
+  // Compared by value, so an inline `cluster.layers` array costs nothing.
+  const onlyKey = cluster?.layers ? `only:${cluster.layers.join('\n')}` : '';
+  const only = useMemo(() => clusteredSet(cluster?.layers), [onlyKey]);
+  const split = useMemo(() => splitPins(pins, only), [pins, only]);
   const data = useMemo(
     (): PinData | null =>
       clusterOn
         ? {
             type: 'FeatureCollection',
-            features: pins.map((p) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lng, p.lat] }, properties: { id: p.id, z: ranks.get(p.layer) ?? -1 } })),
+            features: split.clustered.map((p) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lng, p.lat] }, properties: { id: p.id, z: ranks.get(p.layer) ?? -1 } })),
           }
         : null,
-    [clusterOn, pins, ranks],
+    [clusterOn, split, ranks],
   );
   const dataRef = useRef(data);
   dataRef.current = data;
+  // Pins outside `cluster.layers`: never in the source, drawn as markers when in view.
+  const freeRef = useRef(split.free);
+  freeRef.current = split.free;
+  const onlyRef = useRef(only);
+  onlyRef.current = only;
   const [shown, setShown] = useState<Shown | null>(null);
 
   useEffect(() => {
@@ -324,7 +339,7 @@ export function StreetMap({
         cluster: true,
         clusterRadius: radius,
         clusterMaxZoom: maxZoom,
-        clusterProperties: clusterProperties(layersRef.current),
+        clusterProperties: clusterProperties(layersRef.current, onlyRef.current),
       });
       map.addLayer({ id: SOURCE, type: 'circle', source: SOURCE, paint: { 'circle-radius': 0, 'circle-opacity': 0 } });
     };
@@ -345,6 +360,7 @@ export function StreetMap({
           clusters.set(p.cluster_id, { id: p.cluster_id, lng, lat, count, text: String(p.point_count_abbreviated ?? count), props: p });
         } else if (typeof p.id === 'string') pinIds.add(p.id);
       }
+      for (const p of freeRef.current) if (view.contains([p.lng, p.lat])) pinIds.add(p.id);
       const list = [...clusters.values()].sort((a, b) => b.lat - a.lat || a.lng - b.lng);
       const key = `${[...pinIds].sort().join('\n')}|${list.map((c) => c.id).join(',')}`;
       setShown((cur) => (cur?.key === key ? cur : { key, pins: pinIds, clusters: list }));
@@ -368,7 +384,7 @@ export function StreetMap({
       if (map.getSource(SOURCE)) map.removeSource(SOURCE);
       setShown(null);
     };
-  }, [map, clusterOn, radius, maxZoom, layersKey]);
+  }, [map, clusterOn, radius, maxZoom, layersKey, onlyKey]);
 
   useEffect(() => {
     const source = map?.getSource(SOURCE) as MapLibre.GeoJSONSource | undefined;
@@ -378,19 +394,24 @@ export function StreetMap({
   // Everything drawn as a DOM marker, in tab order: pins by label, then bubbles north to south.
   const sortedPins = useMemo(() => [...pins].sort((a, b) => a.label.localeCompare(b.label) || a.id.localeCompare(b.id)), [pins]);
   const spots = useMemo((): Spot[] => {
-    const pinSpot = (p: StreetPin): Spot => ({ kind: 'pin', key: `p:${p.id}`, lng: p.lng, lat: p.lat, z: pinZ(ranks.get(p.layer)), pin: p, layer: layerOf.get(p.layer) });
+    const n = layers.length;
+    const pinSpot = (p: StreetPin): Spot => {
+      const rank = ranks.get(p.layer);
+      const z = clusterOn && only && !only.has(p.layer) ? unclusteredPinZ(rank, n) : pinZ(rank);
+      return { kind: 'pin', key: `p:${p.id}`, lng: p.lng, lat: p.lat, z, pin: p, layer: layerOf.get(p.layer) };
+    };
     if (!clusterOn) return sortedPins.map(pinSpot);
     if (!shown) return [];
     const out = sortedPins.filter((p) => shown.pins.has(p.id)).map(pinSpot);
     for (const hit of shown.clusters) {
-      const summary = clusterSummary(layers, hit.props);
+      const summary = clusterSummary(layers, hit.props, only);
       const c: StreetCluster = { id: hit.id, lat: hit.lat, lng: hit.lng, count: hit.count, layer: summary.layer?.id, layers: Object.fromEntries(summary.layers) };
       out.push({
         kind: 'cluster',
         key: `c:${String(hit.id)}`,
         lng: hit.lng,
         lat: hit.lat,
-        z: layers.length + 1,
+        z: bubbleZ(n),
         cluster: c,
         name: clusterName(hit.count, summary, layers),
         text: hit.text,
@@ -398,7 +419,7 @@ export function StreetMap({
       });
     }
     return out;
-  }, [clusterOn, shown, sortedPins, ranks, layerOf, layers]);
+  }, [clusterOn, shown, sortedPins, ranks, layerOf, layers, only]);
   const spotOf = useMemo(() => new Map(spots.map((s) => [s.key, s])), [spots]);
 
   // The tooltip: on hover or keyboard focus, kept while the pointer moves onto it (1.4.13), Esc hides it.
@@ -449,7 +470,7 @@ export function StreetMap({
     return el;
   };
   // Above every layer and every bubble: the spot showing its tooltip.
-  const topZ = layers.length + 2;
+  const topZ = tipZ(layers.length);
   const tipKey = useRef(tip);
   tipKey.current = tip;
 

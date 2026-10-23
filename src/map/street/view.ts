@@ -85,14 +85,42 @@ export function layerRanks(layers: readonly MapLayer[]): Map<string, number> {
   return new Map(layers.map((l, i) => [l.id, i]));
 }
 
-/** The CSS z-index of a pin's marker: above the map's own markers at 0, the last layer highest. */
+/**
+ * Stacking, for `n` layers, bottom to top:
+ * - `pinZ(rank)`, 0..n: a pin that clusters (or any pin when clustering is off), by layer rank;
+ * - `bubbleZ(n)`, n + 1: every cluster bubble;
+ * - `unclusteredPinZ(rank, n)`, n + 2..2n + 2: a pin of a layer outside `cluster.layers`, by layer rank,
+ *   so a sparse layer that never clusters is never under a bubble or a clustered pin;
+ * - `tipZ(n)`, 2n + 3: the spot showing its tooltip.
+ */
 export const pinZ = (rank: number | undefined) => (rank ?? -1) + 1;
+export const bubbleZ = (n: number) => n + 1;
+export const unclusteredPinZ = (rank: number | undefined, n: number) => n + 2 + pinZ(rank);
+export const tipZ = (n: number) => 2 * n + 3;
 
-/** Per-cluster aggregates MapLibre computes: `top` is the highest layer rank among the members, `n<i>` the members of layer i. */
-export function clusterProperties(layers: readonly MapLayer[]): Record<string, [unknown, unknown]> {
+/** The layer ids that cluster: `cluster.layers` as a set, or null when every layer clusters. */
+export const clusteredSet = (ids: readonly string[] | undefined): ReadonlySet<string> | null => (ids ? new Set(ids) : null);
+
+/** Whether a pin of `layer` goes into the clustered source. */
+export const clusters = (only: ReadonlySet<string> | null, layer: string) => !only || only.has(layer);
+
+/** Splits pins into those that cluster and those always drawn as markers. */
+export function splitPins<P extends { layer: string }>(pins: readonly P[], only: ReadonlySet<string> | null): { clustered: P[]; free: P[] } {
+  if (!only) return { clustered: [...pins], free: [] };
+  const clustered: P[] = [];
+  const free: P[] = [];
+  for (const p of pins) (only.has(p.layer) ? clustered : free).push(p);
+  return { clustered, free };
+}
+
+/**
+ * Per-cluster aggregates MapLibre computes: `top` is the highest layer rank among the members, `n<i>` the members of layer i.
+ * Only the layers that cluster get a count.
+ */
+export function clusterProperties(layers: readonly MapLayer[], only: ReadonlySet<string> | null = null): Record<string, [unknown, unknown]> {
   const props: Record<string, [unknown, unknown]> = { top: ['max', ['get', 'z']] };
-  layers.forEach((_, i) => {
-    props[`n${String(i)}`] = ['+', ['case', ['==', ['get', 'z'], i], 1, 0]];
+  layers.forEach((l, i) => {
+    if (clusters(only, l.id)) props[`n${String(i)}`] = ['+', ['case', ['==', ['get', 'z'], i], 1, 0]];
   });
   return props;
 }
@@ -104,15 +132,17 @@ export interface ClusterSummary {
   layers: [string, number][];
 }
 
-/** Reads `clusterProperties`' aggregates back from a cluster feature's properties. */
-export function clusterSummary(layers: readonly MapLayer[], props: Readonly<Record<string, unknown>>): ClusterSummary {
+/** Reads `clusterProperties`' aggregates back from a cluster feature's properties; a layer outside `only` is never counted nor the bubble's colour. */
+export function clusterSummary(layers: readonly MapLayer[], props: Readonly<Record<string, unknown>>, only: ReadonlySet<string> | null = null): ClusterSummary {
   const top = typeof props.top === 'number' ? props.top : -1;
   const counts: [string, number][] = [];
   for (let i = layers.length - 1; i >= 0; i--) {
+    if (!clusters(only, layers[i].id)) continue;
     const n = props[`n${String(i)}`];
     if (typeof n === 'number' && n > 0) counts.push([layers[i].id, n]);
   }
-  return { layer: layers[top], layers: counts };
+  const layer = layers[top] as MapLayer | undefined;
+  return { layer: layer && clusters(only, layer.id) ? layer : undefined, layers: counts };
 }
 
 /** The default accessible name of a cluster bubble, e.g. "12 pins: Customers 3, Schools 9". */
