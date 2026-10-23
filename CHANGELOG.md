@@ -4,6 +4,8 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-23
+
 - **Behaviour change** feat(map): `StreetMap`'s `layers` order is now its stacking order, last layer on top (it used to set only shapes and colours). A consumer that lists its most important layer first, as a legend does (`['customer', 'school']`), now gets that layer drawn under the others and mixed cluster bubbles in the other layer's colour: pass `[...layers].reverse()` to the map and keep the legend order. HIVE and LuxReach should check their order on the bump.
 - **Behaviour change** fix(map): with no `bounds` or `center`, `StreetMap` fits the extent of the first non-empty `pins` only; a later `pins` no longer refits the camera, so pins fetched from `onMoveEnd` cannot loop the camera. `bounds` and `center`/`zoom` still move it whenever their values change.
 - feat(map): `StreetMap` clusters, reports its viewport, stacks layers and shows a hover tooltip. `cluster: { radius?, maxZoom?, label? }` (opt-in) clusters with MapLibre's GeoJSON source and draws only the bubbles and pins in view as DOM controls, so ~5,000 pins stay responsive; a bubble takes the colour and shape of the top-most layer among its members and is named by its count per layer; a click zooms in, or `onSelectCluster(c)`. `onMoveEnd({ bbox, zoom })` is debounced 200 ms and also fires once with the initial view. `layers` order is the stacking order, last on top (z-index; tab order stays by label). `tooltip(pin)` on hover and keyboard focus, defaulting to the pin `label`. `onSelectPin` and the `label` accessible name are unchanged. `docs/map.md` documents the MapLibre worker a Vite production build needs (`setWorkerUrl` through `loadMapLibre`). Closes Cirrus-Inc/cuix#79
@@ -100,7 +102,8 @@ Phase 1: core day/night tokens at AAA, generated `tokens.css` / `theme.css` / `t
 - docs(tokens): adopt core day/night as the only palette at AAA (Cirrus-Inc/cuix-legacy#2)
 - docs: README with Mermaid, badges and decision index (Cirrus-Inc/cuix-legacy#1)
 
-[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.12.0
 [0.11.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.11.0
 [0.10.1]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.10.1
 [0.10.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.10.0
