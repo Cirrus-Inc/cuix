@@ -13,8 +13,8 @@ export interface StreetView {
 
 /** What `watchView` needs from a MapLibre map. */
 export interface ViewSource {
-  on(type: 'moveend', fn: () => void): unknown;
-  off(type: 'moveend', fn: () => void): unknown;
+  on(type: 'movestart' | 'moveend', fn: () => void): unknown;
+  off(type: 'movestart' | 'moveend', fn: () => void): unknown;
   isMoving(): boolean;
   getBounds(): { getWest(): number; getSouth(): number; getEast(): number; getNorth(): number };
   getZoom(): number;
@@ -22,27 +22,62 @@ export interface ViewSource {
 
 export const MOVE_END_DEBOUNCE_MS = 200;
 
+/** A longitude in [-180, 180]. */
+export const wrapLng = (lng: number) => (lng >= -180 && lng <= 180 ? lng : ((((lng + 180) % 360) + 360) % 360) - 180);
+
+/**
+ * The bbox of a view with its longitudes wrapped into [-180, 180]. A view a full turn wide or
+ * more is [-180, s, 180, n]; a view across the antimeridian has west > east (RFC 7946 §5.2).
+ */
+export function wrapBBox(west: number, south: number, east: number, north: number): StreetBBox {
+  if (east - west >= 360) return [-180, south, 180, north];
+  return [wrapLng(west), south, wrapLng(east), north];
+}
+
 /**
  * Calls `cb` with the settled view `ms` after the last `moveend`, and once after
  * subscribing: at once when the camera is still, else after the move in flight
- * (the initial fit) ends. Returns the unsubscribe.
+ * (the initial fit) ends. A `movestart` cancels a pending call, so a gesture begun
+ * within `ms` is never reported mid-move. Returns the unsubscribe.
  */
 export function watchView(map: ViewSource, cb: (view: StreetView) => void, ms = MOVE_END_DEBOUNCE_MS): () => void {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const fire = () => {
     const b = map.getBounds();
-    cb({ bbox: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()], zoom: map.getZoom() });
+    cb({ bbox: wrapBBox(b.getWest(), b.getSouth(), b.getEast(), b.getNorth()), zoom: map.getZoom() });
   };
+  const cancel = () => clearTimeout(timer);
   const schedule = () => {
     clearTimeout(timer);
     timer = setTimeout(fire, ms);
   };
+  map.on('movestart', cancel);
   map.on('moveend', schedule);
   if (!map.isMoving()) schedule();
   return () => {
     clearTimeout(timer);
+    map.off('movestart', cancel);
     map.off('moveend', schedule);
   };
+}
+
+/**
+ * What the camera follows, as a key that changes only when it must move: `bounds`, else
+ * `center` + `zoom`, else the pins' extent, but only the first non-empty set of pins. Later
+ * pins never move the camera, so pins fetched for the view in `onMoveEnd` cannot refit it.
+ * `prev` is the key of the previous render.
+ */
+export function cameraKey(
+  prev: string | null,
+  bounds: unknown,
+  center: { lng: number; lat: number } | undefined,
+  zoom: number,
+  hasPins: boolean,
+): string | null {
+  if (bounds) return `b:${JSON.stringify(bounds)}`;
+  if (center) return `c:${JSON.stringify([center.lng, center.lat, zoom])}`;
+  if (hasPins || prev === 'pins') return 'pins';
+  return null;
 }
 
 /** A pin's stacking rank: its layer's index in `layers`, so the last layer is on top. -1 for an unknown layer. */
