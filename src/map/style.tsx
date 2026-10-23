@@ -106,6 +106,11 @@ const CSS = `
 .cuix-street>.cuix-street-canvas{position:absolute;inset:0}
 .cuix-street-pin{display:grid;place-items:center;width:var(--cuix-target-min, 44px);height:var(--cuix-target-min, 44px);padding:0;border:0;border-radius:50%;background:none;cursor:pointer}
 .cuix-street-pin>svg{width:16px;height:16px;overflow:visible}
+.cuix-street-cluster>svg{width:36px;height:36px}
+.cuix-street-bubble{stroke-width:3}
+.cuix-street-tip{left:50%;top:8px}
+.cuix-street .maplibregl-canvas-container{isolation:isolate}
+.cuix-street .maplibregl-popup{z-index:100000}
 .cuix-map-focus:focus-visible{outline:2px solid ${c('focusRing')};outline-offset:2px}
 @media (prefers-reduced-motion: reduce){.cuix-map-camera,.cuix-layer-thumb{transition:none}}
 @media (forced-colors: active){

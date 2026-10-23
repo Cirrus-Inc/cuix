@@ -17,6 +17,20 @@ and the app imports `maplibre-gl/dist/maplibre-gl.css` itself. Under Vite, keep 
 export default defineConfig({ optimizeDeps: { exclude: ['maplibre-gl'] } });
 ```
 
+A production build needs one more step: Vite does not bundle MapLibre's worker on its own, so the built app shows a blank map and logs "Worker failed to load" while dev works. Hand the worker's URL to MapLibre through `loadMapLibre`:
+
+```tsx
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+
+const loadMapLibre = () =>
+  import('maplibre-gl').then((ml) => {
+    ml.setWorkerUrl(workerUrl);
+    return ml;
+  });
+
+<StreetMap loadMapLibre={loadMapLibre} … />
+```
+
 ## Subpaths
 
 | Import | What |
@@ -78,11 +92,19 @@ One `role="switch"` per layer; the row is the 44px target and its text (label, h
   layers={layers}
   onSelectPin={(pin) => select(pin.id)}
   renderPopup={(pin) => <PinCard id={pin.id} />}
+  tooltip={(pin) => pin.label}
+  cluster={{ radius: 50, maxZoom: 14 }}
+  onMoveEnd={({ bbox, zoom }) => fetchPins(bbox, zoom)}
   style={{ height: 480 }}
 />
 ```
 
 `maplibre-gl` is imported inside an effect, so `@cirrus/cuix/map` never loads it and SSR renders an empty, named region. Camera: `bounds`, else `center` + `zoom`, else the pins' extent. `styleUrl` defaults to OpenFreeMap Liberty (keyless); point it at self-hosted tiles when needed. The attribution control is always on (the tiles' licence requires it). Pins are 44px buttons (`--cuix-target-min`, 2.5.5) around a 16px marker, named by `label`, in label order (kept when pins are added later); `renderPopup` renders into a MapLibre popup through a portal, so it keeps the app's context.
+
+- **Layer order is stacking order.** `layers` is drawn in array order, the last layer on top: with `['school', 'customer']` a customer pin is never under a school pin. It is a z-index per layer, not DOM order, so the tab order stays by label.
+- **`onMoveEnd(view)`** gets `{ bbox: [west, south, east, north], zoom }` 200 ms after the camera stops (a burst of moves is one call), and once after mount with the initial view; when the camera opens on a fit, after the fit. Fetch by viewport from it; there is no separate first-load path.
+- **`cluster`** (off by default) groups pins with MapLibre's GeoJSON clustering, which runs in its worker: `radius` in px (default 50) and `maxZoom`, the last zoom that clusters (default 14). Only the bubbles and pins in view are DOM controls, so ~5,000 pins in one viewport stay responsive. A bubble shows the count with a ring in the colour, and a corner marker in the shape, of the top-most layer present among its members: one customer among 90 schools gives a customer bubble. Its accessible name lists the members per layer, top layer first ("91 pins: Customers 1, Schools 90"); `cluster.label(c)` replaces it. A click zooms in until the bubble splits (focus moves to the map, from where Tab reaches the new pins); `onSelectCluster(c)` replaces that, with `c` = `{ id, lat, lng, count, layer, layers }`. Bubbles follow the pins in the tab order, north to south. Pins off screen are not in the tab order while clustering is on.
+- **`tooltip(pin)`** is shown on hover and on keyboard focus, never on a click (the popup opens there), stays while the pointer moves onto it and hides on Esc (1.4.13). Without the prop it shows the pin's `label`; that copy is `aria-hidden`, since it is already the name. A custom tooltip is the button's `aria-describedby` while shown. A bubble's tooltip is its name.
 
 ## Colours
 
@@ -92,4 +114,4 @@ The styles are one `<style>` element React 19 hoists to `<head>` once. Under a C
 
 ## Not included
 
-Free pan and zoom on the SVG levels, a phone layout, clustering at the street level.
+Free pan and zoom on the SVG levels, a phone layout, the members of a street-level cluster (read them from your own data with the bubble's position).
