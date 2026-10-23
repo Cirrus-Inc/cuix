@@ -6,7 +6,7 @@ import type * as MapLibre from 'maplibre-gl';
 import { Marker, MarkerSwatch } from '../Marker.tsx';
 import { MapStyle, colorVars, mapColor, shapeColor, type MapColors } from '../style.tsx';
 import type { MapLayer, MarkerShape } from '../types.ts';
-import { bubbleZ, cameraKey, clusterName, clusterProperties, clusterSummary, clusteredSet, layerRanks, pinZ, splitPins, tipFor, tipZ, unclusteredPinZ, watchView, type StreetView } from './view.ts';
+import { bubbleZ, cameraKey, clusterHits, clusterName, clusterProperties, clusterSummary, clusteredSet, layerRanks, pinZ, splitPins, tipFor, tipZ, unclusteredPinZ, watchClusters, watchView, type ClusterHit, type StreetView } from './view.ts';
 
 // The district level: a street map on MapLibre GL and vector tiles. maplibre-gl
 // is an optional peer, imported inside an effect, so `@cirrus/cuix/map` never
@@ -100,15 +100,6 @@ const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(pre
 
 const SOURCE = 'cuix-street-pins';
 type PinData = Parameters<MapLibre.GeoJSONSource['setData']>[0];
-
-interface ClusterHit {
-  id: number;
-  lat: number;
-  lng: number;
-  count: number;
-  text: string;
-  props: Record<string, unknown>;
-}
 
 interface Shown {
   key: string;
@@ -346,27 +337,11 @@ export function StreetMap({
     const refresh = () => {
       if (!map.getSource(SOURCE) || !map.isSourceLoaded(SOURCE)) return;
       const view = map.getBounds();
-      const pinIds = new Set<string>();
-      const clusters = new Map<number, ClusterHit>();
-      // Features repeat across tiles and tiles reach past the viewport: dedupe, then keep what is in view.
-      for (const f of map.querySourceFeatures(SOURCE)) {
-        if (f.geometry.type !== 'Point') continue;
-        const [lng, lat] = f.geometry.coordinates;
-        if (!view.contains([lng, lat])) continue;
-        const p = f.properties as Record<string, unknown>;
-        if (p.cluster === true && typeof p.cluster_id === 'number') {
-          if (clusters.has(p.cluster_id)) continue;
-          const count = Number(p.point_count);
-          clusters.set(p.cluster_id, { id: p.cluster_id, lng, lat, count, text: String(p.point_count_abbreviated ?? count), props: p });
-        } else if (typeof p.id === 'string') pinIds.add(p.id);
-      }
-      for (const p of freeRef.current) if (view.contains([p.lng, p.lat])) pinIds.add(p.id);
-      const list = [...clusters.values()].sort((a, b) => b.lat - a.lat || a.lng - b.lng);
+      const inView = (lngLat: [number, number]) => view.contains(lngLat);
+      const { pins: pinIds, clusters: list } = clusterHits(map.querySourceFeatures(SOURCE), inView);
+      for (const p of freeRef.current) if (inView([p.lng, p.lat])) pinIds.add(p.id);
       const key = `${[...pinIds].sort().join('\n')}|${list.map((c) => c.id).join(',')}`;
       setShown((cur) => (cur?.key === key ? cur : { key, pins: pinIds, clusters: list }));
-    };
-    const onData = (e: MapLibre.MapSourceDataEvent) => {
-      if (e.sourceId === SOURCE && map.isSourceLoaded(SOURCE)) refresh();
     };
     try {
       install();
@@ -374,12 +349,10 @@ export function StreetMap({
       // The style is still loading: 'style.load' installs the source.
     }
     map.on('style.load', install);
-    map.on('moveend', refresh);
-    map.on('sourcedata', onData);
+    const unwatch = watchClusters(map, SOURCE, refresh);
     return () => {
       map.off('style.load', install);
-      map.off('moveend', refresh);
-      map.off('sourcedata', onData);
+      unwatch();
       if (map.getLayer(SOURCE)) map.removeLayer(SOURCE);
       if (map.getSource(SOURCE)) map.removeSource(SOURCE);
       setShown(null);

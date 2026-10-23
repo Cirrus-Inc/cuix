@@ -5,6 +5,7 @@ import { renderToString } from 'react-dom/server';
 import {
   bubbleZ,
   cameraKey,
+  clusterHits,
   clusterName,
   clusterProperties,
   clusterSummary,
@@ -15,8 +16,11 @@ import {
   tipFor,
   tipZ,
   unclusteredPinZ,
+  watchClusters,
   watchView,
   wrapBBox,
+  type ClusterSource,
+  type SourceFeature,
   type ViewSource,
 } from '../src/map/street/view.ts';
 
@@ -236,6 +240,71 @@ test('the tooltip defaults to the pin label', () => {
   const pin = { id: '1', lat: 30.3, lng: -81.6, layer: 'school', label: 'Ribault High, Duval' };
   assert.equal(tipFor(pin), 'Ribault High, Duval');
   assert.equal(tipFor(pin, (p) => `${p.label} (customer)`), 'Ribault High, Duval (customer)');
+});
+
+const pt = (lng: number, lat: number, properties: Record<string, unknown>): SourceFeature => ({ geometry: { type: 'Point', coordinates: [lng, lat] }, properties });
+const bubble = (id: number, lng: number, lat: number, n: number) => pt(lng, lat, { cluster: true, cluster_id: id, point_count: n });
+
+test('clusterHits dedupes features repeated across tiles and keeps only what is in view', () => {
+  const inView = ([lng]: [number, number]) => lng > -82;
+  const { pins, clusters } = clusterHits(
+    [bubble(7, -81.5, 30, 3), bubble(7, -81.5, 30, 3), bubble(9, -81.4, 30.5, 2), bubble(11, -83, 30, 4), pt(-81.6, 30.1, { id: 'a' }), pt(-81.6, 30.1, { id: 'a' }), pt(-83, 30, { id: 'off' })],
+    inView,
+  );
+  assert.deepEqual([...pins], ['a']);
+  assert.deepEqual(
+    clusters.map((c) => c.id),
+    [9, 7],
+    'north to south, the off-screen bubble dropped',
+  );
+});
+
+// A map that fires the cluster events when told to; the test stands in for its tile pyramid.
+function fakeClusterMap() {
+  const on = new Map<string, Set<(e: { sourceId?: string }) => void>>();
+  const map: ClusterSource = {
+    on: (t, fn) => on.set(t, (on.get(t) ?? new Set()).add(fn)),
+    off: (t, fn) => on.get(t)?.delete(fn),
+    isSourceLoaded: () => true,
+  };
+  const fire = (t: string, e: { sourceId?: string } = {}) => {
+    for (const fn of on.get(t) ?? []) fn(e);
+  };
+  return { map, fire, on };
+}
+
+test('watchClusters: the idle pass after a zoom drops a parent bubble shown next to its children (cuix#85)', () => {
+  const { map, fire, on } = fakeClusterMap();
+  // z10: one bubble of 6. Zoomed to z11: it splits into a bubble of 4 and a pin pair.
+  const parent = bubble(330, -82.46, 27.95, 6);
+  const children = [bubble(1000, -82.45, 27.96, 4), pt(-82.47, 27.94, { id: 'i1' }), pt(-82.47, 27.94, { id: 'i2' })];
+  let tiles: SourceFeature[] = [parent];
+  let shown: ReturnType<typeof clusterHits> = { pins: new Set(), clusters: [] };
+  const stop = watchClusters(map, 'pins', () => (shown = clusterHits(tiles, () => true)));
+
+  fire('moveend');
+  // The last ideal tile loads: `sourcedata` fires while the parent tile is still retained as cover.
+  tiles = [parent, ...children];
+  fire('sourcedata', { sourceId: 'pins' });
+  assert.deepEqual(
+    shown.clusters.map((c) => c.id),
+    [1000, 330],
+    'the stale parent is still in the query here',
+  );
+  // The next frame releases the parent and fires no sourcedata; then the map goes idle.
+  tiles = children;
+  fire('sourcedata', { sourceId: 'basemap' });
+  assert.ok(shown.clusters.some((c) => c.id === 330), 'another source loading does not refresh');
+  fire('idle');
+  assert.deepEqual(
+    shown.clusters.map((c) => c.id),
+    [1000],
+    'the parent bubble is gone',
+  );
+  assert.deepEqual([...shown.pins].sort(), ['i1', 'i2']);
+
+  stop();
+  for (const fns of on.values()) assert.equal(fns.size, 0, 'every listener is removed');
 });
 
 // Imported from dist at run time: dist/ does not exist when `tsc --noEmit` runs on a fresh checkout.
