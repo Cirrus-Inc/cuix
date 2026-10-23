@@ -268,10 +268,11 @@ export function StreetMap({
   }, [pins]);
   const target = bounds ?? (center ? null : pinBox);
   // Fits the pins' extent once, on the first non-empty set: a refetch from `onMoveEnd` must not refit.
-  const camera = useRef<string | null>(null);
-  camera.current = cameraKey(camera.current, bounds, center, zoom, pins.length > 0);
-  const camKey = camera.current;
+  // The previous key is the committed one, set in the effect: a render React discards must not latch the fit.
+  const committedCamKey = useRef<string | null>(null);
+  const camKey = cameraKey(committedCamKey.current, bounds, center, zoom, pins.length > 0);
   useEffect(() => {
+    committedCamKey.current = camKey;
     if (!map) return;
     const animate = !reducedMotion();
     if (target) map.fitBounds(target, { padding: 48, maxZoom: 15, animate });
