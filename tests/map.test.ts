@@ -5,7 +5,7 @@ import { createElement as h } from 'react';
 import { renderToString } from 'react-dom/server';
 import { albersUsa } from '../src/map/albersUsa.ts';
 import { groupPoints } from '../src/map/groupPoints.ts';
-import { cameraFor, intersects, pathBBox, shapePoints, visibleRect } from '../src/map/mapMath.ts';
+import { ZOOM_MAX, ZOOM_MIN, cameraFor, clampZoom, intersects, pathBBox, shapePoints, stepZoom, visibleRect, zoomCamera } from '../src/map/mapMath.ts';
 import { US_STATES } from '../src/map/geo/usStates.ts';
 
 // Reference values produced by d3-geo 3.1.1 geoAlbersUsa().scale(1300).translate([487.5, 305])
@@ -55,6 +55,54 @@ test('camera fits a box and visibleRect inverts it', () => {
   assert.equal(shapePoints('triangle', 0, 0, 1)?.split(' ').length, 3);
 });
 
+test('zoomCamera scales the fit about the centre of the view', () => {
+  const view = { width: 975, height: 610 };
+  const fit = cameraFor({ x: 600, y: 300, width: 200, height: 150 }, view);
+  assert.deepEqual(zoomCamera(fit, 1, view), fit);
+  const cam = zoomCamera(fit, 2, view);
+  assert.equal(cam.k, fit.k * 2);
+  const centre = (c: typeof fit) => {
+    const r = visibleRect(c, view);
+    return [r.x + r.width / 2, r.y + r.height / 2];
+  };
+  const [ax, ay] = centre(fit);
+  const [bx, by] = centre(cam);
+  assert.ok(Math.abs(ax - bx) < 1e-9 && Math.abs(ay - by) < 1e-9, 'the centre stays put');
+  // Out of range clamps: below 1 is the fit, above ZOOM_MAX is ZOOM_MAX.
+  assert.deepEqual(zoomCamera(fit, 0.25, view), fit);
+  assert.equal(zoomCamera(fit, 100, view).k, fit.k * ZOOM_MAX);
+});
+
+test('clampZoom and stepZoom stay within [1, 8]', () => {
+  assert.equal(clampZoom(0), ZOOM_MIN);
+  assert.equal(clampZoom(Number.NaN), ZOOM_MIN);
+  assert.equal(clampZoom(Infinity), ZOOM_MIN);
+  assert.equal(clampZoom(9), ZOOM_MAX);
+  assert.equal(clampZoom(3), 3);
+  assert.equal(stepZoom(1, 1), 1.5);
+  assert.equal(stepZoom(1.5, -1), 1);
+  assert.equal(stepZoom(1, -1), ZOOM_MIN);
+  assert.equal(stepZoom(7, 1), ZOOM_MAX);
+  let z = ZOOM_MIN;
+  for (let i = 0; i < 10; i++) z = stepZoom(z, 1);
+  assert.equal(z, ZOOM_MAX);
+  for (let i = 0; i < 10; i++) z = stepZoom(z, -1);
+  assert.equal(z, ZOOM_MIN);
+});
+
+test('visibleRect under zoom shrinks around the centre and culls the edges', () => {
+  const view = { width: 975, height: 610 };
+  const fit = cameraFor({ x: 0, y: 0, width: 975, height: 610 }, view, 0);
+  const whole = visibleRect(fit, view);
+  const seen = visibleRect(zoomCamera(fit, 4, view), view);
+  assert.ok(Math.abs(seen.width - whole.width / 4) < 1e-9 && Math.abs(seen.height - whole.height / 4) < 1e-9);
+  const corner = { x: 10, y: 10, width: 20, height: 20 };
+  const middle = { x: 480, y: 300, width: 10, height: 10 };
+  assert.ok(intersects(whole, corner));
+  assert.ok(!intersects(seen, corner), 'a corner county leaves the view at 4x');
+  assert.ok(intersects(seen, middle));
+});
+
 test('groupPoints merges points on one spot, names and sorts the group', () => {
   const items = [
     { id: 'b', name: 'Bea', lat: 30.3322, lng: -81.6557 },
@@ -97,6 +145,27 @@ test('UsMap renders states as links or buttons, with labels, on the server', asy
   assert.match(html, />FL 12</);
   assert.match(html, /<style[^>]*cuix-map/);
   assert.doesNotMatch(html, /class="[^"]*\b(fill|stroke|bg|text)-/, 'no theme utility classes');
+});
+
+test('UsMap zoom controls: state level only, named, disabled at the clamps, optional', async () => {
+  const { UsMap } = await import(built);
+  const base = { label: 'Florida', states: [], onSelect: () => {}, loadCounties: () => new Promise(() => {}) };
+  const us = renderToString(h(UsMap, { ...base, level: { kind: 'us' } }));
+  assert.doesNotMatch(us, /aria-label="Zoom/);
+  const fit = renderToString(h(UsMap, { ...base, level: { kind: 'state', iso: 'US-FL' } }));
+  assert.match(fit, /role="group" aria-label="Zoom"/);
+  assert.match(fit, /<button type="button" aria-label="Zoom in" class/);
+  assert.match(fit, /aria-label="Zoom out" aria-disabled="true"/);
+  assert.match(fit, /aria-disabled="true"[^>]*>Fit<\/button>/);
+  const max = renderToString(h(UsMap, { ...base, level: { kind: 'state', iso: 'US-FL' }, zoom: 8 }));
+  assert.match(max, /aria-label="Zoom in" aria-disabled="true"/);
+  assert.doesNotMatch(max, /aria-label="Zoom out" aria-disabled/);
+  assert.match(max, /scale\(/);
+  const off = renderToString(h(UsMap, { ...base, level: { kind: 'state', iso: 'US-FL' }, zoomControls: false }));
+  assert.doesNotMatch(off, /aria-label="Zoom/);
+  const named = renderToString(h(UsMap, { ...base, level: { kind: 'state', iso: 'US-FL' }, zoomLabels: { zoomIn: 'Acercar', fit: 'Ajustar' } }));
+  assert.match(named, /aria-label="Acercar"/);
+  assert.match(named, />Ajustar<\/button>/);
 });
 
 test('LayersPanel renders one switch per layer, controlled, with a disabled hint', async () => {

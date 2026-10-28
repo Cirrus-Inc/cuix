@@ -15,7 +15,20 @@ import {
 } from 'react';
 import { COUNTY_LOADERS } from './geo/countyLoaders.ts';
 import { US_STATES, VIEWBOX, type CountyShape } from './geo/usStates.ts';
-import { COUNTY_PAD, IDENTITY, cameraFor, cameraTransform, intersects, pathBBox, visibleRect } from './mapMath.ts';
+import {
+  COUNTY_PAD,
+  IDENTITY,
+  ZOOM_MAX,
+  ZOOM_MIN,
+  cameraFor,
+  cameraTransform,
+  clampZoom,
+  intersects,
+  pathBBox,
+  stepZoom,
+  visibleRect,
+  zoomCamera,
+} from './mapMath.ts';
 import { Hatch, Marker } from './Marker.tsx';
 import { MapStyle, colorVars, shapeColor, type MapColors } from './style.tsx';
 import type { MapBucket, MapLevel, MapPoint, MapRegion } from './types.ts';
@@ -54,6 +67,16 @@ function useCounties(iso: string | null, loader: CountyLoader): Counties {
   }, [iso]);
   return state;
 }
+
+/** The names of the built-in zoom controls. `fit` is also the Fit button's visible text. */
+export interface ZoomLabels {
+  group: string;
+  zoomIn: string;
+  zoomOut: string;
+  fit: string;
+}
+
+const ZOOM_LABELS: ZoomLabels = { group: 'Zoom', zoomIn: 'Zoom in', zoomOut: 'Zoom out', fit: 'Fit' };
 
 type Ring = { kind: 'state' | 'county' | 'point'; id: string; iso: string | null };
 
@@ -94,6 +117,20 @@ export interface UsMapProps {
   style?: CSSProperties;
   /** Shown when a county file fails to load. */
   errorText?: string;
+  /**
+   * State level only: a factor over the fit camera (the state, or the `focus` county), 1 to 8,
+   * about the centre of the view. Controlled when set; otherwise the map keeps its own, back to 1
+   * whenever the fit changes (another state or another `focus`).
+   */
+  zoom?: number;
+  /** Called with the new factor when a zoom control is pressed. */
+  onZoomChange?: (zoom: number) => void;
+  /** The built-in + / − / Fit group at the state level. Default true; false for an app that places its own. */
+  zoomControls?: boolean;
+  /** Names of the built-in zoom controls. Default: Zoom, Zoom in, Zoom out, Fit. */
+  zoomLabels?: Partial<ZoomLabels>;
+  /** State level only: `bold` draws the state's county borders at 2px in `border-strong`, a clear grid. Default `hairline`. */
+  countyOutline?: 'hairline' | 'bold';
 }
 
 const activate = (e: KeyboardEvent<Element>, run: () => void) => {
@@ -125,6 +162,11 @@ export function UsMap({
   className,
   style,
   errorText = 'Could not load the county shapes.',
+  zoom: zoomProp,
+  onZoomChange,
+  zoomControls = true,
+  zoomLabels,
+  countyOutline = 'hairline',
 }: UsMapProps) {
   const hatch = useId();
   const tipId = useId();
@@ -135,14 +177,26 @@ export function UsMap({
   const shapes = geo.status === 'ok' && geo.iso === iso ? geo.shapes : null;
   const focused = focus && shapes ? shapes.find((c) => c.fips === focus) : undefined;
 
-  const camera = useMemo(
+  const fit = useMemo(
     () => (focused ? cameraFor(pathBBox(focused.d), VIEW, COUNTY_PAD) : stateShape ? cameraFor(pathBBox(stateShape.d), VIEW) : IDENTITY),
     [focused, stateShape],
   );
 
+  // Uncontrolled zoom starts over at every new fit; a controlled one is the app's.
+  const fitKey = `${iso ?? ''}|${focused?.fips ?? ''}`;
+  const [ownZoom, setOwnZoom] = useState({ key: fitKey, zoom: ZOOM_MIN });
+  if (ownZoom.key !== fitKey) setOwnZoom({ key: fitKey, zoom: ZOOM_MIN });
+  const zoom = iso ? clampZoom(zoomProp ?? (ownZoom.key === fitKey ? ownZoom.zoom : ZOOM_MIN)) : ZOOM_MIN;
+  const setZoom = (next: number) => {
+    if (zoomProp === undefined) setOwnZoom({ key: fitKey, zoom: next });
+    onZoomChange?.(next);
+  };
+  const camera = useMemo(() => (zoom === ZOOM_MIN ? fit : zoomCamera(fit, zoom, VIEW)), [fit, zoom]);
+  const text = { ...ZOOM_LABELS, ...zoomLabels };
+
   const boxes = useMemo(() => (shapes ? new Map(shapes.map((c) => [c.fips, pathBBox(c.d)])) : null), [shapes]);
-  // At county zoom the rest of the state is off-screen: still clickable, out of the tab order.
-  const view = focused ? visibleRect(camera, VIEW) : null;
+  // At county focus or zoomed in, part of the state is off-screen: still clickable, out of the tab order.
+  const view = focused || zoom > ZOOM_MIN ? visibleRect(camera, VIEW) : null;
   const offscreen = (box: { x: number; y: number; width: number; height: number } | null | undefined) => (view && box && !intersects(view, box) ? -1 : 0);
 
   // A ref, so an inline callback that sets the page's state reports once per file.
@@ -247,6 +301,37 @@ export function UsMap({
   return (
     <div className={className ? `cuix-map ${className}` : 'cuix-map'} style={colorVars(colors, style)}>
       <MapStyle />
+      {/* Before the map in the DOM, so Tab reaches the controls without walking every county. */}
+      {iso && zoomControls && (
+        <div role="group" aria-label={text.group} className="cuix-map-zoom">
+          <button
+            type="button"
+            aria-label={text.zoomIn}
+            aria-disabled={zoom >= ZOOM_MAX || undefined}
+            onClick={() => zoom < ZOOM_MAX && setZoom(stepZoom(zoom, 1))}
+            className="cuix-map-zoom-btn cuix-map-focus"
+          >
+            <span aria-hidden>+</span>
+          </button>
+          <button
+            type="button"
+            aria-label={text.zoomOut}
+            aria-disabled={zoom <= ZOOM_MIN || undefined}
+            onClick={() => zoom > ZOOM_MIN && setZoom(stepZoom(zoom, -1))}
+            className="cuix-map-zoom-btn cuix-map-focus"
+          >
+            <span aria-hidden>−</span>
+          </button>
+          <button
+            type="button"
+            aria-disabled={zoom <= ZOOM_MIN || undefined}
+            onClick={() => zoom > ZOOM_MIN && setZoom(ZOOM_MIN)}
+            className="cuix-map-zoom-btn cuix-map-zoom-fit cuix-map-focus"
+          >
+            {text.fit}
+          </button>
+        </div>
+      )}
       <svg
         viewBox={VIEWBOX}
         role="group"
@@ -302,7 +387,7 @@ export function UsMap({
             })}
 
           {stateShape && shapes && (
-            <>
+            <g className={countyOutline === 'bold' ? 'cuix-map-counties-bold' : undefined}>
               <g aria-hidden>
                 {shapes
                   .filter((c) => !countyRegions.has(c.fips))
@@ -363,7 +448,7 @@ export function UsMap({
                   );
                 })}
               </g>
-            </>
+            </g>
           )}
 
           {/* The selected state's own outline sits above its counties, never over a label. */}

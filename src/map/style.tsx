@@ -80,6 +80,13 @@ const CSS = `
 .cuix-map-hit:hover>.cuix-map-shape{stroke:${c('foreground')};stroke-width:2}
 .cuix-map-outline{fill:none;stroke:${c('foregroundMuted')};stroke-width:2;pointer-events:none}
 .cuix-map-highlight{fill:none;stroke:${c('foreground')};stroke-width:2;pointer-events:none}
+.cuix-map-counties-bold :is(.cuix-map-none,.cuix-map-tint,.cuix-map-solid){stroke:${c('borderStrong')};stroke-width:2}
+.cuix-map-counties-bold .cuix-map-hit:hover>.cuix-map-shape,.cuix-map-counties-bold .cuix-map-highlight{stroke-width:3}
+.cuix-map-zoom{position:absolute;top:8px;right:8px;z-index:1;display:flex;flex-direction:column;gap:4px}
+.cuix-map-zoom-btn{display:grid;place-items:center;box-sizing:border-box;min-width:var(--cuix-target-min, 44px);min-height:var(--cuix-target-min, 44px);padding:0 6px;border:1px solid ${c('borderStrong')};border-radius:var(--cuix-radius-control, 6px);background:${c('surface')};color:${c('foreground')};font:inherit;font-size:1.25rem;font-weight:600;line-height:1;cursor:pointer}
+.cuix-map-zoom-fit{font-size:${FONT_CAPTION}}
+.cuix-map-zoom-btn:hover{border-color:${c('foreground')}}
+.cuix-map-zoom-btn[aria-disabled=true]{border-color:${c('border')};color:${c('foregroundMuted')};cursor:not-allowed}
 .cuix-map-ring-band{fill:none;stroke:${c('surface')};stroke-width:6;stroke-linejoin:round}
 .cuix-map-ring-line{fill:none;stroke:${c('focusRing')};stroke-width:2;stroke-linejoin:round}
 .cuix-map-marker{stroke:${c('surface')};stroke-width:1.5;stroke-linejoin:round}
@@ -116,6 +123,8 @@ const CSS = `
 @media (forced-colors: active){
 .cuix-map-ring-line{stroke:Highlight}
 .cuix-map-tip{border:1px solid CanvasText}
+.cuix-map-zoom-btn{border-color:ButtonText;color:ButtonText;background:ButtonFace}
+.cuix-map-zoom-btn[aria-disabled=true]{border-color:GrayText;color:GrayText}
 .cuix-layer-track{border-color:CanvasText}
 .cuix-layer-thumb{background:CanvasText}
 .cuix-layer[aria-checked=true] .cuix-layer-track{border-color:Highlight}

@@ -57,6 +57,25 @@ export const intersects = (a: BBox, b: BBox): boolean =>
 /** A county fit pads wider than a state's (0.08), so the neighbours stay in view. */
 export const COUNTY_PAD = 0.3;
 
+/** The zoom factor UsMap applies on top of a fit: 1 is the fit, ZOOM_MAX its cap. */
+export const ZOOM_MIN = 1;
+export const ZOOM_MAX = 8;
+export const ZOOM_STEP = 1.5;
+
+/** `zoom` within [ZOOM_MIN, ZOOM_MAX]; anything not finite is the fit. */
+export const clampZoom = (zoom: number): number => (Number.isFinite(zoom) ? Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom)) : ZOOM_MIN);
+
+/** One button press: `dir` 1 zooms in by `step`, -1 out, clamped. */
+export const stepZoom = (zoom: number, dir: 1 | -1, step = ZOOM_STEP): number => clampZoom(dir === 1 ? clampZoom(zoom) * step : clampZoom(zoom) / step);
+
+/** Scale `c` by `zoom` (clamped) about the centre of the view: the point under the centre stays put. */
+export function zoomCamera(c: Camera, zoom: number, view: { width: number; height: number }): Camera {
+  const z = clampZoom(zoom);
+  const cx = view.width / 2;
+  const cy = view.height / 2;
+  return { k: c.k * z, x: cx - (cx - c.x) * z, y: cy - (cy - c.y) * z };
+}
+
 export const cameraTransform = (c: Camera) => `translate(${String(c.x)}px, ${String(c.y)}px) scale(${String(c.k)})`;
 
 /** Corner points of a marker shape around (x, y); null for the circle, which is drawn as a <circle>. */
