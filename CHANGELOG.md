@@ -4,6 +4,8 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-10-29
+
 - feat(map): `UsMap` gains `selected?: string | null`, additive: a county of `counties` kept drawn with the focus ring's look (the same `cuix-map-ring-band` + `cuix-map-ring-line` paths, so 2px non-scaling at every zoom and `Highlight` in forced colours), state level only. It sits above the county fills, labels and state outline and below the transient focus ring and the points, has `pointer-events: none`, and does not change the county's tab stop, click or hover. Ignored when the FIPS is not in `counties` or the shapes have not loaded. `highlight` is unchanged. Closes Cirrus-Inc/cuix#101
 
 ## [0.15.0] - 2026-10-29
@@ -120,7 +122,8 @@ Phase 1: core day/night tokens at AAA, generated `tokens.css` / `theme.css` / `t
 - docs(tokens): adopt core day/night as the only palette at AAA (Cirrus-Inc/cuix-legacy#2)
 - docs: README with Mermaid, badges and decision index (Cirrus-Inc/cuix-legacy#1)
 
-[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.16.0
 [0.15.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.15.0
 [0.14.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.14.0
 [0.13.1]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.13.1
