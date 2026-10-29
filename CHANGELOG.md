@@ -5,6 +5,9 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 ## [Unreleased]
 
 - feat(map): `UsMap` behaves like Google Maps at the state level. **On by default** (behaviour change for every existing state-level map; `gestures={false}` restores the static map): wheel or trackpad scroll zooms about the pointer (native non-passive listener, `preventDefault` only while over the map, deltas normalised and capped per event), a Mac trackpad pinch zooms the same way, double-click zooms one step about the click point, press-and-drag pans (grab / grabbing cursors, Pointer Events with capture), touch pans with one finger and pinches with two (the map's svg is `touch-action: pan-y` at the fit, so a phone page still scrolls over it, and `none` once zoomed in), and with the map's svg focused the arrows pan and `+` / `=` / `-` zoom (one new tab stop; a focused county or marker keeps its keys). A drag of more than 4px fires no `onSelect`, `onSelectPoint` or `onBack` on release and suppresses hover; the second click of a double-click no longer calls `onSelect` / `onSelectPoint`, and with gestures on `onBack` waits 250ms after a click on empty map so a double-click there can zoom. The pan is clamped so the state keeps a quarter of its smaller side in view, and resets with the fit and at zoom 1 (Fit clears it). Controlled `zoom` / `onZoomChange` keeps working and reports every gesture; `zoomControls={false}` apps get the gestures too. New props: `gestures?: boolean` (default true), `wheelZoom?: 'plain' | 'modifier'` (default `plain`; `modifier` needs ctrl or cmd, a pinch always zooms) and `onSelectedBounds?: (rect: DOMRect | null) => void`, the `selected` county's on-screen rectangle in client px, fired after camera changes, resizes and scrolls. New maths: `viewCamera`, `zoomAbout`, `panBy`, `clampShift`, `isDrag`, `wheelZoomFactor`, `clientToView`, `screenRect`, `Shift`, `ZERO`, `DRAG_THRESHOLD`, `WHEEL_MAX`, `KEEP`. Closes Cirrus-Inc/cuix#98
+
+## [0.16.0] - 2026-10-29
+
 - feat(map): `UsMap` gains `selected?: string | null`, additive: a county of `counties` kept drawn with the focus ring's look (the same `cuix-map-ring-band` + `cuix-map-ring-line` paths, so 2px non-scaling at every zoom and `Highlight` in forced colours), state level only. It sits above the county fills, labels and state outline and below the transient focus ring and the points, has `pointer-events: none`, and does not change the county's tab stop, click or hover. Ignored when the FIPS is not in `counties` or the shapes have not loaded. `highlight` is unchanged. Closes Cirrus-Inc/cuix#101
 
 ## [0.15.0] - 2026-10-29
@@ -121,7 +124,8 @@ Phase 1: core day/night tokens at AAA, generated `tokens.css` / `theme.css` / `t
 - docs(tokens): adopt core day/night as the only palette at AAA (Cirrus-Inc/cuix-legacy#2)
 - docs: README with Mermaid, badges and decision index (Cirrus-Inc/cuix-legacy#1)
 
-[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.16.0
 [0.15.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.15.0
 [0.14.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.14.0
 [0.13.1]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.13.1
