@@ -72,6 +72,7 @@ const CSS = `
 .cuix-map-zoomout{cursor:zoom-out}
 .cuix-map>svg.cuix-map-gestures{touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .cuix-map>svg.cuix-map-pan{cursor:grab;touch-action:none}
+.cuix-map>svg.cuix-map-pin,.cuix-map>svg.cuix-map-pin .cuix-map-hit{cursor:crosshair}
 .cuix-map-dragging,.cuix-map.cuix-map-dragging>svg{cursor:grabbing}
 .cuix-map-dragging .cuix-map-hit{pointer-events:none}
 .cuix-map-live .cuix-map-camera,.cuix-map-dragging .cuix-map-camera{transition:none}

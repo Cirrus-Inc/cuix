@@ -201,6 +201,22 @@ test('UsMap gestures: the map is a tab stop at the state level, default on, off 
   assert.doesNotMatch(us, /<svg[^>]*(tabindex|cuix-map-gestures)/);
 });
 
+test('UsMap overlay renders inside the camera at the state level only; onMapClick adds the pin class', async () => {
+  const { UsMap } = await import(built);
+  const base = { label: 'Florida', states: [], onSelect: () => {}, loadCounties: () => new Promise(() => {}), overlay: h('circle', { id: 'my-overlay' }) };
+  const html = renderToString(h(UsMap, { ...base, level: { kind: 'state', iso: 'US-FL' } }));
+  const camera = html.slice(html.indexOf('class="cuix-map-camera"'));
+  assert.match(camera, /<g aria-hidden="true" pointer-events="none"><circle id="my-overlay"/);
+  assert.doesNotMatch(html, /class="[^"]*cuix-map-pin/);
+  const us = renderToString(h(UsMap, { ...base, level: { kind: 'us' } }));
+  assert.doesNotMatch(us, /my-overlay/);
+  const pin = renderToString(h(UsMap, { ...base, level: { kind: 'state', iso: 'US-FL' }, onMapClick: () => {}, onBack: () => {} }));
+  assert.match(pin, /<svg[^>]*class="[^"]*cuix-map-pin/);
+  assert.doesNotMatch(pin, /class="[^"]*cuix-map-zoomout/);
+  const usPin = renderToString(h(UsMap, { ...base, level: { kind: 'us' }, onMapClick: () => {} }));
+  assert.doesNotMatch(usPin, /class="[^"]*cuix-map-pin/);
+});
+
 test('UsMap selected draws nothing at the US level or before the shapes load', async () => {
   const { UsMap } = await import(built);
   const base = { label: 'Florida', states: [], counties: [{ fips: '12031', bucket: 'none', name: 'Duval' }], onSelect: () => {}, loadCounties: () => new Promise(() => {}), selected: '12031' };

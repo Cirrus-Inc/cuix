@@ -164,6 +164,20 @@ export interface UsMapProps {
    * transition runs), and again when the map resizes or the page scrolls.
    */
   onSelectedBounds?: (rect: DOMRect | null) => void;
+  /**
+   * State level only: pin mode. While set, a single left click anywhere on the map (a county, the
+   * water, a marker) reports the point in the 975x610 map space and fires nothing else: no `onSelect`,
+   * `onSelectPoint` or `onBack`. Hover and the gestures keep working; with gestures on, the click waits
+   * out the double-click window like `onBack`, so a double-click only zooms. Enter or Space on a county
+   * reports the centre of its box, on a marker its point. `albersUsaInvert` turns
+   * the point into a lng/lat. The svg gets `cuix-map-pin` (crosshair cursor).
+   */
+  onMapClick?: (p: { x: number; y: number }) => void;
+  /**
+   * State level only: drawn inside the camera, in map space, above the county fills, outlines and
+   * labels and below the markers; `aria-hidden` and `pointer-events: none`, so it scales and pans with the map.
+   */
+  overlay?: ReactNode;
 }
 
 /** A click that does not become a double-click within this long steps back (`onBack`). */
@@ -209,6 +223,8 @@ export function UsMap({
   gestures = true,
   wheelZoom = 'plain',
   onSelectedBounds,
+  onMapClick,
+  overlay,
 }: UsMapProps) {
   const hatch = useId();
   const tipId = useId();
@@ -257,6 +273,9 @@ export function UsMap({
   const setZoom = (next: number) => zoomBy(next / cur.current.zoom, { x: VIEW_W / 2, y: VIEW_H / 2 });
 
   const gesturesOn = gestures && iso !== null;
+  const pin = iso !== null && !!onMapClick;
+  const onMapClickRef = useRef(onMapClick);
+  onMapClickRef.current = onMapClick;
   const svgRef = useRef<SVGSVGElement>(null);
   const toView = (cx: number, cy: number) => clientToView((svgRef.current as SVGSVGElement).getBoundingClientRect(), VIEW, cx, cy);
   // While a gesture runs the camera follows it at once; buttons and keys keep the eased transition.
@@ -413,6 +432,7 @@ export function UsMap({
   const boxes = useMemo(() => (shapes ? new Map(shapes.map((c) => [c.fips, pathBBox(c.d)])) : null), [shapes]);
   // At county focus or zoomed in, part of the state is off-screen: still clickable, out of the tab order.
   const view = focused || zoom > ZOOM_MIN ? visibleRect(camera, VIEW) : null;
+  const pinAt = (box: { x: number; y: number; width: number; height: number } | undefined) => box && onMapClick?.({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
   const offscreen = (box: { x: number; y: number; width: number; height: number } | null | undefined) => (view && box && !intersects(view, box) ? -1 : 0);
 
   // A ref, so an inline callback that sets the page's state reports once per file.
@@ -482,10 +502,10 @@ export function UsMap({
         tabIndex={offscreen({ x: p.x, y: p.y, width: 0, height: 0 })}
         aria-label={p.name}
         aria-describedby={tipPoint?.id === p.id ? tipId : undefined}
-        onClick={(e) => e.detail <= 1 && onSelectPoint?.(p.id)}
+        onClick={pin ? undefined : (e) => e.detail <= 1 && onSelectPoint?.(p.id)}
         onKeyDown={(e) => {
           if (e.key === 'Escape') hideTip();
-          activate(e, () => onSelectPoint?.(p.id));
+          activate(e, () => (pin ? onMapClick?.({ x: p.x, y: p.y }) : onSelectPoint?.(p.id)));
         }}
         onFocus={(e) => {
           ringOn(e, 'point', p.id);
@@ -583,7 +603,18 @@ export function UsMap({
             : undefined
         }
         onClick={
-          iso && onBack
+          pin
+            ? (e) => {
+                if (e.button !== 0 || e.detail > 1) return;
+                // The camera's inverse: the point in the 975x610 map space, not in the zoomed viewport.
+                const v = toView(e.clientX, e.clientY);
+                const p = { x: (v.x - camera.x) / camera.k, y: (v.y - camera.y) / camera.k };
+                if (gesturesOn) {
+                  clearTimeout(backTimer.current);
+                  backTimer.current = setTimeout(() => onMapClickRef.current?.(p), DBLCLICK_MS);
+                } else onMapClick(p);
+              }
+            : iso && onBack
             ? (e) => {
                 // detail > 1: the second click of a double-click on a state, which landed after the zoom in.
                 if (e.button !== 0 || e.detail > 1 || (e.target as Element).closest('a, [role="button"]')) return;
@@ -595,7 +626,7 @@ export function UsMap({
               }
             : undefined
         }
-        className={[iso && onBack && !(gesturesOn && zoom > ZOOM_MIN) && 'cuix-map-zoomout', gesturesOn && 'cuix-map-gestures', gesturesOn && zoom > ZOOM_MIN && 'cuix-map-pan', gesturesOn && 'cuix-map-focus']
+        className={[iso && onBack && !pin && !(gesturesOn && zoom > ZOOM_MIN) && 'cuix-map-zoomout', pin && 'cuix-map-pin', gesturesOn && 'cuix-map-gestures', gesturesOn && zoom > ZOOM_MIN && 'cuix-map-pan', gesturesOn && 'cuix-map-focus']
           .filter(Boolean)
           .join(' ') || undefined}
       >
@@ -658,8 +689,9 @@ export function UsMap({
                     tabIndex={offscreen(boxes?.get(r.fips))}
                     aria-label={r.name}
                     // detail > 1: the second click of a double-click, which zooms and must not select again.
-                    onClick={(e) => e.detail <= 1 && onSelect('county', r.fips)}
-                    onKeyDown={(e) => activate(e, () => onSelect('county', r.fips))}
+                    onClick={pin ? undefined : (e) => e.detail <= 1 && onSelect('county', r.fips)}
+                    // Pin mode: the keyboard drops the pin at the centre of the county's box, as a click would on it.
+                    onKeyDown={(e) => activate(e, () => (pin ? pinAt(boxes?.get(r.fips)) : onSelect('county', r.fips)))}
                     onMouseEnter={() => !g.current.active && onHover?.(r.fips)}
                     onMouseLeave={() => !g.current.active && onHover?.(null)}
                     onFocus={(e) => {
@@ -708,6 +740,12 @@ export function UsMap({
 
           {/* The selected state's own outline sits above its counties, never over a label. */}
           {stateShape && <path aria-hidden d={stateShape.d} className="cuix-map-outline" />}
+
+          {stateShape && overlay != null && (
+            <g aria-hidden pointerEvents="none">
+              {overlay}
+            </g>
+          )}
 
           {/* The selected county keeps the ring's look: above fills, labels and the state outline, below the transient ring and the points. */}
           {selectedD && (

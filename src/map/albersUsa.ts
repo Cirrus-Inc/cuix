@@ -40,16 +40,30 @@ function conicEqualArea([p0, p1]: [number, number]) {
   const n = (sy0 + Math.sin(p1 * RAD)) / 2;
   const c = 1 + sy0 * (2 * n - sy0);
   const r0 = Math.sqrt(c) / n;
-  return (lambda: number, phi: number): [number, number] => {
+  const forward = (lambda: number, phi: number): [number, number] => {
     const r = Math.sqrt(c - 2 * n * Math.sin(phi)) / n;
     return [r * Math.sin(lambda * n), r0 - r * Math.cos(lambda * n)];
   };
+  const inverse = (x: number, y: number): [number, number] | null => {
+    const r0y = r0 - y;
+    const r = Math.sign(n) * Math.sqrt(x * x + r0y * r0y);
+    let l = Math.atan2(x, Math.abs(r0y)) * Math.sign(r0y);
+    if (r0y * n < 0) l -= Math.PI * Math.sign(x) * Math.sign(r0y);
+    const s = (c - r * r * n * n) / (2 * n);
+    return s >= -1 && s <= 1 ? [l / n, Math.asin(s)] : null;
+  };
+  return { forward, inverse };
 }
 
 // d3 projects the centre through the same raw function and shifts the translate
 // so the centre lands on it (projection/index.js recenter()); y is flipped.
-const PROJECTORS = PIECES.map((p) => {
-  const raw = conicEqualArea(p.parallels);
+interface Projector {
+  project: (lng: number, lat: number) => [number, number] | null;
+  invert: (x: number, y: number) => [number, number] | null;
+}
+
+const PROJECTORS: Projector[] = PIECES.map((p) => {
+  const { forward: raw, inverse: rawInverse } = conicEqualArea(p.parallels);
   const [cx, cy] = raw(p.centre[0] * RAD, p.centre[1] * RAD);
   const dx = TX + p.t[0] * K - p.k * cx;
   const dy = TY + p.t[1] * K + p.k * cy;
@@ -58,7 +72,7 @@ const PROJECTORS = PIECES.map((p) => {
   const y0 = TY + by0 * K;
   const x1 = TX + bx1 * K;
   const y1 = TY + by1 * K;
-  return (lng: number, lat: number): [number, number] | null => {
+  const project = (lng: number, lat: number): [number, number] | null => {
     let lambda = lng * RAD + p.lambda0;
     if (Math.abs(lambda) > Math.PI) lambda -= Math.round(lambda / TAU) * TAU;
     const [x, y] = raw(lambda, lat * RAD);
@@ -67,6 +81,16 @@ const PROJECTORS = PIECES.map((p) => {
     const e = p.shrink;
     return px >= x0 + e && px <= x1 - e && py >= y0 + e && py <= y1 - e ? [px, py] : null;
   };
+  const invert = (px: number, py: number): [number, number] | null => {
+    const e = p.shrink;
+    if (!(px >= x0 + e && px <= x1 - e && py >= y0 + e && py <= y1 - e)) return null;
+    const q = rawInverse((px - dx) / p.k, (dy - py) / p.k);
+    if (!q) return null;
+    let lng = (q[0] - p.lambda0) / RAD;
+    lng -= Math.round(lng / 360) * 360;
+    return [lng, q[1] / RAD];
+  };
+  return { project, invert };
 });
 
 /**
@@ -74,9 +98,21 @@ const PROJECTORS = PIECES.map((p) => {
  * the point, as d3 does; null when none does (Puerto Rico, open ocean).
  */
 export function albersUsa(lng: number, lat: number): [number, number] | null {
-  for (const project of PROJECTORS) {
-    const p = project(lng, lat);
+  for (const projector of PROJECTORS) {
+    const p = projector.project(lng, lat);
     if (p) return p;
   }
   return null;
+}
+
+/**
+ * The inverse of `albersUsa`, d3's `albersUsa().invert`: Alaska and Hawaii by the
+ * inset boxes, else the lower 48. null outside the piece the point falls in, or
+ * where the conic inverse is undefined.
+ */
+export function albersUsaInvert(x: number, y: number): [number, number] | null {
+  const u = (x - TX) / K;
+  const v = (y - TY) / K;
+  const i = v >= 0.12 && v < 0.234 && u >= -0.425 && u < -0.214 ? 1 : v >= 0.166 && v < 0.234 && u >= -0.214 && u < -0.115 ? 2 : 0;
+  return (PROJECTORS[i] as Projector).invert(x, y);
 }
