@@ -10,6 +10,7 @@ import {
   type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,
+  type PointerEvent,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -18,16 +19,26 @@ import { US_STATES, VIEWBOX, type CountyShape } from './geo/usStates.ts';
 import {
   COUNTY_PAD,
   IDENTITY,
+  ZERO,
   ZOOM_MAX,
   ZOOM_MIN,
+  ZOOM_STEP,
   cameraFor,
   cameraTransform,
+  clampShift,
   clampZoom,
+  clientToView,
   intersects,
+  isDrag,
+  panBy,
   pathBBox,
+  screenRect,
   stepZoom,
+  viewCamera,
   visibleRect,
-  zoomCamera,
+  wheelZoomFactor,
+  zoomAbout,
+  type Shift,
 } from './mapMath.ts';
 import { Hatch, Marker } from './Marker.tsx';
 import { MapStyle, colorVars, shapeColor, type MapColors } from './style.tsx';
@@ -120,12 +131,13 @@ export interface UsMapProps {
   /** Shown when a county file fails to load. */
   errorText?: string;
   /**
-   * State level only: a factor over the fit camera (the state, or the `focus` county), 1 to 8,
-   * about the centre of the view. Controlled when set; otherwise the map keeps its own, back to 1
-   * whenever the fit changes (another state or another `focus`).
+   * State level only: a factor over the fit camera (the state, or the `focus` county), 1 to 8.
+   * Controlled when set; otherwise the map keeps its own, back to 1 whenever the fit changes
+   * (another state or another `focus`). The pan (drag, arrow keys, pinch) is always the map's own:
+   * it resets with the fit and whenever the zoom is 1.
    */
   zoom?: number;
-  /** Called with the new factor when a zoom control is pressed. */
+  /** Called with the new factor when the zoom changes: a control, the wheel, a double-click, a pinch or a key. */
   onZoomChange?: (zoom: number) => void;
   /** The built-in + / − / Fit group at the state level. Default true; false for an app that places its own. */
   zoomControls?: boolean;
@@ -133,7 +145,31 @@ export interface UsMapProps {
   zoomLabels?: Partial<ZoomLabels>;
   /** State level only: `bold` draws the state's county borders at 2px in `border-strong`, a clear grid. Default `hairline`. */
   countyOutline?: 'hairline' | 'bold';
+  /**
+   * State level only: Google-Maps-style gestures. Wheel or trackpad scroll and pinch zoom about the
+   * pointer, double-click zooms in one step, press-and-drag pans (touch: one finger pans, two pinch),
+   * and with the map itself focused the arrow keys pan and `+` / `-` zoom. Default true; false keeps
+   * the map static (buttons and the controlled `zoom` only).
+   */
+  gestures?: boolean;
+  /**
+   * Which wheel events zoom. `plain` (default): any wheel over the map, which also stops the page
+   * scrolling while the pointer is over it. `modifier`: only with ctrl or cmd held, as embedded
+   * Google Maps does; a plain wheel then scrolls the page. A trackpad pinch (a ctrl wheel) always zooms.
+   */
+  wheelZoom?: 'plain' | 'modifier';
+  /**
+   * The on-screen rectangle (client px, like `getBoundingClientRect`) of the `selected` county's
+   * shape, or null when there is none. Called after the camera settles on it (not while the
+   * transition runs), and again when the map resizes or the page scrolls.
+   */
+  onSelectedBounds?: (rect: DOMRect | null) => void;
 }
+
+/** A click that does not become a double-click within this long steps back (`onBack`). */
+const DBLCLICK_MS = 250;
+/** One arrow key pans this fraction of the view. */
+const KEY_PAN = 0.2;
 
 const activate = (e: KeyboardEvent<Element>, run: () => void) => {
   if (e.key === 'Enter' || e.key === ' ') {
@@ -170,6 +206,9 @@ export function UsMap({
   zoomControls = true,
   zoomLabels,
   countyOutline = 'hairline',
+  gestures = true,
+  wheelZoom = 'plain',
+  onSelectedBounds,
 }: UsMapProps) {
   const hatch = useId();
   const tipId = useId();
@@ -185,16 +224,190 @@ export function UsMap({
     [focused, stateShape],
   );
 
-  // Uncontrolled zoom starts over at every new fit; a controlled one is the app's.
+  // Uncontrolled zoom and the pan start over at every new fit; a controlled zoom is the app's.
   const fitKey = `${iso ?? ''}|${focused?.fips ?? ''}`;
-  const [ownZoom, setOwnZoom] = useState({ key: fitKey, zoom: ZOOM_MIN });
-  if (ownZoom.key !== fitKey) setOwnZoom({ key: fitKey, zoom: ZOOM_MIN });
-  const zoom = iso ? clampZoom(zoomProp ?? (ownZoom.key === fitKey ? ownZoom.zoom : ZOOM_MIN)) : ZOOM_MIN;
-  const setZoom = (next: number) => {
-    if (zoomProp === undefined) setOwnZoom({ key: fitKey, zoom: next });
-    onZoomChange?.(next);
+  const [ownState, setOwn] = useState<{ key: string; zoom: number; shift: Shift }>({ key: fitKey, zoom: ZOOM_MIN, shift: ZERO });
+  if (ownState.key !== fitKey) setOwn({ key: fitKey, zoom: ZOOM_MIN, shift: ZERO });
+  const own = ownState.key === fitKey ? ownState : { key: fitKey, zoom: ZOOM_MIN, shift: ZERO };
+  const zoom = iso ? clampZoom(zoomProp ?? own.zoom) : ZOOM_MIN;
+  // The pan lives only while zoomed in, and is clamped on every render: a zoom set from outside can break it.
+  if (zoom <= ZOOM_MIN && own.shift !== ZERO) setOwn({ ...own, shift: ZERO });
+  const stateBox = useMemo(() => (stateShape ? pathBBox(stateShape.d) : null), [stateShape]);
+  const shift = zoom > ZOOM_MIN && stateBox ? clampShift(fit, zoom, own.shift, stateBox, VIEW) : ZERO;
+  const camera = useMemo(() => (zoom === ZOOM_MIN ? fit : viewCamera(fit, zoom, shift, VIEW)), [fit, zoom, shift]);
+  const cur = useRef({ zoom, shift, fit, stateBox, fitKey, zoomProp });
+  cur.current = { zoom, shift, fit, stateBox, fitKey, zoomProp };
+  const onZoomRef = useRef(onZoomChange);
+  onZoomRef.current = onZoomChange;
+  // Every zoom or pan goes through here; handlers read `cur` so two events before a render still add up.
+  const commit = (nextZoom: number, nextShift: Shift) => {
+    const c = cur.current;
+    const z = clampZoom(nextZoom);
+    const u = z <= ZOOM_MIN || !c.stateBox ? ZERO : clampShift(c.fit, z, nextShift, c.stateBox, VIEW);
+    cur.current = { ...c, zoom: z, shift: u };
+    const key = c.fitKey;
+    setOwn((o) => ({ key, zoom: c.zoomProp === undefined ? z : o.zoom, shift: u }));
+    if (z !== c.zoom) onZoomRef.current?.(z);
   };
-  const camera = useMemo(() => (zoom === ZOOM_MIN ? fit : zoomCamera(fit, zoom, VIEW)), [fit, zoom]);
+  const zoomBy = (factor: number, p: { x: number; y: number }) => {
+    const c = cur.current;
+    const r = zoomAbout(c.fit, c.zoom, c.shift, factor, p, VIEW);
+    commit(r.zoom, r.shift);
+  };
+  const setZoom = (next: number) => zoomBy(next / cur.current.zoom, { x: VIEW_W / 2, y: VIEW_H / 2 });
+
+  const gesturesOn = gestures && iso !== null;
+  const svgRef = useRef<SVGSVGElement>(null);
+  const toView = (cx: number, cy: number) => clientToView((svgRef.current as SVGSVGElement).getBoundingClientRect(), VIEW, cx, cy);
+  // While a gesture runs the camera follows it at once; buttons and keys keep the eased transition.
+  const [snap, setSnap] = useState(false);
+  const liveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const g = useRef({ pointers: new Map<number, { x: number; y: number }>(), start: { x: 0, y: 0 }, moved: false, active: false, suppress: false });
+  const [dragging, setDragging] = useState(false);
+  const backTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const onBackRef = useRef(onBack);
+  onBackRef.current = onBack;
+  useEffect(
+    () => () => {
+      clearTimeout(liveTimer.current);
+      clearTimeout(backTimer.current);
+    },
+    [],
+  );
+
+  // A native, non-passive listener: React's onWheel is passive, so it cannot stop the page scrolling.
+  const wheelRef = useRef<(e: WheelEvent) => void>(() => {});
+  wheelRef.current = (e) => {
+    if (wheelZoom === 'modifier' && !e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+    clearTimeout(liveTimer.current);
+    setSnap(true);
+    liveTimer.current = setTimeout(() => setSnap(false), 150);
+    zoomBy(wheelZoomFactor(e.deltaY, e.deltaMode, e.ctrlKey), toView(e.clientX, e.clientY));
+  };
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || !gesturesOn) return;
+    const on = (e: WheelEvent) => wheelRef.current(e);
+    svg.addEventListener('wheel', on, { passive: false });
+    return () => svg.removeEventListener('wheel', on);
+  }, [gesturesOn]);
+
+  const beginDrag = (e: PointerEvent<SVGSVGElement>) => {
+    const d = g.current;
+    if (!d.moved) {
+      d.moved = true;
+      d.active = true;
+      setDragging(true);
+      hideTip();
+      onHover?.(null);
+    }
+    // Captured only once it is a drag: capturing on press would retarget the click of a plain press.
+    for (const id of d.pointers.keys()) {
+      try {
+        e.currentTarget.setPointerCapture(id);
+      } catch {
+        // the pointer is already gone
+      }
+    }
+  };
+  const pointerDown = (e: PointerEvent<SVGSVGElement>) => {
+    const d = g.current;
+    if (!gesturesOn || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    if (d.pointers.size === 0) {
+      d.start = { x: e.clientX, y: e.clientY };
+      d.moved = false;
+      d.suppress = false;
+    }
+    d.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (d.pointers.size === 2) beginDrag(e);
+  };
+  const pointerMove = (e: PointerEvent<SVGSVGElement>) => {
+    const d = g.current;
+    const prev = d.pointers.get(e.pointerId);
+    if (!prev) return;
+    const now = { x: e.clientX, y: e.clientY };
+    d.pointers.set(e.pointerId, now);
+    if (d.pointers.size === 1) {
+      if (!d.moved && !isDrag(now.x - d.start.x, now.y - d.start.y)) return;
+      const from = d.moved ? prev : d.start;
+      beginDrag(e);
+      const a = toView(from.x, from.y);
+      const b = toView(now.x, now.y);
+      const c = cur.current;
+      commit(c.zoom, panBy(c.shift, b.x - a.x, b.y - a.y, c.zoom));
+    } else if (d.pointers.size === 2) {
+      const [other] = [...d.pointers].filter(([id]) => id !== e.pointerId);
+      if (!other) return;
+      const o = other[1];
+      const before = { mx: (prev.x + o.x) / 2, my: (prev.y + o.y) / 2, dist: Math.hypot(prev.x - o.x, prev.y - o.y) };
+      const after = { mx: (now.x + o.x) / 2, my: (now.y + o.y) / 2, dist: Math.hypot(now.x - o.x, now.y - o.y) };
+      const p0 = toView(before.mx, before.my);
+      const p1 = toView(after.mx, after.my);
+      const c = cur.current;
+      const r = zoomAbout(c.fit, c.zoom, c.shift, before.dist > 0 ? after.dist / before.dist : 1, p0, VIEW);
+      commit(r.zoom, panBy(r.shift, p1.x - p0.x, p1.y - p0.y, r.zoom));
+    }
+  };
+  const pointerUp = (e: PointerEvent<SVGSVGElement>) => {
+    const d = g.current;
+    if (!d.pointers.delete(e.pointerId)) return;
+    if (d.pointers.size > 0) return;
+    // The click that follows a drag is the drag's own release: swallowed in onClickCapture.
+    d.suppress = d.moved;
+    d.active = false;
+    setDragging(false);
+  };
+  const onKey = (e: KeyboardEvent<SVGSVGElement>) => {
+    // Only the map itself: a focused county or marker keeps its own keys.
+    if (!gesturesOn || e.target !== e.currentTarget || e.ctrlKey || e.metaKey || e.altKey) return;
+    const c = cur.current;
+    const pan = (dx: number, dy: number) => {
+      if (c.zoom <= ZOOM_MIN) return;
+      e.preventDefault();
+      commit(c.zoom, panBy(c.shift, dx * VIEW_W * KEY_PAN, dy * VIEW_H * KEY_PAN, c.zoom));
+    };
+    if (e.key === 'ArrowLeft') pan(1, 0);
+    else if (e.key === 'ArrowRight') pan(-1, 0);
+    else if (e.key === 'ArrowUp') pan(0, 1);
+    else if (e.key === 'ArrowDown') pan(0, -1);
+    else if (e.key === '+' || e.key === '=') {
+      e.preventDefault();
+      if (c.zoom < ZOOM_MAX) setZoom(stepZoom(c.zoom, 1));
+    } else if (e.key === '-' || e.key === '_') {
+      e.preventDefault();
+      if (c.zoom > ZOOM_MIN) setZoom(stepZoom(c.zoom, -1));
+    }
+  };
+
+  // The selected county's box on screen, from the camera it is heading to (not the transition's frame).
+  const selBoxD = selected && stateShape && counties.some((r) => r.fips === selected) ? shapes?.find((c) => c.fips === selected)?.d : undefined;
+  const selBox = useMemo(() => (selBoxD ? pathBBox(selBoxD) : null), [selBoxD]);
+  const wantsBounds = !!onSelectedBounds;
+  const boundsRef = useRef(onSelectedBounds);
+  boundsRef.current = onSelectedBounds;
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!wantsBounds || !svg) return;
+    let last = '';
+    const emit = () => {
+      const r = selBox ? screenRect(selBox, camera, svg.getBoundingClientRect(), VIEW) : null;
+      const key = r ? `${String(r.x)},${String(r.y)},${String(r.width)},${String(r.height)}` : 'none';
+      if (key === last) return;
+      last = key;
+      boundsRef.current?.(r ? new DOMRect(r.x, r.y, r.width, r.height) : null);
+    };
+    emit();
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(emit);
+    ro?.observe(svg);
+    window.addEventListener('scroll', emit, { capture: true, passive: true });
+    window.addEventListener('resize', emit);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('scroll', emit, { capture: true });
+      window.removeEventListener('resize', emit);
+    };
+  }, [wantsBounds, selBox, camera]);
   const text = { ...ZOOM_LABELS, ...zoomLabels };
 
   const boxes = useMemo(() => (shapes ? new Map(shapes.map((c) => [c.fips, pathBBox(c.d)])) : null), [shapes]);
@@ -269,7 +482,7 @@ export function UsMap({
         tabIndex={offscreen({ x: p.x, y: p.y, width: 0, height: 0 })}
         aria-label={p.name}
         aria-describedby={tipPoint?.id === p.id ? tipId : undefined}
-        onClick={() => onSelectPoint?.(p.id)}
+        onClick={(e) => e.detail <= 1 && onSelectPoint?.(p.id)}
         onKeyDown={(e) => {
           if (e.key === 'Escape') hideTip();
           activate(e, () => onSelectPoint?.(p.id));
@@ -282,7 +495,7 @@ export function UsMap({
           ringOff();
           hideTip();
         }}
-        onMouseEnter={() => showTip(p.id)}
+        onMouseEnter={() => !g.current.active && showTip(p.id)}
         onMouseLeave={() => hideTip(150)}
         className="cuix-map-hit cuix-map-point"
       >
@@ -304,7 +517,10 @@ export function UsMap({
   };
 
   return (
-    <div className={className ? `cuix-map ${className}` : 'cuix-map'} style={colorVars(colors, style)}>
+    <div
+      className={['cuix-map', className, dragging && 'cuix-map-dragging', snap && 'cuix-map-live'].filter(Boolean).join(' ')}
+      style={colorVars(colors, style)}
+    >
       <MapStyle />
       {/* Before the map in the DOM, so Tab reaches the controls without walking every county. */}
       {iso && zoomControls && (
@@ -338,19 +554,50 @@ export function UsMap({
         </div>
       )}
       <svg
+        ref={svgRef}
         viewBox={VIEWBOX}
         role="group"
         aria-label={label}
+        // The map itself is a tab stop when it has gestures: arrows pan and + / - zoom while it, not a county, has focus.
+        tabIndex={gesturesOn ? 0 : undefined}
+        onPointerDown={gesturesOn ? pointerDown : undefined}
+        onPointerMove={gesturesOn ? pointerMove : undefined}
+        onPointerUp={gesturesOn ? pointerUp : undefined}
+        onPointerCancel={gesturesOn ? pointerUp : undefined}
+        onKeyDown={gesturesOn ? onKey : undefined}
+        onClickCapture={
+          gesturesOn
+            ? (e) => {
+                if (!g.current.suppress) return;
+                g.current.suppress = false;
+                e.stopPropagation();
+              }
+            : undefined
+        }
+        onDoubleClick={
+          gesturesOn
+            ? (e) => {
+                clearTimeout(backTimer.current);
+                zoomBy(ZOOM_STEP, toView(e.clientX, e.clientY));
+              }
+            : undefined
+        }
         onClick={
           iso && onBack
             ? (e) => {
                 // detail > 1: the second click of a double-click on a state, which landed after the zoom in.
                 if (e.button !== 0 || e.detail > 1 || (e.target as Element).closest('a, [role="button"]')) return;
-                onBack();
+                // With gestures a double-click zooms, so a click waits out the double-click window before it steps back.
+                if (gesturesOn) {
+                  clearTimeout(backTimer.current);
+                  backTimer.current = setTimeout(() => onBackRef.current?.(), DBLCLICK_MS);
+                } else onBack();
               }
             : undefined
         }
-        className={iso && onBack ? 'cuix-map-zoomout' : undefined}
+        className={[iso && onBack && !(gesturesOn && zoom > ZOOM_MIN) && 'cuix-map-zoomout', gesturesOn && 'cuix-map-gestures', gesturesOn && zoom > ZOOM_MIN && 'cuix-map-pan', gesturesOn && 'cuix-map-focus']
+          .filter(Boolean)
+          .join(' ') || undefined}
       >
         <defs>
           <Hatch id={hatch} k={k} />
@@ -410,10 +657,11 @@ export function UsMap({
                     role="button"
                     tabIndex={offscreen(boxes?.get(r.fips))}
                     aria-label={r.name}
-                    onClick={() => onSelect('county', r.fips)}
+                    // detail > 1: the second click of a double-click, which zooms and must not select again.
+                    onClick={(e) => e.detail <= 1 && onSelect('county', r.fips)}
                     onKeyDown={(e) => activate(e, () => onSelect('county', r.fips))}
-                    onMouseEnter={() => onHover?.(r.fips)}
-                    onMouseLeave={() => onHover?.(null)}
+                    onMouseEnter={() => !g.current.active && onHover?.(r.fips)}
+                    onMouseLeave={() => !g.current.active && onHover?.(null)}
                     onFocus={(e) => {
                       onHover?.(r.fips);
                       ringOn(e, 'county', r.fips);

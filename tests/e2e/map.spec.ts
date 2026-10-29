@@ -151,3 +151,207 @@ test('selected draws the focus ring on that county only; unknown FIPS draws noth
   await page.getByTestId('selected').selectOption('');
   await expect(band).toHaveCount(0);
 });
+
+// Gestures: wheel, drag, double-click, keys, selected bounds.
+const svg = (page: Page) => page.locator('.cuix-map > svg');
+const cam = (page: Page) => page.locator('.cuix-map-camera').evaluate((el) => {
+  const m = new DOMMatrix(getComputedStyle(el).transform);
+  return { k: m.a, x: m.e, y: m.f };
+});
+const settled = async (page: Page) => {
+  // Skip the 400ms ease: two equal reads in a row.
+  let last = '';
+  await expect
+    .poll(async () => {
+      const c = JSON.stringify(await cam(page));
+      const same = c === last;
+      last = c;
+      return same;
+    })
+    .toBe(true);
+};
+const centre = async (page: Page) => {
+  const b = (await svg(page).boundingBox())!;
+  return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+};
+
+test('wheel zooms about the pointer, not the centre, and reports through onZoomChange', async ({ page }) => {
+  await open(page);
+  const b = (await svg(page).boundingBox())!;
+  const px = b.x + b.width * 0.3;
+  const py = b.y + b.height * 0.3;
+  const before = await cam(page);
+  // The map point under the pointer, in view units.
+  const mapPt = { x: ((px - b.x) / b.width) * 975, y: ((py - b.y) / b.height) * 610 };
+  await page.mouse.move(px, py);
+  await page.mouse.wheel(0, -300);
+  await expect.poll(async () => (await cam(page)).k).toBeGreaterThan(before.k * 1.15);
+  await settled(page);
+  const after = await cam(page);
+  const f = after.k / before.k;
+  expect(after.x).toBeCloseTo(mapPt.x - (mapPt.x - before.x) * f, 0);
+  expect(after.y).toBeCloseTo(mapPt.y - (mapPt.y - before.y) * f, 0);
+  await expect(page.getByTestId('zoom')).not.toHaveText('Zoom 1');
+  await fit(page).click();
+  await settled(page);
+  expect(await cam(page)).toEqual(before);
+  await expect(page.getByTestId('zoom')).toHaveText('Zoom 1');
+});
+
+test('with wheelZoom=modifier a plain wheel does not zoom (the page keeps it) and ctrl+wheel does', async ({ page }) => {
+  await open(page, 'theme=day&modifier=1');
+  const before = await cam(page);
+  const c = await centre(page);
+  await page.mouse.move(c.x, c.y);
+  await page.mouse.wheel(0, -300);
+  await page.waitForTimeout(200);
+  expect(await cam(page)).toEqual(before);
+  await page.keyboard.down('Control');
+  await page.mouse.wheel(0, -300);
+  await page.keyboard.up('Control');
+  await expect.poll(async () => (await cam(page)).k).toBeGreaterThan(before.k);
+});
+
+test('drag pans with grab cursors, never selects, and a small press is still a click; Fit resets', async ({ page }) => {
+  await open(page);
+  await zoomIn(page).click();
+  await zoomIn(page).click();
+  await settled(page);
+  const county = page.getByRole('button', { name: 'Hillsborough: 3 schools' });
+  const start = (await svg(page).boundingBox())!;
+  await expect(svg(page)).toHaveCSS('cursor', 'grab');
+  const before = await cam(page);
+  const x = start.x + start.width / 2;
+  const y = start.y + start.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 3, y + 1);
+  await page.mouse.move(x + 60, y + 20, { steps: 5 });
+  await expect(page.locator('.cuix-map')).toHaveClass(/cuix-map-dragging/);
+  await expect(svg(page)).toHaveCSS('cursor', 'grabbing');
+  await page.mouse.up();
+  await expect(page.locator('.cuix-map')).not.toHaveClass(/cuix-map-dragging/);
+  await page.waitForTimeout(50);
+  const after = await cam(page);
+  expect(after.x - before.x).toBeGreaterThan(30);
+  expect(after.k).toBe(before.k);
+  await expect(page.getByTestId('selects')).toHaveText('Selects 0');
+  // Release over a county: still no select. Now a press with 2px of jitter selects.
+  const box = (await county.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 2, box.y + box.height / 2);
+  await page.mouse.up();
+  await expect(page.getByTestId('selects')).toHaveText('Selects 1');
+  await fit(page).click();
+  await settled(page);
+  await expect.poll(async () => (await cam(page)).k).toBeLessThan(before.k);
+  const reset = await cam(page);
+  await zoomIn(page).click();
+  await fit(page).click();
+  await settled(page);
+  expect(await cam(page)).toEqual(reset);
+});
+
+test('the pan cannot take the state out of the view', async ({ page }) => {
+  await open(page);
+  for (let i = 0; i < 4; i++) await zoomIn(page).click();
+  await settled(page);
+  const b = (await svg(page).boundingBox())!;
+  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(b.x + b.width / 2 + 2000, b.y + b.height / 2 + 2000, { steps: 8 });
+  await page.mouse.up();
+  await settled(page);
+  const outline = (await page.locator('svg path.cuix-map-outline').boundingBox())!;
+  expect(outline.x + outline.width).toBeGreaterThan(b.x);
+  expect(outline.x).toBeLessThan(b.x + b.width);
+  expect(outline.y + outline.height).toBeGreaterThan(b.y);
+  expect(outline.y).toBeLessThan(b.y + b.height);
+});
+
+test('double-click zooms in one step and selects once', async ({ page }) => {
+  await open(page);
+  // Hillsborough has no marker or tooltip over it.
+  const county = page.getByRole('button', { name: 'Hillsborough: 3 schools' });
+  const box = (await county.boundingBox())!;
+  await page.mouse.dblclick(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(page.getByTestId('zoom')).toHaveText('Zoom 1.5');
+  await expect(page.getByTestId('selects')).toHaveText('Selects 1');
+});
+
+test('keyboard on the focused map: + and - zoom, arrows pan; a focused county keeps its keys', async ({ page }) => {
+  await open(page);
+  await svg(page).focus();
+  await page.keyboard.press('ArrowLeft');
+  const fitCam = await cam(page);
+  await page.keyboard.press('+');
+  await expect(page.getByTestId('zoom')).toHaveText('Zoom 1.5');
+  await page.keyboard.press('=');
+  await expect(page.getByTestId('zoom')).toHaveText('Zoom 2.25');
+  await settled(page);
+  const z = await cam(page);
+  await page.keyboard.press('ArrowRight');
+  await settled(page);
+  expect((await cam(page)).x).toBeLessThan(z.x);
+  await page.keyboard.press('ArrowDown');
+  await settled(page);
+  expect((await cam(page)).y).toBeLessThan(z.y);
+  await page.keyboard.press('-');
+  await page.keyboard.press('-');
+  await expect(page.getByTestId('zoom')).toHaveText('Zoom 1');
+  await settled(page);
+  expect(await cam(page)).toEqual(fitCam);
+  // On a county the arrows do nothing to the camera.
+  await page.keyboard.press('+');
+  await settled(page);
+  const zoomed = await cam(page);
+  await page.getByRole('button', { name: 'Duval: 4 schools' }).focus();
+  await page.keyboard.press('ArrowLeft');
+  await page.waitForTimeout(100);
+  expect(await cam(page)).toEqual(zoomed);
+});
+
+test('onSelectedBounds reports the county on screen, after camera changes', async ({ page }) => {
+  await open(page);
+  await expect(page.getByTestId('bounds')).toHaveText('none');
+  await page.getByTestId('selected').selectOption('12031');
+  const read = async () => {
+    const t = await page.getByTestId('bounds').innerText();
+    const [x, y, w, h] = t.split(',').map(Number) as [number, number, number, number];
+    return { x, y, w, h };
+  };
+  await expect.poll(async () => (await read()).w).toBeGreaterThan(0);
+  const ring = async () => (await page.locator('svg path.cuix-map-ring-line').boundingBox())!;
+  const near = async () => {
+    const r = await ring();
+    const b = await read();
+    // The stroke is 2px around the geometry: within a few px.
+    expect(Math.abs(b.x - r.x)).toBeLessThan(4);
+    expect(Math.abs(b.y - r.y)).toBeLessThan(4);
+    expect(Math.abs(b.w - r.width)).toBeLessThan(6);
+  };
+  await settled(page);
+  await near();
+  await zoomIn(page).click();
+  await zoomIn(page).click();
+  await settled(page);
+  await expect.poll(async () => (await read()).w).toBeGreaterThan(0);
+  await expect.poll(async () => Math.abs((await read()).w - (await ring()).width)).toBeLessThan(6);
+  await near();
+  await page.getByTestId('selected').selectOption('');
+  await expect(page.getByTestId('bounds')).toHaveText('none');
+});
+
+test('a controlled zoom with the built-in controls off gets the wheel and double-click too', async ({ page }) => {
+  await open(page, 'theme=day&controlled=1');
+  const c = await centre(page);
+  await page.mouse.move(c.x, c.y);
+  await page.mouse.wheel(0, -100);
+  await expect(page.getByTestId('zoom')).not.toHaveText('Zoom 1');
+  await page.getByRole('button', { name: 'Toolbar zoom 4×' }).click();
+  await expect(page.getByTestId('zoom')).toHaveText('Zoom 4');
+  const d = await centre(page);
+  await page.mouse.dblclick(d.x, d.y);
+  await expect(page.getByTestId('zoom')).toHaveText('Zoom 6');
+});
