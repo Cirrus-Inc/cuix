@@ -62,8 +62,11 @@ function MapPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-5xl flex-col gap-4 bg-background p-4 font-sans text-body text-foreground">
       <h1 className="text-title">Map</h1>
-      <Checkbox label="Drop pin" checked={dropPin} onChange={(e) => setDropPin(e.target.checked)} data-testid="drop-pin" />
-      <Checkbox label="Bold county outline" checked={bold} onChange={(e) => setBold(e.target.checked)} data-testid="bold" />
+      {/* One row each for the toggles and the readouts: the e2e drags and wheels at the map's centre, which must stay in the viewport. */}
+      <div className="flex items-center gap-4">
+        <Checkbox label="Bold county outline" checked={bold} onChange={(e) => setBold(e.target.checked)} data-testid="bold" />
+        <Checkbox label="Drop pin" checked={dropPin} onChange={(e) => setDropPin(e.target.checked)} data-testid="drop-pin" />
+      </div>
       <div className="flex items-center gap-2">
         <span aria-hidden>Selected county</span>
         <NativeSelect aria-label="Selected county" value={selected} onChange={(e) => setSelected(e.target.value)} data-testid="selected">
@@ -81,8 +84,10 @@ function MapPage() {
       <p data-testid="zoom">Zoom {zoom}</p>
       <p data-testid="picked">{picked}</p>
       <p data-testid="selects">Selects {selects}</p>
-      <p data-testid="bounds">{bounds}</p>
-      <p data-testid="pin">{pin ? `${String(pin.x)},${String(pin.y)}` : 'none'}</p>
+      <div className="flex gap-4">
+        <p data-testid="bounds">{bounds}</p>
+        <p data-testid="pin">{pin ? `${String(pin.x)},${String(pin.y)}` : 'none'}</p>
+      </div>
       <UsMap
         level={{ kind: 'state', iso: 'US-FL' }}
         label="Schools in Florida"

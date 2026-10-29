@@ -295,11 +295,19 @@ test('pin mode: a click on a county reports map coordinates and selects nothing;
   expect(y).toBeLessThanOrEqual(610);
   await expect(page.getByTestId('selects')).toHaveText('Selects 0');
   await expect(page.locator('.cuix-map-camera polygon[fill-opacity]')).toHaveCount(1);
+  // The reported point is in map space: the marker drawn at it lands under the click, not elsewhere in the fitted state.
+  const mark = (await page.getByRole('button', { name: 'Dropped pin' }).boundingBox())!;
+  expect(Math.abs(mark.x + mark.width / 2 - (box.x + box.width / 2))).toBeLessThan(4);
+  expect(Math.abs(mark.y + mark.height / 2 - (box.y + box.height / 2))).toBeLessThan(4);
   const before = await page.getByTestId('pin').innerText();
   await page.mouse.dblclick(box.x + box.width / 4, box.y + box.height / 4);
   await expect(page.getByTestId('zoom')).toHaveText('Zoom 1.5');
   await page.waitForTimeout(400);
   expect(await page.getByTestId('pin').innerText()).toBe(before);
+  await expect(page.getByTestId('selects')).toHaveText('Selects 0');
+  await page.getByRole('button', { name: 'Duval: 4 schools' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('pin')).not.toHaveText(before);
   await expect(page.getByTestId('selects')).toHaveText('Selects 0');
 });
 
