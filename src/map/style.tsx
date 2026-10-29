@@ -70,6 +70,11 @@ const CSS = `
 .cuix-map-camera{transition:transform var(--cuix-motion-panel, 400ms) var(--cuix-motion-ease, cubic-bezier(0.2, 0, 0, 1))}
 .cuix-map-camera :is(path,circle,polygon){vector-effect:non-scaling-stroke}
 .cuix-map-zoomout{cursor:zoom-out}
+.cuix-map>svg.cuix-map-gestures{touch-action:none;user-select:none;-webkit-user-select:none}
+.cuix-map>svg.cuix-map-pan{cursor:grab}
+.cuix-map-dragging,.cuix-map.cuix-map-dragging>svg{cursor:grabbing}
+.cuix-map-dragging .cuix-map-hit{pointer-events:none}
+.cuix-map-live .cuix-map-camera,.cuix-map-dragging .cuix-map-camera{transition:none}
 .cuix-map-faded{opacity:0.4}
 .cuix-map-none{fill:${c('surface')};stroke:${c('border')};stroke-width:1}
 .cuix-map-tint{stroke:${c('borderStrong')};stroke-width:1}

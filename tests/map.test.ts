@@ -5,7 +5,29 @@ import { createElement as h } from 'react';
 import { renderToString } from 'react-dom/server';
 import { albersUsa } from '../src/map/albersUsa.ts';
 import { groupPoints } from '../src/map/groupPoints.ts';
-import { ZOOM_MAX, ZOOM_MIN, cameraFor, clampZoom, intersects, pathBBox, shapePoints, stepZoom, visibleRect, zoomCamera } from '../src/map/mapMath.ts';
+import {
+  DRAG_THRESHOLD,
+  WHEEL_MAX,
+  ZERO,
+  ZOOM_MAX,
+  ZOOM_MIN,
+  cameraFor,
+  clampShift,
+  clampZoom,
+  clientToView,
+  intersects,
+  isDrag,
+  panBy,
+  pathBBox,
+  screenRect,
+  shapePoints,
+  stepZoom,
+  viewCamera,
+  visibleRect,
+  wheelZoomFactor,
+  zoomAbout,
+  zoomCamera,
+} from '../src/map/mapMath.ts';
 import { US_STATES } from '../src/map/geo/usStates.ts';
 
 // Reference values produced by d3-geo 3.1.1 geoAlbersUsa().scale(1300).translate([487.5, 305])
@@ -168,6 +190,17 @@ test('UsMap zoom controls: state level only, named, disabled at the clamps, opti
   assert.match(named, />Ajustar<\/button>/);
 });
 
+test('UsMap gestures: the map is a tab stop at the state level, default on, off with gestures={false}', async () => {
+  const { UsMap } = await import(built);
+  const base = { label: 'Florida', states: [], onSelect: () => {}, loadCounties: () => new Promise(() => {}) };
+  const on = renderToString(h(UsMap, { ...base, level: { kind: 'state', iso: 'US-FL' } }));
+  assert.match(on, /<svg[^>]*tabindex="0"[^>]*class="[^"]*cuix-map-gestures/);
+  const off = renderToString(h(UsMap, { ...base, level: { kind: 'state', iso: 'US-FL' }, gestures: false }));
+  assert.doesNotMatch(off, /<svg[^>]*(tabindex|cuix-map-gestures)/);
+  const us = renderToString(h(UsMap, { ...base, level: { kind: 'us' } }));
+  assert.doesNotMatch(us, /<svg[^>]*(tabindex|cuix-map-gestures)/);
+});
+
 test('UsMap selected draws nothing at the US level or before the shapes load', async () => {
   const { UsMap } = await import(built);
   const base = { label: 'Florida', states: [], counties: [{ fips: '12031', bucket: 'none', name: 'Duval' }], onSelect: () => {}, loadCounties: () => new Promise(() => {}), selected: '12031' };
@@ -250,4 +283,105 @@ test('a shaded solid county label stays haloed; only an unshaded solid one knock
   const src = readFileSync(new URL('../src/map/UsMap.tsx', import.meta.url), 'utf8');
   assert.match(src, /const solid = r\.bucket === 'solid' && !r\.shade;/);
   assert.match(src, /solid \? 'cuix-map-label cuix-map-label-solid' : 'cuix-map-label'/);
+});
+
+const VIEW = { width: 975, height: 610 };
+const BOX = { x: 600, y: 300, width: 200, height: 150 };
+const FIT = cameraFor(BOX, VIEW);
+// The map point under a view point, for a camera.
+const under = (c: { x: number; y: number; k: number }, p: { x: number; y: number }) => ({ x: (p.x - c.x) / c.k, y: (p.y - c.y) / c.k });
+
+test('zoomAbout keeps the map point under the pointer fixed', () => {
+  const p = { x: 200, y: 90 };
+  let zoom = 1;
+  let shift = ZERO;
+  const before = under(viewCamera(FIT, zoom, shift, VIEW), p);
+  for (const f of [1.5, 1.5, 0.8, 2]) {
+    const r = zoomAbout(FIT, zoom, shift, f, p, VIEW);
+    zoom = r.zoom;
+    shift = r.shift;
+    const now = under(viewCamera(FIT, zoom, shift, VIEW), p);
+    assert.ok(Math.abs(now.x - before.x) < 1e-9 && Math.abs(now.y - before.y) < 1e-9, `factor ${String(f)}`);
+  }
+  assert.ok(Math.abs(zoom - 1.5 * 1.5 * 0.8 * 2) < 1e-9);
+  // About the centre it is zoomCamera, with no shift.
+  const c = { x: 487.5, y: 305 };
+  const centred = zoomAbout(FIT, 1, ZERO, 3, c, VIEW);
+  const cam = viewCamera(FIT, centred.zoom, centred.shift, VIEW);
+  const ref = zoomCamera(FIT, 3, VIEW);
+  assert.ok(Math.abs(cam.x - ref.x) < 1e-9 && Math.abs(cam.y - ref.y) < 1e-9 && cam.k === ref.k);
+});
+
+test('zoomAbout clamps the zoom to [ZOOM_MIN, ZOOM_MAX] and ignores a bad factor', () => {
+  const p = { x: 10, y: 10 };
+  assert.equal(zoomAbout(FIT, 6, ZERO, 100, p, VIEW).zoom, ZOOM_MAX);
+  assert.equal(zoomAbout(FIT, 2, ZERO, 0.001, p, VIEW).zoom, ZOOM_MIN);
+  assert.equal(zoomAbout(FIT, 2, ZERO, Number.NaN, p, VIEW).zoom, 2);
+});
+
+test('a zoom about the centre keeps the centre point whatever the pan', () => {
+  const shift = panBy(ZERO, -120, 40, 3);
+  const mid = { x: VIEW.width / 2, y: VIEW.height / 2 };
+  const a = under(viewCamera(FIT, 3, shift, VIEW), mid);
+  const b = under(viewCamera(FIT, 6, shift, VIEW), mid);
+  assert.ok(Math.abs(a.x - b.x) < 1e-9 && Math.abs(a.y - b.y) < 1e-9);
+});
+
+test('panBy moves the view by the drag, whatever the zoom', () => {
+  const s = panBy(ZERO, 30, -12, 2);
+  const a = viewCamera(FIT, 2, ZERO, VIEW);
+  const b = viewCamera(FIT, 2, s, VIEW);
+  assert.ok(Math.abs(b.x - a.x - 30) < 1e-9 && Math.abs(b.y - a.y + 12) < 1e-9);
+});
+
+test('clampShift: no pan at the fit, and the box can never leave the view', () => {
+  assert.deepEqual(clampShift(FIT, 1, { x: 500, y: 500 }, BOX, VIEW), ZERO);
+  for (const z of [1.5, 3, 8]) {
+    for (const [dx, dy] of [[5000, 5000], [-5000, -5000], [5000, -5000]] as const) {
+      const s = clampShift(FIT, z, panBy(ZERO, dx, dy, z), BOX, VIEW);
+      const cam = viewCamera(FIT, z, s, VIEW);
+      const r = screenRect(BOX, cam, { left: 0, top: 0, width: VIEW.width, height: VIEW.height }, VIEW);
+      assert.ok(r.x + r.width > 0 && r.x < VIEW.width && r.y + r.height > 0 && r.y < VIEW.height, `z=${String(z)} ${String(dx)},${String(dy)}`);
+      assert.ok(Math.min(r.x + r.width, VIEW.width) - Math.max(r.x, 0) >= 0.25 * Math.min(r.width, VIEW.width) - 1e-6, 'keeps a quarter of its width');
+      assert.ok(Math.min(r.y + r.height, VIEW.height) - Math.max(r.y, 0) >= 0.25 * Math.min(r.height, VIEW.height) - 1e-6, 'keeps a quarter of its height');
+    }
+  }
+  // A pan already inside the limit is returned as is.
+  const inside = panBy(ZERO, 5, 5, 2);
+  assert.equal(clampShift(FIT, 2, inside, BOX, VIEW), inside);
+});
+
+test('isDrag: a press under the threshold is a click, beyond it a drag', () => {
+  assert.equal(DRAG_THRESHOLD, 4);
+  assert.equal(isDrag(0, 0), false);
+  assert.equal(isDrag(3, 0), false);
+  assert.equal(isDrag(4, 0), false);
+  assert.equal(isDrag(2.8, 2.8), false);
+  assert.equal(isDrag(0, -4.1), true);
+  assert.equal(isDrag(3, 3), true);
+  assert.equal(isDrag(1, 1, 1), true);
+});
+
+test('wheelZoomFactor: up zooms in, down out, capped, lines and pages normalised, a pinch is more sensitive', () => {
+  assert.ok(wheelZoomFactor(-100) > 1);
+  assert.ok(wheelZoomFactor(100) < 1);
+  assert.equal(wheelZoomFactor(0), 1);
+  assert.ok(Math.abs(wheelZoomFactor(-40) * wheelZoomFactor(40) - 1) < 1e-12, 'symmetric');
+  assert.equal(wheelZoomFactor(-5000), wheelZoomFactor(-WHEEL_MAX), 'a flick cannot jump');
+  assert.equal(wheelZoomFactor(-3, 1), wheelZoomFactor(-48, 0), 'three lines are 48px');
+  assert.equal(wheelZoomFactor(-1, 2), wheelZoomFactor(-WHEEL_MAX, 0), 'a page is capped');
+  assert.ok(wheelZoomFactor(-4, 0, true) > wheelZoomFactor(-4, 0, false));
+  assert.equal(wheelZoomFactor(Number.NaN), 1);
+  // A trackpad's stream of small deltas adds up to the same as one big one (below the cap).
+  const stream = Array.from({ length: 10 }, () => wheelZoomFactor(-5)).reduce((a, b) => a * b, 1);
+  assert.ok(Math.abs(stream - wheelZoomFactor(-50)) < 1e-12);
+});
+
+test('clientToView and screenRect are inverses, with and without letterboxing', () => {
+  for (const rect of [{ left: 10, top: 20, width: 487.5, height: 305 }, { left: 0, top: 0, width: 975, height: 900 }]) {
+    const cam = viewCamera(FIT, 2, panBy(ZERO, 10, 10, 2), VIEW);
+    const r = screenRect(BOX, cam, rect, VIEW);
+    const a = clientToView(rect, VIEW, r.x, r.y);
+    assert.ok(Math.abs(a.x - (cam.x + BOX.x * cam.k)) < 1e-9 && Math.abs(a.y - (cam.y + BOX.y * cam.k)) < 1e-9);
+  }
 });
