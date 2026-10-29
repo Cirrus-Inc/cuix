@@ -229,6 +229,12 @@ test('MapRegion shade replaces the fill, keeps an outline class, and detail is a
   const swatch = renderToString(h(MapSwatch, { bucket: 'solid', shade: '#fcd34d' }));
   assert.match(swatch, /fill="#fcd34d" class="cuix-map-shade"/);
   assert.match(renderToString(h(MapSwatch, { bucket: 'solid' })), /class="cuix-map-solid"/);
+  assert.match(renderToString(h(MapSwatch, {})), /class="cuix-map-none"/, 'bucket defaults to none');
+  assert.match(renderToString(h(MapSwatch, { bucket: 'tint', shade: '#fcd34d' })), /fill="#fcd34d" class="cuix-map-shade"/, 'shade wins over the hatch');
+  const empty = renderToString(
+    h(UsMap, { level: { kind: 'us' }, label: 'x', states: [{ fips: '32', bucket: 'tint', name: 'Nevada', shade: '' }], onSelect: () => {} }),
+  );
+  assert.match(empty, /fill="url\(#[^)]+\)" class="cuix-map-shape cuix-map-tint"/, 'an empty shade is no shade');
 });
 
 test('a shaded solid county label stays haloed; only an unshaded solid one knocks out', () => {

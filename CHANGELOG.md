@@ -4,7 +4,7 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
-- feat(map): `MapRegion` gains `shade?: string` and `detail?: string`, additive. `shade` is any CSS colour drawn as the region's fill in place of the bucket's fill or hatch (a count layer); the bucket's outline stays, so colour is never the only encoding, and the label stays haloed even on a `solid` region (only a solid region without `shade` knocks it out). `MapSwatch({ bucket, shade })` draws the same for a legend. `detail` renders as a `<title>` on the region at the state and county levels, like `MapPoint.detail`. Closes Cirrus-Inc/cuix#95
+- feat(map): `MapRegion` gains `shade?: string` and `detail?: string`, additive. `shade` is any CSS colour drawn as the region's fill in place of the bucket's fill or hatch (a count layer); the bucket's outline stays, so colour is never the only encoding, and the label stays haloed even on a `solid` region (only a solid region without `shade` knocks it out). `MapSwatch({ bucket, shade })` draws the same for a legend; its `bucket` is now optional (default `none`). `detail` renders as a `<title>` on the region at the state and county levels, like `MapPoint.detail`. Closes Cirrus-Inc/cuix#95
 
 ## [0.14.0] - 2026-10-29
 

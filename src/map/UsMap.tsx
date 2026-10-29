@@ -251,7 +251,7 @@ export function UsMap({
     };
   }, [shownId]);
 
-  const fillAttr = (r: Pick<MapRegion, 'bucket' | 'shade'>) => (r.shade ?? (r.bucket === 'tint' ? `url(#${hatch})` : undefined));
+  const fillAttr = (r: Pick<MapRegion, 'bucket' | 'shade'>) => (r.shade ? r.shade : r.bucket === 'tint' ? `url(#${hatch})` : undefined);
   const shapeClass = (r: Pick<MapRegion, 'bucket' | 'shade'>) => `cuix-map-shape cuix-map-${r.shade ? 'shade' : r.bucket}`;
   const sorted = (list: readonly MapRegion[]) => [...list].sort((a, b) => a.name.localeCompare(b.name));
   const k = camera.k;
