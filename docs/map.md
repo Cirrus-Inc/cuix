@@ -35,7 +35,7 @@ const loadMapLibre = () =>
 
 | Import | What |
 |---|---|
-| `@cirrus/cuix/map` | `UsMap`, `LayersPanel`, `MapSwatch`, `MarkerSwatch`, `albersUsa`, `groupPoints`, `cameraFor`, `pathBBox`, `visibleRect`, `intersects`, `shapePoints`, `mapColor`, `colorVars`, types |
+| `@cirrus/cuix/map` | `UsMap`, `LayersPanel`, `MapSwatch`, `MarkerSwatch`, `albersUsa`, `groupPoints`, `cameraFor`, `zoomCamera`, `clampZoom`, `stepZoom`, `ZOOM_MIN` / `ZOOM_MAX` / `ZOOM_STEP`, `pathBBox`, `visibleRect`, `intersects`, `shapePoints`, `mapColor`, `colorVars`, types |
 | `@cirrus/cuix/map/geo/usStates` | `US_STATES` (51 shapes, 107 KB), `VIEWBOX` (`0 0 975 610`), `StateShape`, `CountyShape` |
 | `@cirrus/cuix/map/geo/usStateIndex` | `US_STATE_INDEX`: FIPS, ISO and name, no paths |
 | `@cirrus/cuix/map/geo/US-XX` | `COUNTIES` of one state (median 16 KB, Texas 53 KB) |
@@ -65,6 +65,8 @@ const loadMapLibre = () =>
 - **Focus** is a non-scaling overlay ring (surface band under a `focus-ring` line), not an outline: an outline inside the zoomed group would scale with the camera.
 - **Target size.** Counties and points are drawn at their geographic size, so many are under cuix's 44px floor (a point is 10px, a badge 22px, at a 975px-wide map). The map relies on the 2.5.5 *equivalent* exception: the app must offer every county and point as a 44px control elsewhere on the page (the list beside the map in HIVE and LuxReach). A map without that list does not meet 2.5.5.
 - **Camera.** `level` fits the state, `focus` (a county FIPS) fits that county with its neighbours. `onBack` makes a single click outside any control step back a level (mouse only; the keyboard uses the app's breadcrumb and Esc). `prefers-reduced-motion` turns the transition off.
+- **Zoom** (state level only; the US level has none). A factor over the fit camera, 1 (the fit) to 8 (`ZOOM_MAX`), about the centre of the view; with `focus` set it zooms into that county's fit. Built in: a `+` / `−` / Fit group in the map's top-right corner, 44px native buttons placed before the map in the tab order, named by `zoomLabels` (default `Zoom`, `Zoom in`, `Zoom out`, `Fit`; `fit` is also the visible text). Each press steps by 1.5 (`ZOOM_STEP`); at a clamp the button is `aria-disabled` and keeps focus, so pressing on does nothing rather than dropping focus to the page. `zoomControls={false}` hides the group for an app that places its own. `zoom` + `onZoomChange(zoom)` make it controlled, e.g. from the app's toolbar (`stepZoom(zoom, 1)` and `clampZoom` give the same steps and bounds); a controlled factor survives a change of state or `focus`, so set it back to 1 when you change `level` or `focus`, or the new fit opens zoomed in. Uncontrolled, the map keeps its own factor and returns to 1 whenever the fit changes (another state, another `focus`), and `onZoomChange` still reports each press. Zoomed in, the counties and points outside the view leave the tab order but stay clickable, as at county focus. There is no pan: the centre of the fit stays the centre.
+- **County outline.** `countyOutline="bold"` draws the state's county borders at 2px in `border-strong`, a clear grid instead of hairlines (default `hairline`). It is separate from `highlight`, which stays its own path on top (3px over a bold grid, so it still stands out); a hovered county goes to 3px as well. The state's own outline is unchanged.
 
 ## LayersPanel
 
@@ -115,4 +117,4 @@ The styles are one `<style>` element React 19 hoists to `<head>` once. Under a C
 
 ## Not included
 
-Free pan and zoom on the SVG levels, a phone layout, the members of a street-level cluster (read them from your own data with the bubble's position).
+Pan and wheel or pinch zoom on the SVG levels (zoom is by button, about the centre), a phone layout, the members of a street-level cluster (read them from your own data with the bubble's position).

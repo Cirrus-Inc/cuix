@@ -4,6 +4,8 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
+- feat(map): `UsMap` zooms at the state level and can draw a bold county grid. A built-in `+` / `−` / Fit group (44px, keyboard reachable, `aria-disabled` at the clamps; `zoomControls={false}` hides it, `zoomLabels` names it) scales the fit camera 1×–8× about the centre in 1.5× steps; `zoom` + `onZoomChange` make it controlled from the app's toolbar. Off-screen counties and points leave the tab order while zoomed. `countyOutline="bold"` draws the state's county borders at 2px in `border-strong` (default `hairline`), separate from `highlight`. New maths: `zoomCamera`, `clampZoom`, `stepZoom`, `ZOOM_MIN` / `ZOOM_MAX` / `ZOOM_STEP`. No prop or export changes, but the group is on by default: every existing state-level map gains it in its top-right corner on upgrade; pass `zoomControls={false}` to keep the previous look. A controlled `zoom` is not reset when `level` or `focus` changes; the app resets it. Closes Cirrus-Inc/cuix#92
+
 ## [0.13.1] - 2026-10-23
 
 - fix(street): a `StreetMap` cluster bubble from the previous zoom no longer stays on screen next to the bubbles and pins it split into. While a zoom's tiles load, MapLibre keeps the loaded parent tiles as cover and returns their clusters too; the last tile's `sourcedata` was the final refresh and still saw them. The bubbles are now also refreshed on `idle`, once every tile is loaded and rendered. Closes Cirrus-Inc/cuix#85
