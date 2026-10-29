@@ -1,0 +1,1 @@
+try{var t=localStorage.getItem("cuix-theme");if(["day","night","dawn","midnight","forest","ocean","hive-day","hive-night"].indexOf(t)>-1)document.documentElement.setAttribute("data-theme",t)}catch(e){}

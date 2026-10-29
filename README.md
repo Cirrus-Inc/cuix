@@ -98,10 +98,10 @@ Pre-release: expect breaking changes before `1.0.0`. Pin an exact tag.
 ## Quick start
 
 ```sh
-npm i @cirrus/cuix@github:Cirrus-Inc/cuix#v0.14.0
+npm i @cirrus/cuix@github:Cirrus-Inc/cuix#v0.15.0
 ```
 
-Or in `package.json`: `"@cirrus/cuix": "github:Cirrus-Inc/cuix#v0.14.0"`.
+Or in `package.json`: `"@cirrus/cuix": "github:Cirrus-Inc/cuix#v0.15.0"`.
 
 ```css
 /* app.css */
