@@ -124,6 +124,7 @@ const CSS = `
 .cuix-street-tip{left:50%;top:8px}
 .cuix-street .maplibregl-canvas-container{isolation:isolate}
 .cuix-street .maplibregl-popup{z-index:100000}
+.cuix-map-focus:focus:not(:focus-visible){outline:none}
 .cuix-map-focus:focus-visible{outline:2px solid ${c('focusRing')};outline-offset:2px}
 @media (prefers-reduced-motion: reduce){.cuix-map-camera,.cuix-layer-thumb{transition:none}}
 @media (forced-colors: active){
