@@ -75,7 +75,7 @@ const loadMapLibre = () =>
   | Trackpad pinch (Mac: a ctrl wheel) | Zoom about the pointer, more sensitive than a plain wheel; counts as the modifier below |
   | Double-click | Zoom in one step (`ZOOM_STEP`) about the click point |
   | Press and drag | Pan, with a `grab` / `grabbing` cursor. Pointer Events with pointer capture |
-  | Touch: one finger / two fingers | Pan / pinch about the midpoint of the fingers; the map's svg has `touch-action: none` |
+  | Touch: one finger / two fingers | Pan / pinch about the midpoint of the fingers; at the fit the svg has `touch-action: pan-y` (a one-finger vertical swipe still scrolls the page; a pinch reaches the map), zoomed in `touch-action: none` |
   | Arrows, with the map itself focused | Pan by 20% of the view (nothing at the fit, so the page still scrolls) |
   | `+` or `=` / `-` or `_`, with the map itself focused | Zoom in / out one step about the centre |
 
