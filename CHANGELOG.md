@@ -4,6 +4,8 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-10-29
+
 - feat(map): `UsMap` zooms at the state level and can draw a bold county grid. A built-in `+` / `−` / Fit group (44px, keyboard reachable, `aria-disabled` at the clamps; `zoomControls={false}` hides it, `zoomLabels` names it) scales the fit camera 1×–8× about the centre in 1.5× steps; `zoom` + `onZoomChange` make it controlled from the app's toolbar. Off-screen counties and points leave the tab order while zoomed. `countyOutline="bold"` draws the state's county borders at 2px in `border-strong` (default `hairline`), separate from `highlight`. New maths: `zoomCamera`, `clampZoom`, `stepZoom`, `ZOOM_MIN` / `ZOOM_MAX` / `ZOOM_STEP`. No prop or export changes, but the group is on by default: every existing state-level map gains it in its top-right corner on upgrade; pass `zoomControls={false}` to keep the previous look. A controlled `zoom` is not reset when `level` or `focus` changes; the app resets it. Closes Cirrus-Inc/cuix#92
 
 ## [0.13.1] - 2026-10-23
@@ -112,7 +114,8 @@ Phase 1: core day/night tokens at AAA, generated `tokens.css` / `theme.css` / `t
 - docs(tokens): adopt core day/night as the only palette at AAA (Cirrus-Inc/cuix-legacy#2)
 - docs: README with Mermaid, badges and decision index (Cirrus-Inc/cuix-legacy#1)
 
-[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.13.1...HEAD
+[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.14.0
 [0.13.1]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.13.1
 [0.13.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.13.0
 [0.12.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.12.0
