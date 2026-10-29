@@ -129,3 +129,25 @@ test('a shaded county keeps its outline in every theme and in forced colors; det
   const alachua = nodes.find((n) => n.name?.value === 'Alachua: 40 students');
   expect(alachua?.description?.value).toBe('Alachua: 40 Deaf and hard of hearing students');
 });
+
+test('selected draws the focus ring on that county only; unknown FIPS draws nothing; highlight is separate', async ({ page }) => {
+  await open(page, 'theme=day&highlight=12095');
+  const band = page.locator('svg path.cuix-map-ring-band');
+  const line = page.locator('svg path.cuix-map-ring-line');
+  await expect(band).toHaveCount(0);
+  await page.getByTestId('selected').selectOption('12031');
+  await expect(band).toHaveCount(1);
+  await expect(line).toHaveCount(1);
+  await expect(line).toHaveCSS('stroke-width', '2px');
+  await expect(band).toHaveCSS('stroke-width', '6px');
+  await expect(line).toHaveCSS('pointer-events', 'none');
+  const duval = await page.getByRole('button', { name: 'Duval: 4 schools' }).locator('path').first().getAttribute('d');
+  expect(await line.getAttribute('d')).toBe(duval);
+  await expect(page.locator('svg path.cuix-map-highlight')).toHaveCount(1);
+  await zoomIn(page).click();
+  await expect(line).toHaveCSS('stroke-width', '2px');
+  await page.getByTestId('selected').selectOption('99999');
+  await expect(band).toHaveCount(0);
+  await page.getByTestId('selected').selectOption('');
+  await expect(band).toHaveCount(0);
+});

@@ -94,6 +94,8 @@ export interface UsMapProps {
   onCountyShapes?: (counties: readonly { fips: string; name: string }[] | null) => void;
   /** A county of `counties` drawn with a strong outline, e.g. the one a list beside the map points at. */
   highlight?: string | null;
+  /** State level only: a county of `counties` kept drawn with the focus ring's look (surface band under a `focusRing` line, 2px at every zoom), e.g. the district the app has open. Not interactive; ignored when the FIPS is not in `counties` or the shapes have not loaded. */
+  selected?: string | null;
   /** A county of `counties` pointed at or focused; null when it is left. */
   onHover?: (fips: string | null) => void;
   /** State level only: FIPS of the county the camera fits instead of the state. */
@@ -150,6 +152,7 @@ export function UsMap({
   onSelect,
   onCountyShapes,
   highlight,
+  selected,
   onHover,
   focus,
   points,
@@ -218,6 +221,7 @@ export function UsMap({
   const live = ring && ring.iso === iso ? ring : null;
   const ringD =
     live?.kind === 'state' ? US_STATES.find((s) => s.fips === live.id)?.d : live?.kind === 'county' ? shapes?.find((c) => c.fips === live.id)?.d : undefined;
+  const selectedD = selected && stateShape && countyRegions.has(selected) ? shapes?.find((c) => c.fips === selected)?.d : undefined;
   const ringPoint = live?.kind === 'point' && shapes ? points?.find((p) => p.id === live.id) : undefined;
 
   // The built-in tooltip: on hover or focus, kept while the pointer moves onto it (1.4.13), Esc hides it.
@@ -456,6 +460,14 @@ export function UsMap({
 
           {/* The selected state's own outline sits above its counties, never over a label. */}
           {stateShape && <path aria-hidden d={stateShape.d} className="cuix-map-outline" />}
+
+          {/* The selected county keeps the ring's look: above fills, labels and the state outline, below the transient ring and the points. */}
+          {selectedD && (
+            <g aria-hidden pointerEvents="none">
+              <path d={selectedD} className="cuix-map-ring-band" />
+              <path d={selectedD} className="cuix-map-ring-line" />
+            </g>
+          )}
 
           {/* The focus ring is an overlay with non-scaling strokes: an outline inside the zoomed group would scale with the camera. A surface band under a focus line, so it reads on an accent fill too. */}
           {ringD && (

@@ -168,6 +168,15 @@ test('UsMap zoom controls: state level only, named, disabled at the clamps, opti
   assert.match(named, />Ajustar<\/button>/);
 });
 
+test('UsMap selected draws nothing at the US level or before the shapes load', async () => {
+  const { UsMap } = await import(built);
+  const base = { label: 'Florida', states: [], counties: [{ fips: '12031', bucket: 'none', name: 'Duval' }], onSelect: () => {}, loadCounties: () => new Promise(() => {}), selected: '12031' };
+  const us = renderToString(h(UsMap, { ...base, level: { kind: 'us' } }));
+  assert.doesNotMatch(us, /cuix-map-ring-(band|line)"/);
+  const loading = renderToString(h(UsMap, { ...base, level: { kind: 'state', iso: 'US-FL' } }));
+  assert.doesNotMatch(loading, /cuix-map-ring-(band|line)"/);
+});
+
 test('LayersPanel renders one switch per layer, controlled, with a disabled hint', async () => {
   const { LayersPanel } = await import(built);
   const html = renderToString(
