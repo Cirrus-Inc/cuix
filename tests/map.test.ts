@@ -208,3 +208,37 @@ test('the map subpath imports neither the theme, the React components, Radix nor
   assert.doesNotMatch(street, /from ['"]maplibre-gl['"]/, 'maplibre-gl is imported statically');
   assert.match(street, /import\(['"]maplibre-gl['"]\)/);
 });
+
+test('MapRegion shade replaces the fill, keeps an outline class, and detail is a title', async () => {
+  const { UsMap, MapSwatch } = await import(built);
+  const html = renderToString(
+    h(UsMap, {
+      level: { kind: 'us' },
+      label: 'Students by state',
+      states: [
+        { fips: '12', bucket: 'solid', name: 'Florida: 40 students', label: 'FL 40', shade: '#fcd34d', detail: 'Florida: 40 Deaf students' },
+        { fips: '32', bucket: 'tint', name: 'Nevada: 1 district' },
+      ],
+      onSelect: () => {},
+    }),
+  );
+  assert.match(html, /<path d="[^"]*" fill="#fcd34d" class="cuix-map-shape cuix-map-shade"/);
+  assert.match(html, /<title>Florida: 40 Deaf students<\/title>/);
+  assert.equal(html.match(/<title>/g)?.length, 1, 'a region without detail has no title');
+  assert.match(html, /fill="url\(#[^)]+\)" class="cuix-map-shape cuix-map-tint"/);
+  const swatch = renderToString(h(MapSwatch, { bucket: 'solid', shade: '#fcd34d' }));
+  assert.match(swatch, /fill="#fcd34d" class="cuix-map-shade"/);
+  assert.match(renderToString(h(MapSwatch, { bucket: 'solid' })), /class="cuix-map-solid"/);
+  assert.match(renderToString(h(MapSwatch, {})), /class="cuix-map-none"/, 'bucket defaults to none');
+  assert.match(renderToString(h(MapSwatch, { bucket: 'tint', shade: '#fcd34d' })), /fill="#fcd34d" class="cuix-map-shade"/, 'shade wins over the hatch');
+  const empty = renderToString(
+    h(UsMap, { level: { kind: 'us' }, label: 'x', states: [{ fips: '32', bucket: 'tint', name: 'Nevada', shade: '' }], onSelect: () => {} }),
+  );
+  assert.match(empty, /fill="url\(#[^)]+\)" class="cuix-map-shape cuix-map-tint"/, 'an empty shade is no shade');
+});
+
+test('a shaded solid county label stays haloed; only an unshaded solid one knocks out', () => {
+  const src = readFileSync(new URL('../src/map/UsMap.tsx', import.meta.url), 'utf8');
+  assert.match(src, /const solid = r\.bucket === 'solid' && !r\.shade;/);
+  assert.match(src, /solid \? 'cuix-map-label cuix-map-label-solid' : 'cuix-map-label'/);
+});

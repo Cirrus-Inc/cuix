@@ -108,3 +108,24 @@ test('countyOutline bold draws the county borders at 2px in border-strong', asyn
   // The highlight path and the state outline are untouched by the grid.
   await expect(page.locator('svg path.cuix-map-outline')).toHaveCSS('stroke-width', '2px');
 });
+
+test('a shaded county keeps its outline in every theme and in forced colors; detail describes it', async ({ page }) => {
+  for (const theme of ['day', 'night', 'hive-day', 'hive-night'] as const) {
+    for (const forcedColors of ['none', 'active'] as const) {
+      await page.emulateMedia({ forcedColors });
+      await open(page, `theme=${theme}`);
+      const path = page.getByRole('button', { name: 'Alachua: 40 students', exact: true }).locator('path.cuix-map-shade');
+      const { stroke, width } = await path.evaluate((el) => {
+        const s = getComputedStyle(el);
+        return { stroke: s.stroke, width: parseFloat(s.strokeWidth) };
+      });
+      expect(stroke, `${theme} ${forcedColors}`).not.toBe('none');
+      expect(width, `${theme} ${forcedColors}`).toBeGreaterThanOrEqual(1);
+    }
+  }
+  // Playwright's own description maths skips SVG <title>; Chromium's tree (SVG-AAM) is what AT reads.
+  const cdp = await page.context().newCDPSession(page);
+  const { nodes } = (await cdp.send('Accessibility.getFullAXTree')) as { nodes: { name?: { value: string }; description?: { value: string } }[] };
+  const alachua = nodes.find((n) => n.name?.value === 'Alachua: 40 students');
+  expect(alachua?.description?.value).toBe('Alachua: 40 Deaf and hard of hearing students');
+});

@@ -31,7 +31,7 @@ import {
 } from './mapMath.ts';
 import { Hatch, Marker } from './Marker.tsx';
 import { MapStyle, colorVars, shapeColor, type MapColors } from './style.tsx';
-import type { MapBucket, MapLevel, MapPoint, MapRegion } from './types.ts';
+import type { MapLevel, MapPoint, MapRegion } from './types.ts';
 
 // A generic US map (HIVE ADR-0012 §6): regions and a level, nothing about what
 // they mean. Geometry is generated (scripts/gen-us-map.mjs); county files load on
@@ -251,7 +251,8 @@ export function UsMap({
     };
   }, [shownId]);
 
-  const fillAttr = (b: MapBucket) => (b === 'tint' ? `url(#${hatch})` : undefined);
+  const fillAttr = (r: Pick<MapRegion, 'bucket' | 'shade'>) => (r.shade ? r.shade : r.bucket === 'tint' ? `url(#${hatch})` : undefined);
+  const shapeClass = (r: Pick<MapRegion, 'bucket' | 'shade'>) => `cuix-map-shape cuix-map-${r.shade ? 'shade' : r.bucket}`;
   const sorted = (list: readonly MapRegion[]) => [...list].sort((a, b) => a.name.localeCompare(b.name));
   const k = camera.k;
 
@@ -381,7 +382,8 @@ export function UsMap({
                   onBlur={ringOff}
                   className="cuix-map-hit"
                 >
-                  <path d={s.d} fill={fillAttr(r.bucket)} className={`cuix-map-shape cuix-map-${r.bucket}`} />
+                  <path d={s.d} fill={fillAttr(r)} className={shapeClass(r)} />
+                  {r.detail && <title>{r.detail}</title>}
                 </a>
               );
             })}
@@ -418,7 +420,8 @@ export function UsMap({
                     }}
                     className="cuix-map-hit"
                   >
-                    <path d={c.d} fill={fillAttr(r.bucket)} className={`cuix-map-shape cuix-map-${r.bucket}`} />
+                    <path d={c.d} fill={fillAttr(r)} className={shapeClass(r)} />
+                    {r.detail && <title>{r.detail}</title>}
                   </g>,
                 ];
               })}
@@ -431,7 +434,7 @@ export function UsMap({
                 {counties.map((r) => {
                   const c = r.label ? shapes.find((x) => x.fips === r.fips) : undefined;
                   if (!c) return null;
-                  const solid = r.bucket === 'solid';
+                  const solid = r.bucket === 'solid' && !r.shade;
                   return (
                     <text
                       key={r.fips}
