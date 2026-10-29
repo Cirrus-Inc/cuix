@@ -4,6 +4,8 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
+- feat(map): `UsMap` gains `selected?: string | null`, additive: a county of `counties` kept drawn with the focus ring's look (the same `cuix-map-ring-band` + `cuix-map-ring-line` paths, so 2px non-scaling at every zoom and `Highlight` in forced colours), state level only. It sits above the county fills, labels and state outline and below the transient focus ring and the points, has `pointer-events: none`, and does not change the county's tab stop, click or hover. Ignored when the FIPS is not in `counties` or the shapes have not loaded. `highlight` is unchanged. Closes Cirrus-Inc/cuix#101
+
 ## [0.15.0] - 2026-10-29
 
 - feat(map): `MapRegion` gains `shade?: string` and `detail?: string`, additive. `shade` is any CSS colour drawn as the region's fill in place of the bucket's fill or hatch (a count layer); the bucket's outline stays, so colour is never the only encoding, and the label stays haloed even on a `solid` region (only a solid region without `shade` knocks it out). `MapSwatch({ bucket, shade })` draws the same for a legend; its `bucket` is now optional (default `none`). `detail` renders as a `<title>` on the region at the state and county levels, like `MapPoint.detail`. Closes Cirrus-Inc/cuix#95

@@ -1,7 +1,7 @@
 import { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { UsMap, albersUsa, type MapPoint, type MapRegion } from '../src/map/index.ts';
-import { Button, Checkbox } from '../src/react/index.ts';
+import { Button, Checkbox, NativeSelect } from '../src/react/index.ts';
 import './app.css';
 
 // UsMap at the state level, for Playwright: the zoom controls and the county outline.
@@ -25,16 +25,29 @@ const at = (id: string, name: string, lng: number, lat: number): MapPoint[] => {
 // ?controlled=1: the app owns the zoom and drives it from its own toolbar.
 const controlled = new URLSearchParams(location.search).get('controlled') === '1';
 
+// ?highlight=<fips> draws the strong outline too, for the spec that checks both together.
+const highlighted = new URLSearchParams(location.search).get('highlight');
+
 const POINTS = [...at('jax', 'Jacksonville interpreter', -81.66, 30.33), ...at('pns', 'Pensacola interpreter', -87.22, 30.42)];
 
 function MapPage() {
   const [bold, setBold] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [picked, setPicked] = useState('');
+  const [selected, setSelected] = useState('');
   return (
     <main className="mx-auto flex min-h-dvh max-w-5xl flex-col gap-4 bg-background p-4 font-sans text-body text-foreground">
       <h1 className="text-title">Map</h1>
       <Checkbox label="Bold county outline" checked={bold} onChange={(e) => setBold(e.target.checked)} data-testid="bold" />
+      <div className="flex items-center gap-2">
+        <span aria-hidden>Selected county</span>
+        <NativeSelect aria-label="Selected county" value={selected} onChange={(e) => setSelected(e.target.value)} data-testid="selected">
+          <option value="">None</option>
+          <option value="12031">Duval</option>
+          <option value="12095">Orange</option>
+          <option value="99999">Unknown FIPS</option>
+        </NativeSelect>
+      </div>
       {controlled && (
         <Button variant="secondary" className="self-start" onClick={() => setZoom(4)}>
           Toolbar zoom 4×
@@ -53,6 +66,8 @@ function MapPage() {
         zoom={controlled ? zoom : undefined}
         onZoomChange={setZoom}
         zoomControls={!controlled}
+        selected={selected || null}
+        highlight={highlighted}
         countyOutline={bold ? 'bold' : 'hairline'}
       />
     </main>
