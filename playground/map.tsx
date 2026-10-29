@@ -1,6 +1,6 @@
 import { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { UsMap, albersUsa, type MapPoint, type MapRegion } from '../src/map/index.ts';
+import { UsMap, albersUsa, albersUsaInvert, type MapPoint, type MapRegion } from '../src/map/index.ts';
 import { Button, Checkbox, NativeSelect } from '../src/react/index.ts';
 import './app.css';
 
@@ -33,7 +33,26 @@ const modifier = new URLSearchParams(location.search).get('modifier') === '1';
 
 const POINTS = [...at('jax', 'Jacksonville interpreter', -81.66, 30.33), ...at('pns', 'Pensacola interpreter', -87.22, 30.42)];
 
+const RADIUS_MILES = 30;
+const EARTH_MILES = 3958.8;
+
+const circle = (lng: number, lat: number) => {
+  const d = RADIUS_MILES / EARTH_MILES;
+  const [lng1, lat1] = [lng * (Math.PI / 180), lat * (Math.PI / 180)];
+  const ring: string[] = [];
+  for (let i = 0; i < 64; i++) {
+    const t = (i / 64) * 2 * Math.PI;
+    const lat2 = Math.asin(Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(t));
+    const lng2 = lng1 + Math.atan2(Math.sin(t) * Math.sin(d) * Math.cos(lat1), Math.cos(d) - Math.sin(lat1) * Math.sin(lat2));
+    const p = albersUsa(lng2 * (180 / Math.PI), lat2 * (180 / Math.PI));
+    if (p) ring.push(`${String(p[0])},${String(p[1])}`);
+  }
+  return ring.join(' ');
+};
+
 function MapPage() {
+  const [dropPin, setDropPin] = useState(false);
+  const [pin, setPin] = useState<{ x: number; y: number; lng: number; lat: number } | null>(null);
   const [bold, setBold] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [picked, setPicked] = useState('');
@@ -43,6 +62,7 @@ function MapPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-5xl flex-col gap-4 bg-background p-4 font-sans text-body text-foreground">
       <h1 className="text-title">Map</h1>
+      <Checkbox label="Drop pin" checked={dropPin} onChange={(e) => setDropPin(e.target.checked)} data-testid="drop-pin" />
       <Checkbox label="Bold county outline" checked={bold} onChange={(e) => setBold(e.target.checked)} data-testid="bold" />
       <div className="flex items-center gap-2">
         <span aria-hidden>Selected county</span>
@@ -62,6 +82,7 @@ function MapPage() {
       <p data-testid="picked">{picked}</p>
       <p data-testid="selects">Selects {selects}</p>
       <p data-testid="bounds">{bounds}</p>
+      <p data-testid="pin">{pin ? `${String(pin.x)},${String(pin.y)}` : 'none'}</p>
       <UsMap
         level={{ kind: 'state', iso: 'US-FL' }}
         label="Schools in Florida"
@@ -71,7 +92,27 @@ function MapPage() {
           setPicked(id);
           setSelects((n) => n + 1);
         }}
-        points={POINTS}
+        points={pin ? [...POINTS, { id: 'pin', name: 'Dropped pin', x: pin.x, y: pin.y, shape: 'cross' }] : POINTS}
+        onMapClick={
+          dropPin
+            ? (p) => {
+                const ll = albersUsaInvert(p.x, p.y);
+                setPin(ll ? { ...p, lng: ll[0], lat: ll[1] } : null);
+              }
+            : undefined
+        }
+        overlay={
+          pin && (
+            <polygon
+              points={circle(pin.lng, pin.lat)}
+              fill="var(--cuix-focus-ring)"
+              fillOpacity={0.15}
+              stroke="var(--cuix-focus-ring)"
+              strokeWidth={2}
+              vectorEffect="non-scaling-stroke"
+            />
+          )
+        }
         onSelectPoint={setPicked}
         zoom={controlled ? zoom : undefined}
         onZoomChange={setZoom}

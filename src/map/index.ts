@@ -4,7 +4,7 @@
 export { UsMap, type UsMapProps, type CountyLoader, type ZoomLabels } from './UsMap.tsx';
 export { LayersPanel, type LayersPanelProps } from './LayersPanel.tsx';
 export { MapSwatch, MarkerSwatch } from './Marker.tsx';
-export { albersUsa } from './albersUsa.ts';
+export { albersUsa, albersUsaInvert } from './albersUsa.ts';
 export {
   COUNTY_PAD,
   DRAG_THRESHOLD,

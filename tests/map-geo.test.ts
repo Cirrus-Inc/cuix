@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { albersUsa, albersUsaInvert } from '../src/map/albersUsa.ts';
 import { US_STATES, VIEWBOX } from '../src/map/geo/usStates.ts';
 import { US_STATE_INDEX } from '../src/map/geo/usStateIndex.ts';
 import { COUNTY_LOADERS } from '../src/map/geo/countyLoaders.ts';
@@ -69,4 +70,20 @@ test('every generated file carries the GENERATED header, command and source line
     assert.ok(lines[1]?.includes('node scripts/gen-us-map.mjs'), f);
     assert.ok(lines[2]?.includes('us-atlas 3.0.1'), f);
   }
+});
+
+test('albersUsaInvert round-trips albersUsa in each piece and is null outside all of them', () => {
+  for (const [name, lng, lat] of [
+    ['Orlando', -81.38, 28.54],
+    ['Anchorage', -149.9, 61.22],
+    ['Honolulu', -157.86, 21.31],
+  ] as const) {
+    const p = albersUsa(lng, lat);
+    assert.ok(p, name);
+    const back = albersUsaInvert(p[0], p[1]);
+    assert.ok(back, name);
+    assert.ok(Math.abs(back[0] - lng) < 1e-6 && Math.abs(back[1] - lat) < 1e-6, `${name}: ${String(back)}`);
+  }
+  assert.equal(albersUsaInvert(1100, 300), null);
+  assert.equal(albersUsaInvert(-200, 300), null);
 });

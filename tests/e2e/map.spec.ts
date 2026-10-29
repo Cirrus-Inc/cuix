@@ -280,6 +280,29 @@ test('double-click zooms in one step and selects once', async ({ page }) => {
   await expect(page.getByTestId('selects')).toHaveText('Selects 1');
 });
 
+test('pin mode: a click on a county reports map coordinates and selects nothing; a double-click only zooms', async ({ page }) => {
+  await open(page);
+  await page.getByTestId('drop-pin').check();
+  await expect(svg(page)).toHaveClass(/cuix-map-pin/);
+  const county = page.getByRole('button', { name: 'Hillsborough: 3 schools' });
+  const box = (await county.boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(page.getByTestId('pin')).toHaveText(/^\d+(\.\d+)?,\d+(\.\d+)?$/);
+  const [x, y] = (await page.getByTestId('pin').innerText()).split(',').map(Number) as [number, number];
+  expect(x).toBeGreaterThanOrEqual(0);
+  expect(x).toBeLessThanOrEqual(975);
+  expect(y).toBeGreaterThanOrEqual(0);
+  expect(y).toBeLessThanOrEqual(610);
+  await expect(page.getByTestId('selects')).toHaveText('Selects 0');
+  await expect(page.locator('.cuix-map-camera polygon[fill-opacity]')).toHaveCount(1);
+  const before = await page.getByTestId('pin').innerText();
+  await page.mouse.dblclick(box.x + box.width / 4, box.y + box.height / 4);
+  await expect(page.getByTestId('zoom')).toHaveText('Zoom 1.5');
+  await page.waitForTimeout(400);
+  expect(await page.getByTestId('pin').innerText()).toBe(before);
+  await expect(page.getByTestId('selects')).toHaveText('Selects 0');
+});
+
 test('keyboard on the focused map: + and - zoom, arrows pan; a focused county keeps its keys', async ({ page }) => {
   await open(page);
   await svg(page).focus();
