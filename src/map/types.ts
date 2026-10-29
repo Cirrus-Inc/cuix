@@ -12,6 +12,10 @@ export interface MapRegion {
   label?: string;
   /** Where a state's anchor points, so open-in-new-tab works. A state without one is a button. */
   href?: string;
+  /** Any CSS colour, drawn as the fill in place of the bucket's fill or hatch (a count layer). The bucket's outline stays, and the label stays haloed even when `bucket` is `solid`. */
+  shade?: string;
+  /** Supplementary tooltip text (a `<title>` on the region), only when it says more than `name`. */
+  detail?: string;
 }
 
 export type MapLevel = { kind: 'us' } | { kind: 'state'; iso: string };

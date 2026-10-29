@@ -73,6 +73,7 @@ const CSS = `
 .cuix-map-faded{opacity:0.4}
 .cuix-map-none{fill:${c('surface')};stroke:${c('border')};stroke-width:1}
 .cuix-map-tint{stroke:${c('borderStrong')};stroke-width:1}
+.cuix-map-shade{stroke:${c('borderStrong')};stroke-width:1}
 .cuix-map-solid{fill:${c('accent')};stroke:${c('borderStrong')};stroke-width:1}
 .cuix-map-hatch-bg{fill:${c('accentSoft')}}
 .cuix-map-hatch-line{stroke:${c('accent')};stroke-width:2}
@@ -80,7 +81,7 @@ const CSS = `
 .cuix-map-hit:hover>.cuix-map-shape{stroke:${c('foreground')};stroke-width:2}
 .cuix-map-outline{fill:none;stroke:${c('foregroundMuted')};stroke-width:2;pointer-events:none}
 .cuix-map-highlight{fill:none;stroke:${c('foreground')};stroke-width:2;pointer-events:none}
-.cuix-map-counties-bold :is(.cuix-map-none,.cuix-map-tint,.cuix-map-solid){stroke:${c('borderStrong')};stroke-width:2}
+.cuix-map-counties-bold :is(.cuix-map-none,.cuix-map-tint,.cuix-map-shade,.cuix-map-solid){stroke:${c('borderStrong')};stroke-width:2}
 .cuix-map-counties-bold .cuix-map-hit:hover>.cuix-map-shape,.cuix-map-counties-bold .cuix-map-highlight{stroke-width:3}
 .cuix-map-zoom{position:absolute;top:8px;right:8px;z-index:1;display:flex;flex-direction:column;gap:4px}
 .cuix-map-zoom-btn{display:grid;place-items:center;box-sizing:border-box;min-width:var(--cuix-target-min, 44px);min-height:var(--cuix-target-min, 44px);padding:0 6px;border:1px solid ${c('borderStrong')};border-radius:var(--cuix-radius-control, 6px);background:${c('surface')};color:${c('foreground')};font:inherit;font-size:1.25rem;font-weight:600;line-height:1;cursor:pointer}

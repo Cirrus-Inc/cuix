@@ -14,6 +14,7 @@ const COUNTIES: MapRegion[] = [
   { fips: '12086', bucket: 'tint', name: 'Miami-Dade: 2 schools', label: '2' },
   { fips: '12033', bucket: 'none', name: 'Escambia: no schools' },
   { fips: '12073', bucket: 'none', name: 'Leon: no schools' },
+  { fips: '12001', bucket: 'solid', name: 'Alachua: 40 students', label: '40', shade: '#fcd34d', detail: 'Alachua: 40 Deaf and hard of hearing students' },
   { fips: '12057', bucket: 'solid', name: 'Hillsborough: 3 schools', label: '3' },
 ];
 

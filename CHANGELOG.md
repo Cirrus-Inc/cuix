@@ -4,6 +4,8 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
+- feat(map): `MapRegion` gains `shade?: string` and `detail?: string`, additive. `shade` is any CSS colour drawn as the region's fill in place of the bucket's fill or hatch (a count layer); the bucket's outline stays, so colour is never the only encoding, and the label stays haloed even on a `solid` region (only a solid region without `shade` knocks it out). `MapSwatch({ bucket, shade })` draws the same for a legend. `detail` renders as a `<title>` on the region at the state and county levels, like `MapPoint.detail`. Closes Cirrus-Inc/cuix#95
+
 ## [0.14.0] - 2026-10-29
 
 - feat(map): `UsMap` zooms at the state level and can draw a bold county grid. A built-in `+` / `−` / Fit group (44px, keyboard reachable, `aria-disabled` at the clamps; `zoomControls={false}` hides it, `zoomLabels` names it) scales the fit camera 1×–8× about the centre in 1.5× steps; `zoom` + `onZoomChange` make it controlled from the app's toolbar. Off-screen counties and points leave the tab order while zoomed. `countyOutline="bold"` draws the state's county borders at 2px in `border-strong` (default `hairline`), separate from `highlight`. New maths: `zoomCamera`, `clampZoom`, `stepZoom`, `ZOOM_MIN` / `ZOOM_MAX` / `ZOOM_STEP`. No prop or export changes, but the group is on by default: every existing state-level map gains it in its top-right corner on upgrade; pass `zoomControls={false}` to keep the previous look. A controlled `zoom` is not reset when `level` or `focus` changes; the app resets it. Closes Cirrus-Inc/cuix#92

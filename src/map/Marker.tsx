@@ -39,8 +39,8 @@ export function Hatch({ id, k = 1 }: { id: string; k?: number }) {
   );
 }
 
-/** A region bucket for a legend: the same fill, hatch or outline UsMap draws. */
-export function MapSwatch({ bucket }: { bucket: MapBucket }) {
+/** A region bucket for a legend: the same fill, hatch or outline UsMap draws; `shade` draws a count layer's colour over the bucket's outline. */
+export function MapSwatch({ bucket, shade }: { bucket: MapBucket; shade?: string }) {
   const id = useId();
   return (
     <>
@@ -49,7 +49,7 @@ export function MapSwatch({ bucket }: { bucket: MapBucket }) {
         <defs>
           <Hatch id={id} />
         </defs>
-        <rect x="1" y="1" width="22" height="14" rx="2" fill={bucket === 'tint' ? `url(#${id})` : undefined} className={`cuix-map-${bucket}`} />
+        <rect x="1" y="1" width="22" height="14" rx="2" fill={shade ?? (bucket === 'tint' ? `url(#${id})` : undefined)} className={`cuix-map-${shade ? 'shade' : bucket}`} />
       </svg>
     </>
   );
