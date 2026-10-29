@@ -28,6 +28,9 @@ const controlled = new URLSearchParams(location.search).get('controlled') === '1
 // ?highlight=<fips> draws the strong outline too, for the spec that checks both together.
 const highlighted = new URLSearchParams(location.search).get('highlight');
 
+// ?modifier=1: the wheel zooms only with ctrl or cmd.
+const modifier = new URLSearchParams(location.search).get('modifier') === '1';
+
 const POINTS = [...at('jax', 'Jacksonville interpreter', -81.66, 30.33), ...at('pns', 'Pensacola interpreter', -87.22, 30.42)];
 
 function MapPage() {
@@ -35,6 +38,8 @@ function MapPage() {
   const [zoom, setZoom] = useState(1);
   const [picked, setPicked] = useState('');
   const [selected, setSelected] = useState('');
+  const [selects, setSelects] = useState(0);
+  const [bounds, setBounds] = useState('none');
   return (
     <main className="mx-auto flex min-h-dvh max-w-5xl flex-col gap-4 bg-background p-4 font-sans text-body text-foreground">
       <h1 className="text-title">Map</h1>
@@ -55,12 +60,17 @@ function MapPage() {
       )}
       <p data-testid="zoom">Zoom {zoom}</p>
       <p data-testid="picked">{picked}</p>
+      <p data-testid="selects">Selects {selects}</p>
+      <p data-testid="bounds">{bounds}</p>
       <UsMap
         level={{ kind: 'state', iso: 'US-FL' }}
         label="Schools in Florida"
         states={[]}
         counties={COUNTIES}
-        onSelect={(_, id) => setPicked(id)}
+        onSelect={(_, id) => {
+          setPicked(id);
+          setSelects((n) => n + 1);
+        }}
         points={POINTS}
         onSelectPoint={setPicked}
         zoom={controlled ? zoom : undefined}
@@ -68,6 +78,8 @@ function MapPage() {
         zoomControls={!controlled}
         selected={selected || null}
         highlight={highlighted}
+        wheelZoom={modifier ? 'modifier' : 'plain'}
+        onSelectedBounds={(r) => setBounds(r ? `${String(Math.round(r.x))},${String(Math.round(r.y))},${String(Math.round(r.width))},${String(Math.round(r.height))}` : 'none')}
         countyOutline={bold ? 'bold' : 'hairline'}
       />
     </main>
