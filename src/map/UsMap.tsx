@@ -190,6 +190,9 @@ const DBLCLICK_MS = 250;
  */
 const canPanAt = (zoom: number, focusFit: boolean): boolean => zoom > ZOOM_MIN || focusFit;
 
+/** Whether a shift moves the camera at all, by value: a zero pan is the fit, whatever the object. */
+const panned = (s: Shift): boolean => s.x !== 0 || s.y !== 0;
+
 /** One arrow key pans this fraction of the view. */
 const KEY_PAN = 0.2;
 
@@ -260,7 +263,7 @@ export function UsMap({
   if (!canPan && own.shift !== ZERO) setOwn({ ...own, shift: ZERO });
   const stateBox = useMemo(() => (stateShape ? pathBBox(stateShape.d) : null), [stateShape]);
   const shift = canPan && stateBox ? clampShift(fit, zoom, own.shift, stateBox, VIEW, canPan) : ZERO;
-  const camera = useMemo(() => (zoom === ZOOM_MIN && shift === ZERO ? fit : viewCamera(fit, zoom, shift, VIEW)), [fit, zoom, shift]);
+  const camera = useMemo(() => (zoom === ZOOM_MIN && !panned(shift) ? fit : viewCamera(fit, zoom, shift, VIEW)), [fit, zoom, shift]);
   const cur = useRef({ zoom, shift, fit, stateBox, fitKey, zoomProp, focusFit });
   cur.current = { zoom, shift, fit, stateBox, fitKey, zoomProp, focusFit };
   const onZoomRef = useRef(onZoomChange);
@@ -271,8 +274,8 @@ export function UsMap({
     const z = clampZoom(nextZoom);
     // The next zoom decides, not the current one: a zoom in from the fit keeps the shift it needs.
     const can = canPanAt(z, c.focusFit);
-    // ZERO is never clamped: Fit asks for the fit camera itself and must land on it exactly.
-    const u = !can || !c.stateBox || nextShift === ZERO ? ZERO : clampShift(c.fit, z, nextShift, c.stateBox, VIEW, can);
+    // A zero pan is never clamped: Fit asks for the fit camera itself and must land on it exactly.
+    const u = !can || !c.stateBox || !panned(nextShift) ? ZERO : clampShift(c.fit, z, nextShift, c.stateBox, VIEW, can);
     cur.current = { ...c, zoom: z, shift: u };
     const key = c.fitKey;
     setOwn((o) => ({ key, zoom: c.zoomProp === undefined ? z : o.zoom, shift: u }));
@@ -578,8 +581,8 @@ export function UsMap({
           </button>
           <button
             type="button"
-            aria-disabled={(zoom <= ZOOM_MIN && shift === ZERO) || undefined}
-            onClick={() => (zoom > ZOOM_MIN || shift !== ZERO) && commit(ZOOM_MIN, ZERO)}
+            aria-disabled={(zoom <= ZOOM_MIN && !panned(shift)) || undefined}
+            onClick={() => (zoom > ZOOM_MIN || panned(shift)) && commit(ZOOM_MIN, ZERO)}
             className="cuix-map-zoom-btn cuix-map-zoom-fit cuix-map-focus"
           >
             {text.fit}
