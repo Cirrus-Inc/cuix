@@ -134,7 +134,8 @@ export interface UsMapProps {
    * State level only: a factor over the fit camera (the state, or the `focus` county), 1 to 8.
    * Controlled when set; otherwise the map keeps its own, back to 1 whenever the fit changes
    * (another state or another `focus`). The pan (drag, arrow keys, pinch) is always the map's own:
-   * it resets with the fit and whenever the zoom is 1.
+   * it resets with the fit, and whenever the zoom is 1 at a state fit, where the whole state is on
+   * screen already. A `focus` county's fit shows only part of the state, so there the pan lives at 1 too.
    */
   zoom?: number;
   /** Called with the new factor when the zoom changes: a control, the wheel, a double-click, a pinch or a key. */
@@ -182,6 +183,16 @@ export interface UsMapProps {
 
 /** A click that does not become a double-click within this long steps back (`onBack`). */
 const DBLCLICK_MS = 250;
+/**
+ * Whether there is anywhere to pan: at ZOOM_MIN a state fit shows the whole state box, but a county
+ * fit (`focusFit`) shows only part of it, so the drag, the keys and Fit all work there without a
+ * zoom step. `clampShift` keeps the state box in view either way.
+ */
+const canPanAt = (zoom: number, focusFit: boolean): boolean => zoom > ZOOM_MIN || focusFit;
+
+/** Whether a shift moves the camera at all, by value: a zero pan is the fit, whatever the object. */
+const panned = (s: Shift): boolean => s.x !== 0 || s.y !== 0;
+
 /** One arrow key pans this fraction of the view. */
 const KEY_PAN = 0.2;
 
@@ -246,20 +257,25 @@ export function UsMap({
   if (ownState.key !== fitKey) setOwn({ key: fitKey, zoom: ZOOM_MIN, shift: ZERO });
   const own = ownState.key === fitKey ? ownState : { key: fitKey, zoom: ZOOM_MIN, shift: ZERO };
   const zoom = iso ? clampZoom(zoomProp ?? own.zoom) : ZOOM_MIN;
-  // The pan lives only while zoomed in, and is clamped on every render: a zoom set from outside can break it.
-  if (zoom <= ZOOM_MIN && own.shift !== ZERO) setOwn({ ...own, shift: ZERO });
+  const focusFit = !!focused;
+  const canPan = canPanAt(zoom, focusFit);
+  // The pan lives only while there is somewhere to go, and is clamped on every render: a zoom set from outside can break it.
+  if (!canPan && own.shift !== ZERO) setOwn({ ...own, shift: ZERO });
   const stateBox = useMemo(() => (stateShape ? pathBBox(stateShape.d) : null), [stateShape]);
-  const shift = zoom > ZOOM_MIN && stateBox ? clampShift(fit, zoom, own.shift, stateBox, VIEW) : ZERO;
-  const camera = useMemo(() => (zoom === ZOOM_MIN ? fit : viewCamera(fit, zoom, shift, VIEW)), [fit, zoom, shift]);
-  const cur = useRef({ zoom, shift, fit, stateBox, fitKey, zoomProp });
-  cur.current = { zoom, shift, fit, stateBox, fitKey, zoomProp };
+  const shift = canPan && stateBox ? clampShift(fit, zoom, own.shift, stateBox, VIEW, canPan) : ZERO;
+  const camera = useMemo(() => (zoom === ZOOM_MIN && !panned(shift) ? fit : viewCamera(fit, zoom, shift, VIEW)), [fit, zoom, shift]);
+  const cur = useRef({ zoom, shift, fit, stateBox, fitKey, zoomProp, focusFit });
+  cur.current = { zoom, shift, fit, stateBox, fitKey, zoomProp, focusFit };
   const onZoomRef = useRef(onZoomChange);
   onZoomRef.current = onZoomChange;
   // Every zoom or pan goes through here; handlers read `cur` so two events before a render still add up.
   const commit = (nextZoom: number, nextShift: Shift) => {
     const c = cur.current;
     const z = clampZoom(nextZoom);
-    const u = z <= ZOOM_MIN || !c.stateBox ? ZERO : clampShift(c.fit, z, nextShift, c.stateBox, VIEW);
+    // The next zoom decides, not the current one: a zoom in from the fit keeps the shift it needs.
+    const can = canPanAt(z, c.focusFit);
+    // A zero pan is never clamped: Fit asks for the fit camera itself and must land on it exactly.
+    const u = !can || !c.stateBox || !panned(nextShift) ? ZERO : clampShift(c.fit, z, nextShift, c.stateBox, VIEW, can);
     cur.current = { ...c, zoom: z, shift: u };
     const key = c.fitKey;
     setOwn((o) => ({ key, zoom: c.zoomProp === undefined ? z : o.zoom, shift: u }));
@@ -382,7 +398,7 @@ export function UsMap({
     if (!gesturesOn || e.target !== e.currentTarget || e.ctrlKey || e.metaKey || e.altKey) return;
     const c = cur.current;
     const pan = (dx: number, dy: number) => {
-      if (c.zoom <= ZOOM_MIN) return;
+      if (!canPanAt(c.zoom, c.focusFit)) return;
       e.preventDefault();
       commit(c.zoom, panBy(c.shift, dx * VIEW_W * KEY_PAN, dy * VIEW_H * KEY_PAN, c.zoom));
     };
@@ -431,7 +447,7 @@ export function UsMap({
 
   const boxes = useMemo(() => (shapes ? new Map(shapes.map((c) => [c.fips, pathBBox(c.d)])) : null), [shapes]);
   // At county focus or zoomed in, part of the state is off-screen: still clickable, out of the tab order.
-  const view = focused || zoom > ZOOM_MIN ? visibleRect(camera, VIEW) : null;
+  const view = canPan ? visibleRect(camera, VIEW) : null;
   const pinAt = (box: { x: number; y: number; width: number; height: number } | undefined) => box && onMapClick?.({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
   const offscreen = (box: { x: number; y: number; width: number; height: number } | null | undefined) => (view && box && !intersects(view, box) ? -1 : 0);
 
@@ -565,8 +581,8 @@ export function UsMap({
           </button>
           <button
             type="button"
-            aria-disabled={zoom <= ZOOM_MIN || undefined}
-            onClick={() => zoom > ZOOM_MIN && setZoom(ZOOM_MIN)}
+            aria-disabled={(zoom <= ZOOM_MIN && !panned(shift)) || undefined}
+            onClick={() => (zoom > ZOOM_MIN || panned(shift)) && commit(ZOOM_MIN, ZERO)}
             className="cuix-map-zoom-btn cuix-map-zoom-fit cuix-map-focus"
           >
             {text.fit}
@@ -626,7 +642,7 @@ export function UsMap({
               }
             : undefined
         }
-        className={[iso && onBack && !pin && !(gesturesOn && zoom > ZOOM_MIN) && 'cuix-map-zoomout', pin && 'cuix-map-pin', gesturesOn && 'cuix-map-gestures', gesturesOn && zoom > ZOOM_MIN && 'cuix-map-pan', gesturesOn && 'cuix-map-focus']
+        className={[iso && onBack && !pin && !(gesturesOn && canPan) && 'cuix-map-zoomout', pin && 'cuix-map-pin', gesturesOn && 'cuix-map-gestures', gesturesOn && canPan && 'cuix-map-pan', gesturesOn && 'cuix-map-focus']
           .filter(Boolean)
           .join(' ') || undefined}
       >

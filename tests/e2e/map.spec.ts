@@ -253,6 +253,37 @@ test('drag pans with grab cursors, never selects, and a small press is still a c
   expect(await cam(page)).toEqual(reset);
 });
 
+// Cirrus-Inc/cuix#110: the county fit shows part of the state, so the drag works without a zoom step.
+test('a county focus pans at the fit, and Fit clears the pan', async ({ page }) => {
+  await open(page, 'theme=day&focus=12057');
+  await settled(page);
+  await expect(page.getByTestId('zoom')).toHaveText('Zoom 1');
+  await expect(svg(page)).toHaveCSS('cursor', 'grab');
+  // Nothing to clear yet: Fit is at its clamp until the pan exists.
+  await expect(fit(page)).toHaveAttribute('aria-disabled', 'true');
+  const before = await cam(page);
+  const b = (await svg(page).boundingBox())!;
+  const x = b.x + b.width / 2;
+  const y = b.y + b.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 3, y + 1);
+  await page.mouse.move(x + 60, y + 20, { steps: 5 });
+  await page.mouse.up();
+  await settled(page);
+  const after = await cam(page);
+  expect(after.x - before.x).toBeGreaterThan(30);
+  expect(after.k).toBe(before.k);
+  // The pan is not a zoom: the factor is still 1 and the zoom-out button stays at its clamp.
+  await expect(page.getByTestId('zoom')).toHaveText('Zoom 1');
+  await expect(zoomOut(page)).toHaveAttribute('aria-disabled', 'true');
+  await expect(fit(page)).not.toHaveAttribute('aria-disabled', 'true');
+  await fit(page).click();
+  await settled(page);
+  expect(await cam(page)).toEqual(before);
+  await expect(fit(page)).toHaveAttribute('aria-disabled', 'true');
+});
+
 test('the pan cannot take the state out of the view', async ({ page }) => {
   await open(page);
   for (let i = 0; i < 4; i++) await zoomIn(page).click();

@@ -28,6 +28,9 @@ const controlled = new URLSearchParams(location.search).get('controlled') === '1
 // ?highlight=<fips> draws the strong outline too, for the spec that checks both together.
 const highlighted = new URLSearchParams(location.search).get('highlight');
 
+// ?focus=<fips>: the camera fits that county while the zoom stays 1, for the pan-at-the-fit spec.
+const focusFips = new URLSearchParams(location.search).get('focus');
+
 // ?modifier=1: the wheel zooms only with ctrl or cmd.
 const modifier = new URLSearchParams(location.search).get('modifier') === '1';
 
@@ -124,6 +127,7 @@ function MapPage() {
         zoomControls={!controlled}
         selected={selected || null}
         highlight={highlighted}
+        focus={focusFips}
         wheelZoom={modifier ? 'modifier' : 'plain'}
         onSelectedBounds={(r) => setBounds(r ? `${String(Math.round(r.x))},${String(Math.round(r.y))},${String(Math.round(r.width))},${String(Math.round(r.height))}` : 'none')}
         countyOutline={bold ? 'bold' : 'hairline'}
