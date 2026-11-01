@@ -6,6 +6,7 @@ import { renderToString } from 'react-dom/server';
 import { albersUsa } from '../src/map/albersUsa.ts';
 import { groupPoints } from '../src/map/groupPoints.ts';
 import {
+  COUNTY_PAD,
   DRAG_THRESHOLD,
   WHEEL_MAX,
   ZERO,
@@ -352,6 +353,7 @@ test('panBy moves the view by the drag, whatever the zoom', () => {
 
 test('clampShift: no pan at the fit, and the box can never leave the view', () => {
   assert.deepEqual(clampShift(FIT, 1, { x: 500, y: 500 }, BOX, VIEW), ZERO);
+  assert.deepEqual(clampShift(FIT, 1, { x: 500, y: 500 }, BOX, VIEW, false), ZERO);
   for (const z of [1.5, 3, 8]) {
     for (const [dx, dy] of [[5000, 5000], [-5000, -5000], [5000, -5000]] as const) {
       const s = clampShift(FIT, z, panBy(ZERO, dx, dy, z), BOX, VIEW);
@@ -365,6 +367,28 @@ test('clampShift: no pan at the fit, and the box can never leave the view', () =
   // A pan already inside the limit is returned as is.
   const inside = panBy(ZERO, 5, 5, 2);
   assert.equal(clampShift(FIT, 2, inside, BOX, VIEW), inside);
+});
+
+// Cirrus-Inc/cuix#110: a county fit shows only part of the state box, so there is a pan at ZOOM_MIN.
+test('clampShift: with canPan a fit of a smaller box pans at ZOOM_MIN, still clamped to the box', () => {
+  const COUNTY = { x: 700, y: 400, width: 24, height: 18 };
+  const cfit = cameraFor(COUNTY, VIEW, COUNTY_PAD);
+  const rect = { left: 0, top: 0, width: VIEW.width, height: VIEW.height };
+  // The county fit is inside the limit already, so Fit returns to exactly the fit.
+  assert.equal(clampShift(cfit, ZOOM_MIN, ZERO, BOX, VIEW, true), ZERO);
+  // A drag at ZOOM_MIN moves, and never takes the state box out of the view.
+  for (const [dx, dy] of [[160, 120], [-160, -120], [9000, -9000]] as const) {
+    const s = clampShift(cfit, ZOOM_MIN, panBy(ZERO, dx, dy, ZOOM_MIN), BOX, VIEW, true);
+    assert.ok(s.x !== 0 || s.y !== 0, `${String(dx)},${String(dy)} did not pan`);
+    const r = screenRect(BOX, viewCamera(cfit, ZOOM_MIN, s, VIEW), rect, VIEW);
+    assert.ok(Math.min(r.x + r.width, VIEW.width) - Math.max(r.x, 0) >= 0.25 * Math.min(r.width, VIEW.width) - 1e-6, 'keeps a quarter of its width');
+    assert.ok(Math.min(r.y + r.height, VIEW.height) - Math.max(r.y, 0) >= 0.25 * Math.min(r.height, VIEW.height) - 1e-6, 'keeps a quarter of its height');
+  }
+  // A small drag is returned as is, and the same shift without canPan is no pan at all.
+  const small = panBy(ZERO, 12, -8, ZOOM_MIN);
+  assert.equal(clampShift(cfit, ZOOM_MIN, small, BOX, VIEW, true), small);
+  assert.deepEqual(clampShift(cfit, ZOOM_MIN, small, BOX, VIEW, false), ZERO);
+  assert.deepEqual(clampShift(cfit, ZOOM_MIN, small, BOX, VIEW), ZERO);
 });
 
 test('isDrag: a press under the threshold is a click, beyond it a drag', () => {

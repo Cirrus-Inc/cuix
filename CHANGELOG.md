@@ -4,6 +4,10 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
+### Fixed
+
+- fix(map): `UsMap` pans at a county focus without a zoom step first. With `focus` set, the camera fits that county and so shows only part of the state, but `commit()` and `clampShift()` read "nothing to pan" as "the zoom is 1" and zeroed every drag, arrow key and pinch until the first `+`. Pan is now allowed whenever the camera shows less than the whole state (`zoom > ZOOM_MIN || focused`), clamped to the state box as before (`KEEP`, a quarter of its smaller side in view); `clampShift` takes the rule as a new trailing `canPan` argument, defaulting to `zoom > ZOOM_MIN`, so its signature stays backwards compatible. Fit and the grab cursor follow the same rule: Fit is live whenever there is a pan to clear and returns to the fit camera. A state fit at zoom 1 still does not pan. Closes Cirrus-Inc/cuix#110
+
 ## [0.18.0] - 2026-10-29
 
 - feat(map): `UsMap` pin mode, a map-space overlay and the `albersUsa` inverse, all additive and state level only. `onMapClick?: (p: { x: number; y: number }) => void`: while set, a single left click anywhere on the map (county, water or marker) reports the point in the 975x610 map space and fires nothing else (no `onSelect`, `onSelectPoint`, `onBack`), at any zoom or pan; Enter or Space on a county reports the centre of its box, on a marker its point; hover and the gestures keep working, with gestures on the click waits out the 250ms double-click window so a double-click only zooms, and the svg gets `cuix-map-pin` (crosshair) in place of `cuix-map-zoomout`. `overlay?: ReactNode` is drawn inside the camera in map space, above the county fills, outlines and labels and below the markers, `aria-hidden` and `pointer-events: none`. New export `albersUsaInvert(x, y): [lng, lat] | null`, d3-geo's `albersUsa().invert` for the same scale and translate (null outside the piece the point falls in). Closes Cirrus-Inc/cuix#106

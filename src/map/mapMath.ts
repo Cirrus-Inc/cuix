@@ -113,11 +113,14 @@ export const KEEP = 0.25;
 
 /**
  * Pan limit: the box (the focused area) keeps at least KEEP of its smaller side in view, on both
- * axes, so it can never leave. At ZOOM_MIN there is no pan.
+ * axes, so it can never leave. `canPan` is the caller's answer to "is there anywhere to go?", i.e.
+ * does the fit show less than the whole box: false pins the map to the fit (a fit of the box itself
+ * at ZOOM_MIN), true allows the pan at any zoom (a fit of something smaller, such as one county of
+ * the state box, already shows only part of it). It defaults to the first case, zoom > ZOOM_MIN.
  */
-export function clampShift(fit: Camera, zoom: number, shift: Shift, box: BBox, view: View): Shift {
+export function clampShift(fit: Camera, zoom: number, shift: Shift, box: BBox, view: View, canPan = clampZoom(zoom) > ZOOM_MIN): Shift {
   const z = clampZoom(zoom);
-  if (z <= ZOOM_MIN) return ZERO;
+  if (!canPan) return ZERO;
   const cam = viewCamera(fit, z, shift, view);
   const axis = (pos: number, lo: number, size: number, viewSize: number) => {
     const keep = KEEP * Math.min(size * cam.k, viewSize);
