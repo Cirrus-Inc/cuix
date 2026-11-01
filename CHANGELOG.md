@@ -4,6 +4,8 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-11-01
+
 ### Fixed
 
 - fix(map): `UsMap` pans at a county focus without a zoom step first. With `focus` set, the camera fits that county and so shows only part of the state, but `commit()` and `clampShift()` read "nothing to pan" as "the zoom is 1" and zeroed every drag, arrow key and pinch until the first `+`. Pan is now allowed whenever the camera shows less than the whole state (`zoom > ZOOM_MIN || focused`), clamped to the state box as before (`KEEP`, a quarter of its smaller side in view); `clampShift` takes the rule as a new trailing `canPan` argument, defaulting to `zoom > ZOOM_MIN`, so its signature stays backwards compatible. Fit and the grab cursor follow the same rule: Fit is live whenever there is a pan to clear and returns to the fit camera. A state fit at zoom 1 still does not pan. Closes Cirrus-Inc/cuix#110
@@ -134,7 +136,8 @@ Phase 1: core day/night tokens at AAA, generated `tokens.css` / `theme.css` / `t
 - docs(tokens): adopt core day/night as the only palette at AAA (Cirrus-Inc/cuix-legacy#2)
 - docs: README with Mermaid, badges and decision index (Cirrus-Inc/cuix-legacy#1)
 
-[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.18.0...HEAD
+[Unreleased]: https://github.com/Cirrus-Inc/cuix/compare/v0.18.1...HEAD
+[0.18.1]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.18.1
 [0.18.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.18.0
 [0.17.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.17.0
 [0.16.0]: https://github.com/Cirrus-Inc/cuix/releases/tag/v0.16.0
