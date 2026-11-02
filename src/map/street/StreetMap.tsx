@@ -331,9 +331,11 @@ export function StreetMap({
   const shapesRef = useRef(shapes);
   shapesRef.current = shapes;
   const shapeData = () => shapeFeatures(shapesRef.current ?? [], (css) => (container.current ? resolveColor(container.current, css) : css));
+  // Nothing is added to the style until there is a shape; installed later, `beforeId` still puts it under the pins.
+  const hasShapes = (shapes?.length ?? 0) > 0;
 
   useEffect(() => {
-    if (!map) return;
+    if (!map || !hasShapes) return;
     const install = () => installShapes(map, shapeData(), SOURCE);
     try {
       install();
@@ -345,7 +347,7 @@ export function StreetMap({
       map.off('style.load', install);
       removeShapes(map);
     };
-  }, [map]);
+  }, [map, hasShapes]);
 
   useEffect(() => {
     if (map) updateShapes(map, shapeData());
