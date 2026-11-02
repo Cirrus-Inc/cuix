@@ -9,6 +9,7 @@ export {
   type LngLat,
   type LngLatBounds,
 } from './StreetMap.tsx';
+export type { StreetShape } from './shapes.ts';
 export type { StreetBBox, StreetView } from './view.ts';
 export type { MapLayer, MarkerShape } from '../types.ts';
 export type { MapColors } from '../style.tsx';

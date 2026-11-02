@@ -4,6 +4,8 @@ Every tag, newest first. Entries up to `v0.7.0` were written against the former 
 
 ## [Unreleased]
 
+- feat(map): `StreetMap` gains `shapes?: readonly StreetShape[]`, additive: polygons and lines in lng/lat drawn under the pins. `StreetShape` is `{ id, coordinates, kind?: 'polygon' | 'line', color?, fillOpacity?, lineWidth? }` (exported from `@cirrus/cuix/map/street`): `coordinates` are rings of `[lng, lat]`, the first the outer ring (a polygon ring is closed if it is not; a `line` uses one ring and is not closed); `color` is a `MapColors` key or a CSS colour, default the focus ring colour, resolved through `--cuix-map-*` when the shapes are set; `fillOpacity` defaults to 0.08 and `lineWidth` to 2 px. One GeoJSON source, `cuix-street-shapes`, feeds a `fill` layer (polygons only) and a `line` layer with data-driven paint (`['get', 'color']`, `['get', 'fillOpacity']`, `['get', 'lineWidth']`), both added before the pin layer, so pins, bubbles, popups and tooltips keep their stacking and hit areas; `setData` runs when `shapes` changes by value, the layers are removed on unmount and re-added on a style reload, as the pins' source is. Shapes are not interactive: no pointer events, no focus stop, no accessible name. Without `shapes` nothing is added. Closes Cirrus-Inc/cuix#113
+
 ## [0.18.1] - 2026-11-01
 
 ### Fixed
