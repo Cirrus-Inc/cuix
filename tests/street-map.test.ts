@@ -23,6 +23,8 @@ import {
   type SourceFeature,
   type ViewSource,
 } from '../src/map/street/view.ts';
+import { SHAPES_FILL, SHAPES_LINE, SHAPES_SOURCE, installShapes, removeShapes, shapeFeatures, updateShapes, type ShapeCollection, type ShapesMap, type StreetShape } from '../src/map/street/shapes.ts';
+import { mapColor } from '../src/map/colors.ts';
 
 // A map that only moves when told to: `movestart`/`moveend` listeners and a settable view.
 function fakeMap(moving = false) {
@@ -323,5 +325,131 @@ test('StreetMap server-renders with the new props and still loads no maplibre-gl
       onSelectCluster: () => {},
     }),
   );
+  assert.match(html, /role="region" aria-label="Duval County"/);
+});
+
+// A map with an ordered layer stack, as far as the shape lifecycle reads it.
+function stackMap(initial: string[] = []) {
+  const order = [...initial];
+  const sources = new Map<string, { data: ShapeCollection; setData: (d: ShapeCollection) => void }>();
+  const setData = mock.fn();
+  const map: ShapesMap = {
+    getSource: (id) => sources.get(id),
+    getLayer: (id) => (order.includes(id) ? { id } : undefined),
+    addSource: (id, src) => sources.set(id, { data: src.data, setData: (d) => setData(d) }),
+    addLayer: (layer, before) => {
+      const at = before === undefined ? order.length : order.indexOf(before);
+      order.splice(at, 0, layer.id);
+    },
+    removeLayer: (id) => order.splice(order.indexOf(id), 1),
+    removeSource: (id) => sources.delete(id),
+  };
+  return { map, order, sources, setData };
+}
+
+const ident = (css: string) => css;
+const RING: [number, number][] = [
+  [-82, 30],
+  [-81, 30],
+  [-81, 31],
+];
+
+test('shapes: the source and both layers sit under the pin layer', () => {
+  const { map, order, sources } = stackMap(['basemap', 'cuix-street-pins']);
+  installShapes(map, shapeFeatures([{ id: 'r', coordinates: [RING] }], ident), 'cuix-street-pins');
+  assert.deepEqual(order, ['basemap', SHAPES_FILL, SHAPES_LINE, 'cuix-street-pins']);
+  assert.ok(sources.has(SHAPES_SOURCE));
+  installShapes(map, shapeFeatures([], ident), 'cuix-street-pins');
+  assert.equal(order.length, 4, 'a second install adds nothing');
+});
+
+test('shapes: without a pin layer the layers go on top of the basemap', () => {
+  const { map, order } = stackMap(['basemap']);
+  installShapes(map, shapeFeatures([], ident), 'cuix-street-pins');
+  assert.deepEqual(order, ['basemap', SHAPES_FILL, SHAPES_LINE]);
+});
+
+test('shapes: setData on change, removed on unmount, re-added after a style reload', () => {
+  const { map, order, sources, setData } = stackMap(['cuix-street-pins']);
+  installShapes(map, shapeFeatures([], ident), 'cuix-street-pins');
+  const next = shapeFeatures([{ id: 'r', coordinates: [RING] }], ident);
+  updateShapes(map, next);
+  assert.equal(setData.mock.callCount(), 1);
+  assert.equal(setData.mock.calls[0]?.arguments[0], next);
+  removeShapes(map);
+  assert.deepEqual(order, ['cuix-street-pins']);
+  assert.equal(sources.size, 0);
+  updateShapes(map, next);
+  assert.equal(setData.mock.callCount(), 1, 'no source, no setData');
+  installShapes(map, next, 'cuix-street-pins');
+  assert.deepEqual(order, [SHAPES_FILL, SHAPES_LINE, 'cuix-street-pins']);
+});
+
+test('shapes: layers are data-driven and only the fill is limited to polygons', () => {
+  const layers: unknown[] = [];
+  const map: ShapesMap = { ...stackMap().map, addLayer: (l) => layers.push(l) };
+  installShapes(map, shapeFeatures([], ident), 'x');
+  const [fill, line] = layers as { type: string; filter?: unknown; paint: Record<string, unknown> }[];
+  assert.equal(fill?.type, 'fill');
+  assert.deepEqual(fill?.filter, ['==', ['geometry-type'], 'Polygon']);
+  assert.deepEqual(fill?.paint, { 'fill-color': ['get', 'color'], 'fill-opacity': ['get', 'fillOpacity'] });
+  assert.equal(line?.type, 'line');
+  assert.equal(line?.filter, undefined);
+  assert.deepEqual(line?.paint, { 'line-color': ['get', 'color'], 'line-width': ['get', 'lineWidth'] });
+});
+
+test('shapeFeatures: a line is an unclosed LineString, a polygon ring is closed', () => {
+  const shapes: StreetShape[] = [
+    { id: 'l', kind: 'line', coordinates: [RING] },
+    { id: 'p', coordinates: [RING] },
+  ];
+  const [line, poly] = shapeFeatures(shapes, ident).features;
+  assert.deepEqual(line?.geometry, { type: 'LineString', coordinates: RING });
+  assert.equal(poly?.geometry.type, 'Polygon');
+  const ring = (poly?.geometry.coordinates as [number, number][][])[0];
+  assert.deepEqual(ring?.[0], ring?.[ring.length - 1]);
+  assert.equal(ring?.length, RING.length + 1);
+  const done = shapeFeatures([{ id: 'c', coordinates: [[...RING, RING[0]!]] }], ident).features[0];
+  assert.equal((done?.geometry.coordinates as unknown[][])[0]?.length, RING.length + 1, 'an already closed ring is kept');
+});
+
+test('shapeFeatures: defaults, per-feature properties and colour resolution through mapColor', () => {
+  const seen: string[] = [];
+  const resolve = (css: string) => {
+    seen.push(css);
+    return `resolved(${css})`;
+  };
+  const { features } = shapeFeatures(
+    [
+      { id: 'd', coordinates: [RING] },
+      { id: 'k', coordinates: [RING], color: 'chart2', fillOpacity: 0.3, lineWidth: 4 },
+      { id: 'c', coordinates: [RING], color: '#ff0000' },
+    ],
+    resolve,
+  );
+  assert.deepEqual(seen, [mapColor('focusRing'), mapColor('chart2'), '#ff0000']);
+  assert.deepEqual(features[0]?.properties, { id: 'd', color: `resolved(${mapColor('focusRing')})`, fillOpacity: 0.08, lineWidth: 2 });
+  assert.deepEqual(features[1]?.properties, { id: 'k', color: `resolved(${mapColor('chart2')})`, fillOpacity: 0.3, lineWidth: 4 });
+  assert.equal(features[2]?.properties.color, 'resolved(#ff0000)');
+  assert.match(mapColor('focusRing'), /^var\(--cuix-map-focus-ring/);
+});
+
+test('shapeFeatures: shapes too short to draw are dropped', () => {
+  const short: [number, number][] = [[0, 0]];
+  const { features } = shapeFeatures(
+    [
+      { id: 'a', kind: 'line', coordinates: [short] },
+      { id: 'b', kind: 'line', coordinates: [] },
+      { id: 'c', coordinates: [[[0, 0], [1, 1]]] },
+      { id: 'd', coordinates: [] },
+    ],
+    ident,
+  );
+  assert.deepEqual(features, []);
+});
+
+test('StreetMap server-renders with shapes', async () => {
+  const { StreetMap } = await import(builtStreet);
+  const html = renderToString(h(StreetMap, { label: 'Duval County', shapes: [{ id: 'r', coordinates: [RING] }] }));
   assert.match(html, /role="region" aria-label="Duval County"/);
 });

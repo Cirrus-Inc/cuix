@@ -115,6 +115,7 @@ One `role="switch"` per layer; the row is the 44px target and its text (label, h
   bounds={[[-82.05, 30.1], [-81.3, 30.6]]}
   pins={visible} // useMemo(() => pins.filter((p) => on[p.layer]), [pins, on])
   layers={layers}
+  shapes={[{ id: 'radius', coordinates: [ring] }]} // ring: [lng, lat][] around the pin
   onSelectPin={(pin) => select(pin.id)}
   renderPopup={(pin) => <PinCard id={pin.id} />}
   tooltip={(pin) => pin.label}
@@ -130,6 +131,22 @@ One `role="switch"` per layer; the row is the 44px target and its text (label, h
 - **`onMoveEnd(view)`** gets `{ bbox: [west, south, east, north], zoom }` 200 ms after the camera stops (a burst of moves is one call), and once after mount with the initial view; when the camera opens on a fit, after the fit. A move that starts within the 200 ms cancels the pending call, so nothing is reported mid-gesture. Fetch by viewport from it; there is no separate first-load path, and the pins fetched there never refit the camera (see Camera above). Longitudes are wrapped into [-180, 180]: a view a full turn wide or more is `[-180, s, 180, n]`, and a view across the antimeridian has `west > east` (RFC 7946 §5.2), so split it in two before querying an API that requires `min ≤ max`.
 - **`cluster`** (off by default) groups pins with MapLibre's GeoJSON clustering, which runs in its worker: `radius` in px (default 50) and `maxZoom`, the last zoom that clusters (default 14). Only the bubbles and pins in view are DOM controls, so ~5,000 pins in one viewport stay responsive. A new `pins` array re-sends every pin to the worker, so memoise it rather than filtering inline on each render. `cluster` itself can be an inline object: only `radius` and `maxZoom` are compared, and `label` is called at render, so a new function each render costs nothing. A bubble shows the count with a ring in the colour, and a corner marker in the shape, of the top-most layer present among its members: one customer among 90 schools gives a customer bubble. Its accessible name lists the members per layer, top layer first ("91 pins: Customers 1, Schools 90"); `cluster.label(c)` replaces it. A click zooms in until the bubble splits (focus moves to the map, from where Tab reaches the new pins); `onSelectCluster(c)` replaces that, with `c` = `{ id, lat, lng, count, layer, layers }`. Bubbles follow the pins in the tab order, north to south. Pins off screen are not in the tab order while clustering is on.
 - **`cluster.layers`** (optional) names the layer ids that cluster; omitted, every layer does. A pin of any other layer never enters a bubble: it is always its own marker while in view (off-screen ones are not in the DOM, as with clustered pins), so a sparse layer such as interpreters stays visible among hundreds of clustered schools. Every in-view pin of such a layer is a DOM marker, so leave a dense layer clustered. `[]` clusters nothing (every pin is its own marker); an id that is not in `layers` is ignored. A bubble's colour, shape, counts, default name and `c.layers` / `c.layer` cover the clustered layers only. Stacking with clustering on, bottom to top: clustered pins by layer rank, then every bubble, then the unclustered pins by layer rank, then the spot showing its tooltip. An unclustered pin is therefore above every bubble and every clustered pin, whatever its rank; among unclustered pins the last layer is on top. Compared by value, so an inline array is fine.
+- **`shapes`** (optional) draws polygons and lines, in `[lng, lat]`, under the pins. A `StreetShape` is `{ id, coordinates, kind?, color?, fillOpacity?, lineWidth? }`:
+
+  | Field | Meaning | Default |
+  | --- | --- | --- |
+  | `coordinates` | Rings of `[lng, lat]`; the first is the outer ring. A `line` uses one ring and is not closed; a polygon ring is closed for you | required |
+  | `kind` | `'polygon'` or `'line'` | `'polygon'` |
+  | `color` | A `MapColors` key (`'chart2'`) or a CSS colour | the focus ring colour |
+  | `fillOpacity` | Polygon fill, 0 to 1 | `0.08` |
+  | `lineWidth` | Outline or line width in px | `2` |
+
+  One GeoJSON source (`cuix-street-shapes`) feeds a `fill` layer (polygons only) and a `line` layer, both added before the pin layer, so pins, bubbles, popups and tooltips keep their stacking and hit areas. Colour, opacity and width are per feature, so a few hundred shapes cost two layers. Shapes are not interactive and have no accessible name: describe them in text ("Within 60 mi of Duval High"). Colours resolve through the `--cuix-map-*` properties when the shapes are set (and when `colors` changes), not on a later theme switch. A value-equal `shapes` array re-sends nothing; the layers are re-added when the style reloads, like the pins'. A shape too short to draw (a line under 2 points, a ring under 3) is skipped.
+
+  ```tsx
+  <StreetMap label="Interpreters near Duval High" center={school} shapes={[{ id: 'radius', coordinates: [ring], color: 'chart2', fillOpacity: 0.1 }]} />
+  ```
+
 - **`tooltip(pin)`** is shown on hover and on keyboard focus, never on a click (the popup opens there), stays while the pointer moves onto it and hides on Esc, wherever focus is (1.4.13). Without the prop it shows the pin's `label`; that copy is `aria-hidden`, since it is already the name. A custom tooltip is the button's `aria-describedby` while shown. A bubble's tooltip is its name.
 
 ## Colours

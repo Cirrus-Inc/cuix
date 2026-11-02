@@ -1,5 +1,5 @@
 import type { AddLayerObject } from 'maplibre-gl';
-import { mapColor, isMapColor } from '../style.tsx';
+import { mapColor, isMapColor } from '../colors.ts';
 
 // Polygons and lines under the pins: one GeoJSON source, a fill layer (polygons) and a line layer,
 // styled per feature so one pair of layers serves every shape. Pure functions over a minimal map
