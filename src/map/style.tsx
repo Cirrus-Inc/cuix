@@ -38,6 +38,9 @@ const TOKENS: Record<keyof MapColors, [string, string]> = {
   chart4: ['chart-4', '#127c0a'],
 };
 
+/** Whether `name` is a `MapColors` key. */
+export const isMapColor = (name: string): name is keyof MapColors => Object.hasOwn(TOKENS, name);
+
 const own = (name: keyof MapColors) => `--cuix-map-${TOKENS[name][0]}`;
 
 /** The CSS value of one map colour. */

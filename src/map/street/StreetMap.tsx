@@ -6,6 +6,7 @@ import type * as MapLibre from 'maplibre-gl';
 import { Marker, MarkerSwatch } from '../Marker.tsx';
 import { MapStyle, colorVars, mapColor, shapeColor, type MapColors } from '../style.tsx';
 import type { MapLayer, MarkerShape } from '../types.ts';
+import { installShapes, removeShapes, resolveColor, shapeFeatures, updateShapes, type StreetShape } from './shapes.ts';
 import { bubbleZ, cameraKey, clusterHits, clusterName, clusterProperties, clusterSummary, clusteredSet, layerRanks, pinZ, splitPins, tipFor, tipZ, unclusteredPinZ, watchClusters, watchView, type ClusterHit, type StreetView } from './view.ts';
 
 // The district level: a street map on MapLibre GL and vector tiles. maplibre-gl
@@ -70,6 +71,8 @@ export interface StreetMapProps {
   /** Zoom with `center`. Default 12. */
   zoom?: number;
   pins?: readonly StreetPin[];
+  /** Polygons and lines drawn under the pins, not interactive (no pointer events, no focus stop, no name): describe them in text. Default none. */
+  shapes?: readonly StreetShape[];
   /** Shape and colour per layer id, and the stacking order: the last layer is drawn on top. The consumer filters `pins` by the layers that are on. */
   layers?: readonly MapLayer[];
   /** A MapLibre style URL. Default OpenFreeMap Liberty (keyless). */
@@ -194,6 +197,7 @@ export function StreetMap({
   center,
   zoom = 12,
   pins = [],
+  shapes,
   layers = [],
   styleUrl = OPENFREEMAP_LIBERTY,
   onSelectPin,
@@ -319,6 +323,33 @@ export function StreetMap({
   const onlyRef = useRef(only);
   onlyRef.current = only;
   const [shown, setShown] = useState<Shown | null>(null);
+
+  // Shapes: a fill and a line layer under the pin layer, re-added when the style reloads, like the pins' source.
+  // Keyed by value, so an inline `shapes` array re-sends nothing on each render.
+  const shapesKey = JSON.stringify(shapes ?? []);
+  const colorsKey = JSON.stringify(colors ?? {});
+  const shapesRef = useRef(shapes);
+  shapesRef.current = shapes;
+  const shapeData = () => shapeFeatures(shapesRef.current ?? [], (css) => (container.current ? resolveColor(container.current, css) : css));
+
+  useEffect(() => {
+    if (!map) return;
+    const install = () => installShapes(map, shapeData(), SOURCE);
+    try {
+      install();
+    } catch {
+      // The style is still loading: 'style.load' installs the layers.
+    }
+    map.on('style.load', install);
+    return () => {
+      map.off('style.load', install);
+      removeShapes(map);
+    };
+  }, [map]);
+
+  useEffect(() => {
+    if (map) updateShapes(map, shapeData());
+  }, [map, shapesKey, colorsKey]);
 
   useEffect(() => {
     if (!map || !clusterOn) return;
