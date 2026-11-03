@@ -6,6 +6,8 @@ import { renderToString } from 'react-dom/server';
 import { albersUsa } from '../src/map/albersUsa.ts';
 import { groupPoints } from '../src/map/groupPoints.ts';
 import {
+  BADGE_OFF,
+  BADGE_R,
   COUNTY_PAD,
   DRAG_THRESHOLD,
   WHEEL_MAX,
@@ -28,6 +30,10 @@ import {
   wheelZoomFactor,
   zoomAbout,
   zoomCamera,
+  badgeText,
+  hasBadge,
+  markBox,
+  roundRectPath,
 } from '../src/map/mapMath.ts';
 import { US_STATES } from '../src/map/geo/usStates.ts';
 
@@ -147,6 +153,7 @@ test('groupPoints merges points on one spot, names and sorts the group', () => {
 
 // Components are imported from dist at run time: dist/ does not exist when `tsc --noEmit` runs.
 const built = '../dist/map/index.js';
+const builtMarker = '../dist/map/Marker.js';
 const builtStreet = '../dist/map/street/index.js';
 
 test('UsMap renders states as links or buttons, with labels, on the server', async () => {
@@ -424,4 +431,49 @@ test('clientToView and screenRect are inverses, with and without letterboxing', 
     const a = clientToView(rect, VIEW, r.x, r.y);
     assert.ok(Math.abs(a.x - (cam.x + BOX.x * cam.k)) < 1e-9 && Math.abs(a.y - (cam.y + BOX.y * cam.k)) < 1e-9);
   }
+});
+
+// Cirrus-Inc/cuix#118: the count badge is a separate element over the marker's top-right corner,
+// so the shape still carries the category, and a count of 1 can be badged too.
+test('the badge rule: a count from badgeFrom up, 99+ over 99, and a box that holds marker and badge', () => {
+  assert.equal(hasBadge(undefined), false);
+  assert.equal(hasBadge(undefined, 1), false, 'no count is never a badge, whatever badgeFrom');
+  assert.equal(hasBadge(1), false);
+  assert.equal(hasBadge(1, 1), true);
+  assert.equal(hasBadge(2), true);
+  assert.equal(hasBadge(0, 1), false);
+  assert.equal(badgeText(1), '1');
+  assert.equal(badgeText(99), '99');
+  assert.equal(badgeText(100), '99+');
+  // Unbadged: the ring circle UsMap has always drawn, r + 4 around the point.
+  assert.deepEqual(markBox(5, false), { x: -9, y: -9, width: 18, height: 18 });
+  // Badged: the marker's ring at the bottom left, the badge's at the top right.
+  const box = markBox(5, true);
+  assert.deepEqual(box, { x: -9, y: -27, width: 36, height: 36 });
+  assert.ok(BADGE_OFF + BADGE_R + 4 <= box.x + box.width && -(BADGE_OFF + BADGE_R + 4) >= box.y, "the badge's own ring is inside the box");
+  // The badge's near edge is tangent to the widest shape (1.2 r), so the marker stays whole under it.
+  assert.ok(Math.abs(Math.hypot(BADGE_OFF, BADGE_OFF) - BADGE_R - 1.2 * 5) < 0.1);
+  assert.equal(roundRectPath(-9, -27, 36, 36, 9), 'M0,-27h18a9,9 0 0 1 9,9v18a9,9 0 0 1 -9,9h-18a9,9 0 0 1 -9,-9v-18a9,9 0 0 1 9,-9z');
+});
+
+test('a counted marker keeps its shape under the badge; count 1 badges only from badgeFrom 1', async () => {
+  const { CountMark } = await import(builtMarker);
+  const draw = (props: object) => renderToString(h('svg', null, h(CountMark, { shape: 'triangle', x: 100, y: 50, r: 5, ...props })));
+  const two = draw({ count: 2 });
+  assert.ok(two.indexOf('<polygon') < two.indexOf('cuix-map-badge'), 'the shape is drawn under the badge');
+  assert.match(two, /<polygon points="100.00,44.50 105.25,54.00 94.75,54.00"/, 'the triangle is unchanged');
+  assert.match(two, /<circle cx="112" cy="38" r="11" class="cuix-map-badge" style="stroke:var\(--cuix-map-chart-3/, "the badge is up and right, in the shape's colour");
+  assert.match(two, /class="cuix-map-badge-text"[^>]*>2</);
+  const one = draw({ count: 1 });
+  assert.match(one, /class="cuix-map-marker"/);
+  assert.doesNotMatch(one, /cuix-map-badge/, 'a count of 1 is a bare marker at the default');
+  assert.match(draw({ count: 1, badgeFrom: 1 }), /class="cuix-map-badge-text"[^>]*>1</);
+  assert.doesNotMatch(draw({}), /cuix-map-badge/, 'no count, no badge');
+  assert.doesNotMatch(draw({ count: 0, badgeFrom: 1 }), /cuix-map-badge/);
+  assert.match(draw({ count: 100 }), />99\+</);
+  // `u` scales the badge with the camera: UsMap draws at 1 / k, so a marker keeps one size on screen.
+  assert.match(draw({ r: 2.5, u: 0.5, count: 3 }), /<circle cx="106" cy="44" r="5.5"[^>]*class="cuix-map-badge"/);
+  assert.match(draw({ r: 2.5, u: 0.5, count: 3 }), /class="cuix-map-badge-text" style="font-size:6px"/);
+  // A StreetMap pin: the marker at the centre of its 44px box, the badge over its corner.
+  assert.match(draw({ shape: 'square', x: 22, y: 22, r: 6, count: 7, badgeFrom: 1 }), /<circle cx="34" cy="10" r="11"[^>]*class="cuix-map-badge"/);
 });

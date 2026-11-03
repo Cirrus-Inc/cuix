@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { shapePoints } from './mapMath.ts';
+import { BADGE_FONT, BADGE_OFF, BADGE_R, badgeText, hasBadge, shapePoints } from './mapMath.ts';
 import { MapStyle, shapeColor } from './style.tsx';
 import type { MapBucket, MarkerShape } from './types.ts';
 
@@ -11,6 +11,49 @@ export function Marker({ shape = 'circle', x, y, r, color }: { shape?: MarkerSha
     <polygon points={points} style={style} className="cuix-map-marker" />
   ) : (
     <circle cx={x} cy={y} r={r} style={style} className="cuix-map-marker" />
+  );
+}
+
+/**
+ * A marker with an optional count badge anchored at its top-right: the shape is always drawn,
+ * and the badge (a `cuix-map-badge` ring in the shape's colour around the number) sits over its
+ * corner, so a triangle stays a triangle however many it stands for. `count` draws a badge from
+ * `badgeFrom` up (default 2); `u` is one marker unit in the surrounding coordinate space (`1 / k`
+ * inside UsMap's camera, 1 in a pixel-sized svg).
+ */
+export function CountMark({
+  shape = 'circle',
+  x,
+  y,
+  r,
+  color,
+  count,
+  badgeFrom = 2,
+  u = 1,
+}: {
+  shape?: MarkerShape;
+  x: number;
+  y: number;
+  r: number;
+  color?: string;
+  count?: number;
+  badgeFrom?: 1 | 2;
+  u?: number;
+}) {
+  const bx = x + BADGE_OFF * u;
+  const by = y - BADGE_OFF * u;
+  return (
+    <>
+      <Marker shape={shape} x={x} y={y} r={r} color={color} />
+      {hasBadge(count, badgeFrom) && (
+        <>
+          <circle cx={bx} cy={by} r={BADGE_R * u} className="cuix-map-badge" style={{ stroke: shapeColor(shape, color) }} />
+          <text x={bx} y={by} textAnchor="middle" dominantBaseline="central" className="cuix-map-badge-text" style={{ fontSize: `${String(BADGE_FONT * u)}px` }}>
+            {badgeText(count)}
+          </text>
+        </>
+      )}
+    </>
   );
 }
 

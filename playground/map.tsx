@@ -18,9 +18,9 @@ const COUNTIES: MapRegion[] = [
   { fips: '12057', bucket: 'solid', name: 'Hillsborough: 3 schools', label: '3' },
 ];
 
-const at = (id: string, name: string, lng: number, lat: number): MapPoint[] => {
+const at = (id: string, name: string, lng: number, lat: number, rest: Partial<MapPoint> = {}): MapPoint[] => {
   const p = albersUsa(lng, lat);
-  return p ? [{ id, name, x: p[0], y: p[1] }] : [];
+  return p ? [{ id, name, x: p[0], y: p[1], ...rest }] : [];
 };
 // ?controlled=1: the app owns the zoom and drives it from its own toolbar.
 const controlled = new URLSearchParams(location.search).get('controlled') === '1';
@@ -34,7 +34,14 @@ const focusFips = new URLSearchParams(location.search).get('focus');
 // ?modifier=1: the wheel zooms only with ctrl or cmd.
 const modifier = new URLSearchParams(location.search).get('modifier') === '1';
 
-const POINTS = [...at('jax', 'Jacksonville interpreter', -81.66, 30.33), ...at('pns', 'Pensacola interpreter', -87.22, 30.42)];
+// ?badgeFrom=1: a count of 1 is badged too (Cirrus-Inc/cuix#118).
+const badgeFrom = new URLSearchParams(location.search).get('badgeFrom') === '1' ? 1 : 2;
+
+// A triangle of 2 (badged at the default) and a lone interpreter of 1 (badged only with ?badgeFrom=1).
+const POINTS = [
+  ...at('jax', 'Jacksonville: 2 interpreters', -81.66, 30.33, { shape: 'triangle', count: 2 }),
+  ...at('pns', 'Pensacola interpreter', -87.22, 30.42, { count: 1 }),
+];
 
 const RADIUS_MILES = 30;
 const EARTH_MILES = 3958.8;
@@ -101,6 +108,7 @@ function MapPage() {
           setSelects((n) => n + 1);
         }}
         points={pin ? [...POINTS, { id: 'pin', name: 'Dropped pin', x: pin.x, y: pin.y, shape: 'cross' }] : POINTS}
+        badgeFrom={badgeFrom}
         onMapClick={
           dropPin
             ? (p) => {

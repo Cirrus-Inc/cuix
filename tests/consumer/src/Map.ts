@@ -15,7 +15,7 @@ export function MapPage(): ReactNode {
   return h(
     'div',
     null,
-    h(UsMap, { level: { kind: 'us' }, label: 'States', states: [{ fips: '12', bucket: 'solid', name: 'Florida', label: 'FL 1' }], onSelect: noop, points }),
+    h(UsMap, { level: { kind: 'us' }, label: 'States', states: [{ fips: '12', bucket: 'solid', name: 'Florida', label: 'FL 1' }], onSelect: noop, points, badgeFrom: 1 }),
     h(LayersPanel, { layers: [{ id: 'schools', label: 'Schools', count: 1 }], value: { schools: true }, onChange: noop }),
   );
 }

@@ -38,10 +38,13 @@ import {
   visibleRect,
   wheelZoomFactor,
   zoomAbout,
+  hasBadge,
+  markBox,
+  roundRectPath,
   type Shift,
 } from './mapMath.ts';
-import { Hatch, Marker } from './Marker.tsx';
-import { MapStyle, colorVars, shapeColor, type MapColors } from './style.tsx';
+import { CountMark, Hatch } from './Marker.tsx';
+import { MapStyle, colorVars, type MapColors } from './style.tsx';
 import type { MapLevel, MapPoint, MapRegion } from './types.ts';
 
 // A generic US map (HIVE ADR-0012 §6): regions and a level, nothing about what
@@ -113,6 +116,13 @@ export interface UsMapProps {
   focus?: string | null;
   /** Markers over the counties, state level only. Tab order is alphabetical by name. */
   points?: readonly MapPoint[];
+  /**
+   * The lowest `MapPoint.count` that draws a number badge over the marker's top-right corner.
+   * Default 2, so a point of 1 is a bare marker and a group of 2 or more is badged, as before;
+   * `badgeFrom={1}` badges a count of 1 too ("1 open position" reads as a number, not as none).
+   * A point without `count` is never badged, whatever this is.
+   */
+  badgeFrom?: 1 | 2;
   onSelectPoint?: (id: string) => void;
   /** Content of the built-in tooltip of a point. Default: its `detail`, after the name. */
   renderTooltip?: (point: MapPoint) => ReactNode;
@@ -196,14 +206,18 @@ const panned = (s: Shift): boolean => s.x !== 0 || s.y !== 0;
 /** One arrow key pans this fraction of the view. */
 const KEY_PAN = 0.2;
 
+/** A marker's radius in map units, at one size on screen whatever the zoom; its badge is sized from it (`markBox`). */
+const MARK_R = 5;
+
+/** The focus ring sits this far outside the marker's own edge, like an outline-offset-2. */
+const RING_OFF = 4;
+
 const activate = (e: KeyboardEvent<Element>, run: () => void) => {
   if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault();
     run();
   }
 };
-
-const badgeText = (n: number) => (n > 99 ? '99+' : String(n));
 
 export function UsMap({
   level,
@@ -217,6 +231,7 @@ export function UsMap({
   onHover,
   focus,
   points,
+  badgeFrom = 2,
   onSelectPoint,
   renderTooltip,
   wrapPoint,
@@ -509,8 +524,20 @@ export function UsMap({
   const sorted = (list: readonly MapRegion[]) => [...list].sort((a, b) => a.name.localeCompare(b.name));
   const k = camera.k;
 
+  /** A badged marker's box (marker ring bottom-left, badge ring top-right) in map units, grown by `grow`. */
+  const markRect = (p: { x: number; y: number }, grow: number) => {
+    const b = markBox(MARK_R, true);
+    return { x: p.x + (b.x - grow) / k, y: p.y + (b.y - grow) / k, width: (b.width + 2 * grow) / k, height: (b.height + 2 * grow) / k };
+  };
+  // The pad keeps 1 unit outside the ring, as the unbadged circle does.
+  const pad = (p: { x: number; y: number }) => markRect(p, 1);
+  const markRingD = (p: { x: number; y: number }) => {
+    const b = markRect(p, 0);
+    return roundRectPath(b.x, b.y, b.width, b.height, (MARK_R + RING_OFF) / k);
+  };
+
   const point = (p: MapPoint) => {
-    const n = p.count ?? 1;
+    const badge = hasBadge(p.count, badgeFrom);
     const marker = (
       <g
         key={p.id}
@@ -536,17 +563,12 @@ export function UsMap({
         className="cuix-map-hit cuix-map-point"
       >
         {/* Unpainted pad: a tooltip anchored to this box clears the focus ring. */}
-        <circle aria-hidden cx={p.x} cy={p.y} r={(n > 1 ? 16 : 12) / k} fill="none" pointerEvents="none" />
-        {n > 1 ? (
-          <>
-            <circle cx={p.x} cy={p.y} r={11 / k} className="cuix-map-badge" style={{ stroke: shapeColor(p.shape ?? 'circle', p.color) }} />
-            <text x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" className="cuix-map-badge-text" style={{ fontSize: `${String(12 / k)}px` }}>
-              {badgeText(n)}
-            </text>
-          </>
+        {badge ? (
+          <rect aria-hidden {...pad(p)} fill="none" pointerEvents="none" />
         ) : (
-          <Marker shape={p.shape} x={p.x} y={p.y} r={5 / k} color={p.color} />
+          <circle aria-hidden cx={p.x} cy={p.y} r={12 / k} fill="none" pointerEvents="none" />
         )}
+        <CountMark shape={p.shape} x={p.x} y={p.y} r={MARK_R / k} color={p.color} count={p.count} badgeFrom={badgeFrom} u={1 / k} />
       </g>
     );
     return wrapPoint ? <g key={p.id}>{wrapPoint(p, marker)}</g> : marker;
@@ -782,11 +804,20 @@ export function UsMap({
           {/* Above the counties and the outline; radius / k with a non-scaling stroke, so a marker keeps one size at every level. */}
           {stateShape && shapes && points && [...points].sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id)).map(point)}
 
-          {/* The marker's ring sits 2px outside its own edge, like an outline-offset-2. */}
+          {/* The marker's ring sits 2px outside its own edge, like an outline-offset-2; a badged marker's encloses the badge too. */}
           {ringPoint && (
             <g aria-hidden pointerEvents="none">
-              <circle cx={ringPoint.x} cy={ringPoint.y} r={((ringPoint.count ?? 1) > 1 ? 15 : 9) / k} className="cuix-map-ring-band" />
-              <circle cx={ringPoint.x} cy={ringPoint.y} r={((ringPoint.count ?? 1) > 1 ? 15 : 9) / k} className="cuix-map-ring-line" />
+              {hasBadge(ringPoint.count, badgeFrom) ? (
+                <>
+                  <path d={markRingD(ringPoint)} className="cuix-map-ring-band" />
+                  <path d={markRingD(ringPoint)} className="cuix-map-ring-line" />
+                </>
+              ) : (
+                <>
+                  <circle cx={ringPoint.x} cy={ringPoint.y} r={(MARK_R + RING_OFF) / k} className="cuix-map-ring-band" />
+                  <circle cx={ringPoint.x} cy={ringPoint.y} r={(MARK_R + RING_OFF) / k} className="cuix-map-ring-line" />
+                </>
+              )}
             </g>
           )}
         </g>
@@ -807,7 +838,8 @@ export function UsMap({
       </svg>
       {tipPoint && (
         <div
-          className="cuix-map-tip"
+          // A badged marker is taller than a bare one: the tooltip clears its box, not the point.
+          className={hasBadge(tipPoint.count, badgeFrom) ? 'cuix-map-tip cuix-map-tip-badge' : 'cuix-map-tip'}
           style={{
             left: `${String(((camera.x + tipPoint.x * k) / VIEW_W) * 100)}%`,
             top: `${String(((camera.y + tipPoint.y * k) / VIEW_H) * 100)}%`,

@@ -36,7 +36,11 @@ export interface MapPoint {
   color?: string;
   /** Supplementary tooltip text, never a repeat of the name. */
   detail?: string;
-  /** More than 1 draws a number badge instead of the marker (see `groupPoints`). */
+  /**
+   * A number drawn in a badge over the marker's top-right corner, from `UsMap`'s `badgeFrom` up
+   * (default 2, so a group of 2+ is badged and a count of 1 is a bare marker; see `groupPoints`).
+   * The shape is always drawn under the badge. Visual only: say the number in `name` too.
+   */
   count?: number;
 }
 

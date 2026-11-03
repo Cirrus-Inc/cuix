@@ -178,3 +178,39 @@ export function shapePoints(shape: MarkerShape, x: number, y: number, r: number)
     : [];
   return pts.length === 0 ? null : pts.map(([dx, dy]) => `${(x + dx * r).toFixed(2)},${(y + dy * r).toFixed(2)}`).join(' ');
 }
+
+/**
+ * Marker geometry shared by UsMap and StreetMap, in marker units (1 unit = 1px at the
+ * map's own scale): the count badge's radius, the offset of its centre from the marker's
+ * on both axes (up and right, so the shape below it stays whole), and its font size.
+ */
+export const BADGE_R = 11;
+export const BADGE_OFF = 12;
+export const BADGE_FONT = 12;
+
+/** The number drawn in a badge; over 99 it reads "99+". */
+export const badgeText = (n: number) => (n > 99 ? '99+' : String(n));
+
+/**
+ * Whether a `count` draws a badge: it must be set and at least `from` (`badgeFrom`, default 2,
+ * so a point of 1 is a bare marker unless the caller opts in). A caller that never wants a badge
+ * omits `count`.
+ */
+export const hasBadge = (count: number | undefined, from: 1 | 2 = 2): count is number => count !== undefined && count >= from;
+
+/**
+ * The box a marker and its badge sit in, relative to the marker's centre, in marker units:
+ * the marker's ring (`r` + 4) at the bottom left, the badge's at the top right.
+ */
+export function markBox(r: number, badge: boolean): BBox {
+  const ring = r + 4;
+  if (!badge) return { x: -ring, y: -ring, width: ring * 2, height: ring * 2 };
+  const far = BADGE_OFF + BADGE_R + 4;
+  return { x: -ring, y: -far, width: ring + far, height: ring + far };
+}
+
+/** A rounded rectangle as a path: the map's rings need a non-scaling stroke, which its CSS gives to paths, not rects. */
+export function roundRectPath(x: number, y: number, w: number, h: number, r: number): string {
+  const a = `a${String(r)},${String(r)} 0 0 1`;
+  return `M${String(x + r)},${String(y)}h${String(w - 2 * r)}${a} ${String(r)},${String(r)}v${String(h - 2 * r)}${a} ${String(-r)},${String(r)}h${String(-(w - 2 * r))}${a} ${String(-r)},${String(-r)}v${String(-(h - 2 * r))}${a} ${String(r)},${String(-r)}z`;
+}

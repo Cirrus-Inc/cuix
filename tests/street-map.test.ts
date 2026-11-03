@@ -1,5 +1,6 @@
 import { test, mock } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { createElement as h } from 'react';
 import { renderToString } from 'react-dom/server';
 import {
@@ -318,7 +319,8 @@ test('StreetMap server-renders with the new props and still loads no maplibre-gl
     h(StreetMap, {
       label: 'Duval County',
       layers: LAYERS,
-      pins: [{ id: '1', lat: 30.3, lng: -81.6, layer: 'customer', label: 'A school' }],
+      badgeFrom: 1,
+      pins: [{ id: '1', lat: 30.3, lng: -81.6, layer: 'customer', label: 'A school: 2 open positions', count: 2 }],
       cluster: { radius: 40, maxZoom: 13, layers: ['school'] },
       tooltip: (p: { label: string }) => p.label,
       onMoveEnd: () => {},
@@ -452,4 +454,18 @@ test('StreetMap server-renders with shapes', async () => {
   const { StreetMap } = await import(builtStreet);
   const html = renderToString(h(StreetMap, { label: 'Duval County', shapes: [{ id: 'r', coordinates: [RING] }] }));
   assert.match(html, /role="region" aria-label="Duval County"/);
+});
+
+// Cirrus-Inc/cuix#118: a pin's own count, drawn with the same badge as UsMap's. The pins are DOM
+// markers MapLibre owns, so they exist only in a browser: this pins the wiring, and `CountMark`'s
+// drawing (shape under the badge, badgeFrom, 99+) is covered in tests/map.test.ts.
+test('a StreetPin count draws the shared badge over the pin, from badgeFrom up', () => {
+  const src = readFileSync(new URL('../src/map/street/StreetMap.tsx', import.meta.url), 'utf8');
+  assert.match(src, /badgeFrom = 2,/, 'the default matches UsMap');
+  assert.match(src, /badge=\{s\.kind === 'pin' && hasBadge\(s\.pin\.count, badgeFrom\) \? s\.pin\.count : undefined\}/);
+  // The marker stays at the centre of the 44px box, which is the pin's position, with the badge over its corner.
+  assert.match(src, /<svg aria-hidden viewBox="0 0 44 44" width=\{44\} height=\{44\}>\s*<CountMark shape=\{shape\} x=\{22\} y=\{22\} r=\{PIN_R\} color=\{color\} count=\{badge\} badgeFrom=\{1\} \/>/);
+  assert.match(src, /'cuix-street-pin cuix-street-count cuix-map-focus'/);
+  const css = readFileSync(new URL('../src/map/style.tsx', import.meta.url), 'utf8');
+  assert.match(css, /\.cuix-street-count>svg\{width:44px;height:44px\}/, 'the badged pin gets the bigger box');
 });
