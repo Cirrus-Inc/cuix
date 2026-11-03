@@ -3,7 +3,8 @@
 import { memo, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type FocusEvent, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import type * as MapLibre from 'maplibre-gl';
-import { Marker, MarkerSwatch } from '../Marker.tsx';
+import { CountMark, Marker, MarkerSwatch } from '../Marker.tsx';
+import { hasBadge } from '../mapMath.ts';
 import { MapStyle, colorVars, mapColor, shapeColor, type MapColors } from '../style.tsx';
 import type { MapLayer, MarkerShape } from '../types.ts';
 import { installShapes, removeShapes, resolveColor, shapeFeatures, updateShapes, type StreetShape } from './shapes.ts';
@@ -24,6 +25,11 @@ export interface StreetPin {
   layer: string;
   /** The pin's accessible name. Tab order is by this label. */
   label: string;
+  /**
+   * A number drawn in a badge over the pin's top-right corner, from `badgeFrom` up (default 2).
+   * Visual only: say it in `label` too, as a cluster's name does.
+   */
+  count?: number;
 }
 
 export interface LngLat {
@@ -82,6 +88,11 @@ export interface StreetMapProps {
   renderPopup?: (pin: StreetPin) => ReactNode;
   /** Shown on hover and keyboard focus, without opening the popup. Default: the pin's `label`. */
   tooltip?: ((pin: StreetPin) => ReactNode) | undefined;
+  /**
+   * The lowest `StreetPin.count` that draws a badge over the pin's top-right corner. Default 2,
+   * as on `UsMap`; `badgeFrom={1}` badges a count of 1 too. A pin without `count` is never badged.
+   */
+  badgeFrom?: 1 | 2;
   /** Groups nearby pins into counted bubbles; only the bubbles and pins in view are in the DOM. Off by default. */
   cluster?: StreetClusterOptions | undefined;
   /** Replaces a bubble's default action, which zooms in until it splits. */
@@ -102,6 +113,9 @@ const loadDefault = () => import('maplibre-gl');
 const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const SOURCE = 'cuix-street-pins';
+
+/** A pin's marker radius inside its 44px box: the same 12px marker a plain pin draws. */
+const PIN_R = 6;
 type PinData = Parameters<MapLibre.GeoJSONSource['setData']>[0];
 
 interface Shown {
@@ -130,6 +144,8 @@ interface SpotButtonProps {
   color?: string;
   /** A cluster's count; a pin has none. */
   count?: string;
+  /** A pin's own count, drawn as a badge over its top-right corner; a cluster has none. */
+  badge?: number;
   /** The tooltip's content while it is shown on this spot, else null. */
   tip: ReactNode;
   /** The tooltip says more than the name, so the button points at it. */
@@ -140,7 +156,7 @@ interface SpotButtonProps {
 }
 
 // Memoised: hovering one spot re-renders that spot, not every pin on the map.
-const SpotButton = memo(function SpotButton({ spotKey, name, expanded, shape, color, count, tip, describe, tipId, tipBox, act }: SpotButtonProps) {
+const SpotButton = memo(function SpotButton({ spotKey, name, expanded, shape, color, count, badge, tip, describe, tipId, tipBox, act }: SpotButtonProps) {
   const shown = tip !== null && tip !== undefined;
   return (
     <>
@@ -161,10 +177,18 @@ const SpotButton = memo(function SpotButton({ spotKey, name, expanded, shape, co
         }}
         onMouseEnter={() => act.current.hover(spotKey)}
         onMouseLeave={() => act.current.hide(150)}
-        className={count === undefined ? 'cuix-street-pin cuix-map-focus' : 'cuix-street-pin cuix-street-cluster cuix-map-focus'}
+        className={count !== undefined ? 'cuix-street-pin cuix-street-cluster cuix-map-focus' : badge !== undefined ? 'cuix-street-pin cuix-street-count cuix-map-focus' : 'cuix-street-pin cuix-map-focus'}
       >
         {count === undefined ? (
-          <MarkerSwatch shape={shape} color={color} size={16} />
+          badge === undefined ? (
+            <MarkerSwatch shape={shape} color={color} size={16} />
+          ) : (
+            // The badge is anchored at the marker's top-right, so the pin keeps its shape: the box is
+            // the 44px target, the marker at its centre is the pin's position.
+            <svg aria-hidden viewBox="0 0 44 44" width={44} height={44}>
+              <CountMark shape={shape} x={22} y={22} r={PIN_R} color={color} count={badge} badgeFrom={1} />
+            </svg>
+          )
         ) : (
           <svg aria-hidden viewBox="0 0 36 36" width={36} height={36}>
             <circle cx={18} cy={18} r={15} className="cuix-map-badge cuix-street-bubble" style={{ stroke: color }} />
@@ -203,6 +227,7 @@ export function StreetMap({
   onSelectPin,
   renderPopup,
   tooltip,
+  badgeFrom = 2,
   cluster,
   onSelectCluster,
   onMoveEnd,
@@ -588,6 +613,7 @@ export function StreetMap({
               shape={s.layer ? (s.layer.shape ?? 'circle') : undefined}
               color={s.kind === 'pin' ? s.layer?.color : s.layer ? shapeColor(s.layer.shape ?? 'circle', s.layer.color) : mapColor('foregroundMuted')}
               count={s.kind === 'cluster' ? s.text : undefined}
+              badge={s.kind === 'pin' && hasBadge(s.pin.count, badgeFrom) ? s.pin.count : undefined}
               tip={tip === s.key ? (s.kind === 'pin' ? tipFor(s.pin, tooltip) : name) : null}
               describe={s.kind === 'pin' && Boolean(tooltip)}
               tipId={tipId}

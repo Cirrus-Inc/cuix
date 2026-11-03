@@ -69,6 +69,7 @@ const CSS = `
 .cuix-map-label{fill:${c('foreground')};stroke:${c('surface')};stroke-width:5;stroke-linejoin:round;paint-order:stroke;pointer-events:none;font-size:var(--cuix-map-label-size, var(--cuix-text-subheading, 1.125rem));font-weight:600}
 .cuix-map-label-solid{fill:${c('surface')};stroke:none}
 .cuix-map-tip{position:absolute;z-index:var(--cuix-z-tooltip, 50);transform:translate(-50%, calc(-100% - 14px));max-width:16rem;width:max-content;padding:4px 8px;border-radius:var(--cuix-radius-control, 6px);background:${c('foreground')};color:${c('surface')};font-size:${FONT_CAPTION};line-height:1.4}
+.cuix-map-tip-badge{transform:translate(-50%, calc(-100% - 30px))}
 .cuix-map-error{color:${c('danger')};font-size:${FONT_CAPTION}}
 .cuix-layers{border:0;margin:0;padding:0;min-width:0}
 .cuix-layers-title{padding:0;margin-bottom:4px;font-weight:600}
@@ -87,6 +88,7 @@ const CSS = `
 .cuix-street-pin{display:grid;place-items:center;width:var(--cuix-target-min, 44px);height:var(--cuix-target-min, 44px);padding:0;border:0;border-radius:50%;background:none;cursor:pointer}
 .cuix-street-pin>svg{width:16px;height:16px;overflow:visible}
 .cuix-street-cluster>svg{width:36px;height:36px}
+.cuix-street-count>svg{width:44px;height:44px}
 .cuix-street-bubble{stroke-width:3}
 .cuix-street-tip{left:50%;top:8px}
 .cuix-street .maplibregl-canvas-container{isolation:isolate}

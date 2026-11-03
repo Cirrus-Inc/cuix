@@ -417,3 +417,33 @@ test('a controlled zoom with the built-in controls off gets the wheel and double
   await page.mouse.dblclick(d.x, d.y);
   await expect(page.getByTestId('zoom')).toHaveText('Zoom 6');
 });
+
+// Cirrus-Inc/cuix#118: the shape carries the category, so it is drawn under the badge, never replaced.
+test('a counted point keeps its marker shape under the badge; count 1 badges only with badgeFrom=1', async ({ page }) => {
+  await open(page);
+  const jax = page.getByRole('button', { name: 'Jacksonville: 2 interpreters' });
+  const triangle = jax.locator('polygon.cuix-map-marker');
+  const badge = jax.locator('circle.cuix-map-badge');
+  await expect(triangle).toHaveCount(1);
+  await expect(jax.locator('text.cuix-map-badge-text')).toHaveText('2');
+  // The badge is anchored at the marker's top-right corner and does not cover it.
+  const mark = (await triangle.boundingBox())!;
+  const dot = (await badge.boundingBox())!;
+  expect(dot.x + dot.width / 2).toBeGreaterThan(mark.x + mark.width);
+  expect(dot.y + dot.height / 2).toBeLessThan(mark.y);
+  // One marker, one badge: a count of 1 is a bare marker at the default.
+  const pns = page.getByRole('button', { name: 'Pensacola interpreter' });
+  await expect(pns.locator('circle.cuix-map-marker')).toHaveCount(1);
+  await expect(pns.locator('circle.cuix-map-badge')).toHaveCount(0);
+  // Focused, the ring encloses the badge as well as the shape.
+  await jax.focus();
+  const ring = (await page.locator('path.cuix-map-ring-line').last().boundingBox())!;
+  expect(ring.x).toBeLessThan(mark.x);
+  expect(ring.y).toBeLessThan(dot.y);
+  expect(ring.x + ring.width).toBeGreaterThan(dot.x + dot.width);
+  expect(ring.y + ring.height).toBeGreaterThan(mark.y + mark.height);
+  await open(page, 'theme=day&badgeFrom=1');
+  const one = page.getByRole('button', { name: 'Pensacola interpreter' });
+  await expect(one.locator('circle.cuix-map-marker')).toHaveCount(1);
+  await expect(one.locator('text.cuix-map-badge-text')).toHaveText('1');
+});
