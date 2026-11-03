@@ -30,9 +30,9 @@ import {
   wheelZoomFactor,
   zoomAbout,
   zoomCamera,
+  badgeBox,
   badgeText,
   hasBadge,
-  markBox,
   roundRectPath,
 } from '../src/map/mapMath.ts';
 import { US_STATES } from '../src/map/geo/usStates.ts';
@@ -445,15 +445,16 @@ test('the badge rule: a count from badgeFrom up, 99+ over 99, and a box that hol
   assert.equal(badgeText(1), '1');
   assert.equal(badgeText(99), '99');
   assert.equal(badgeText(100), '99+');
-  // Unbadged: the ring circle UsMap has always drawn, r + 4 around the point.
-  assert.deepEqual(markBox(5, false), { x: -9, y: -9, width: 18, height: 18 });
-  // Badged: the marker's ring at the bottom left, the badge's at the top right.
-  const box = markBox(5, true);
+  // The marker's ring (r + 4, the circle UsMap draws on a bare point) at the bottom left, the badge's at the top right.
+  const box = badgeBox(5);
   assert.deepEqual(box, { x: -9, y: -27, width: 36, height: 36 });
   assert.ok(BADGE_OFF + BADGE_R + 4 <= box.x + box.width && -(BADGE_OFF + BADGE_R + 4) >= box.y, "the badge's own ring is inside the box");
   // The badge's near edge is tangent to the widest shape (1.2 r), so the marker stays whole under it.
   assert.ok(Math.abs(Math.hypot(BADGE_OFF, BADGE_OFF) - BADGE_R - 1.2 * 5) < 0.1);
   assert.equal(roundRectPath(-9, -27, 36, 36, 9), 'M0,-27h18a9,9 0 0 1 9,9v18a9,9 0 0 1 -9,9h-18a9,9 0 0 1 -9,-9v-18a9,9 0 0 1 9,-9z');
+  // Rounded like shapePoints: the camera's 1 / k would otherwise write 17 digits per number, every frame.
+  assert.equal(roundRectPath(-9 / 1.5, -27 / 1.5, 36 / 1.5, 36 / 1.5, 9 / 1.5), 'M0,-18h12a6,6 0 0 1 6,6v12a6,6 0 0 1 -6,6h-12a6,6 0 0 1 -6,-6v-12a6,6 0 0 1 6,-6z');
+  assert.doesNotMatch(roundRectPath(-9 / 7, -27 / 7, 36 / 7, 36 / 7, 9 / 7), /\d\.\d{3}/, 'no float noise in the path');
 });
 
 test('a counted marker keeps its shape under the badge; count 1 badges only from badgeFrom 1', async () => {

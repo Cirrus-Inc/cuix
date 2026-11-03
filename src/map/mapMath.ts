@@ -198,19 +198,26 @@ export const badgeText = (n: number) => (n > 99 ? '99+' : String(n));
  */
 export const hasBadge = (count: number | undefined, from: 1 | 2 = 2): count is number => count !== undefined && count >= from;
 
+/** A focus ring sits this far outside the edge it rings, like an outline-offset-2. */
+export const RING_OFF = 4;
+
 /**
- * The box a marker and its badge sit in, relative to the marker's centre, in marker units:
- * the marker's ring (`r` + 4) at the bottom left, the badge's at the top right.
+ * The box a marker of radius `r` and its badge sit in, relative to the marker's centre, in marker
+ * units: the marker's ring (`r` + `RING_OFF`) at the bottom left, the badge's at the top right.
  */
-export function markBox(r: number, badge: boolean): BBox {
-  const ring = r + 4;
-  if (!badge) return { x: -ring, y: -ring, width: ring * 2, height: ring * 2 };
-  const far = BADGE_OFF + BADGE_R + 4;
+export function badgeBox(r: number): BBox {
+  const ring = r + RING_OFF;
+  const far = BADGE_OFF + BADGE_R + RING_OFF;
   return { x: -ring, y: -far, width: ring + far, height: ring + far };
 }
 
-/** A rounded rectangle as a path: the map's rings need a non-scaling stroke, which its CSS gives to paths, not rects. */
+/**
+ * A rounded rectangle as a path: the map's rings need a non-scaling stroke, which its CSS gives to
+ * paths, not rects. Rounded to 2 decimals, like `shapePoints`: the camera divides every length by
+ * `k`, and the raw quotients would put 17 digits per number in the DOM on each frame.
+ */
 export function roundRectPath(x: number, y: number, w: number, h: number, r: number): string {
-  const a = `a${String(r)},${String(r)} 0 0 1`;
-  return `M${String(x + r)},${String(y)}h${String(w - 2 * r)}${a} ${String(r)},${String(r)}v${String(h - 2 * r)}${a} ${String(-r)},${String(r)}h${String(-(w - 2 * r))}${a} ${String(-r)},${String(-r)}v${String(-(h - 2 * r))}${a} ${String(r)},${String(-r)}z`;
+  const n = (v: number) => String(Math.round(v * 100) / 100);
+  const a = `a${n(r)},${n(r)} 0 0 1`;
+  return `M${n(x + r)},${n(y)}h${n(w - 2 * r)}${a} ${n(r)},${n(r)}v${n(h - 2 * r)}${a} ${n(-r)},${n(r)}h${n(-(w - 2 * r))}${a} ${n(-r)},${n(-r)}v${n(-(h - 2 * r))}${a} ${n(r)},${n(-r)}z`;
 }

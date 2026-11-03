@@ -38,8 +38,9 @@ import {
   visibleRect,
   wheelZoomFactor,
   zoomAbout,
+  RING_OFF,
+  badgeBox,
   hasBadge,
-  markBox,
   roundRectPath,
   type Shift,
 } from './mapMath.ts';
@@ -206,11 +207,8 @@ const panned = (s: Shift): boolean => s.x !== 0 || s.y !== 0;
 /** One arrow key pans this fraction of the view. */
 const KEY_PAN = 0.2;
 
-/** A marker's radius in map units, at one size on screen whatever the zoom; its badge is sized from it (`markBox`). */
+/** A marker's radius in map units, at one size on screen whatever the zoom; its badge is sized from it (`badgeBox`). */
 const MARK_R = 5;
-
-/** The focus ring sits this far outside the marker's own edge, like an outline-offset-2. */
-const RING_OFF = 4;
 
 const activate = (e: KeyboardEvent<Element>, run: () => void) => {
   if (e.key === 'Enter' || e.key === ' ') {
@@ -526,7 +524,7 @@ export function UsMap({
 
   /** A badged marker's box (marker ring bottom-left, badge ring top-right) in map units, grown by `grow`. */
   const markRect = (p: { x: number; y: number }, grow: number) => {
-    const b = markBox(MARK_R, true);
+    const b = badgeBox(MARK_R);
     return { x: p.x + (b.x - grow) / k, y: p.y + (b.y - grow) / k, width: (b.width + 2 * grow) / k, height: (b.height + 2 * grow) / k };
   };
   // The pad keeps 1 unit outside the ring, as the unbadged circle does.
